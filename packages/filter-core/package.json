@@ -1,0 +1,46 @@
+{
+  "name": "@querycn/filter-core",
+  "version": "0.0.0",
+  "description": "Framework-agnostic conditional filter engine: rules AST, URL codec, backend query serializers and client-side filtering.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "keywords": [
+    "filter",
+    "query-builder",
+    "conditional-filter",
+    "data-table",
+    "shadcn"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint"
+  },
+  "devDependencies": {
+    "@workspace/eslint-config": "workspace:*",
+    "@workspace/typescript-config": "workspace:*",
+    "eslint": "^9",
+    "tsup": "^8.5.1",
+    "typescript": "^5",
+    "vitest": "^5.0.1"
+  }
+}
