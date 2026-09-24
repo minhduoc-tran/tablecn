@@ -1,7 +1,18 @@
-/**
- * @querycn/filter-core — framework-agnostic conditional filter engine.
- *
- * Public API is filled in phase by phase (types, registry, reducer, URL codec,
- * serializers, client-side filtering). Keep exports explicit — no `export *`.
- */
-export const VERSION = "0.0.0"
+export type {
+  Arity,
+  BuiltinFieldTypeId,
+  BuiltinOperatorId,
+  FieldDefinition,
+  FieldTypeId,
+  FilterRule,
+  FilterState,
+  FilterValue,
+  Join,
+  OperatorDefinition,
+  OperatorId,
+  Primitive,
+  SelectOption,
+} from "./types"
+
+export { BUILTIN_OPERATORS, getOperatorArity } from "./operators"
+export type { OperatorMap } from "./operators"

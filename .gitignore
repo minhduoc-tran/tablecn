@@ -46,3 +46,5 @@ next-env.d.ts
 
 # fumadocs-mdx generated collections
 .source
+
+plans/
