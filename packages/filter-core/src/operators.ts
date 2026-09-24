@@ -1,3 +1,4 @@
+import { BUILTIN_MATCHERS } from "./client-filter/operator-matchers"
 import { hasOwn } from "./has-own"
 import type {
   Arity,
@@ -6,24 +7,30 @@ import type {
   OperatorId,
 } from "./types"
 
+const builtin = (id: BuiltinOperatorId, arity: Arity): OperatorDefinition => ({
+  id,
+  arity,
+  match: BUILTIN_MATCHERS[id],
+})
+
 export const BUILTIN_OPERATORS: Readonly<
   Record<BuiltinOperatorId, OperatorDefinition>
 > = {
-  eq: { id: "eq", arity: "single" },
-  ne: { id: "ne", arity: "single" },
-  contains: { id: "contains", arity: "single" },
-  notContains: { id: "notContains", arity: "single" },
-  startsWith: { id: "startsWith", arity: "single" },
-  endsWith: { id: "endsWith", arity: "single" },
-  gt: { id: "gt", arity: "single" },
-  gte: { id: "gte", arity: "single" },
-  lt: { id: "lt", arity: "single" },
-  lte: { id: "lte", arity: "single" },
-  between: { id: "between", arity: "range" },
-  in: { id: "in", arity: "multi" },
-  notIn: { id: "notIn", arity: "multi" },
-  isEmpty: { id: "isEmpty", arity: "none" },
-  isNotEmpty: { id: "isNotEmpty", arity: "none" },
+  eq: builtin("eq", "single"),
+  ne: builtin("ne", "single"),
+  contains: builtin("contains", "single"),
+  notContains: builtin("notContains", "single"),
+  startsWith: builtin("startsWith", "single"),
+  endsWith: builtin("endsWith", "single"),
+  gt: builtin("gt", "single"),
+  gte: builtin("gte", "single"),
+  lt: builtin("lt", "single"),
+  lte: builtin("lte", "single"),
+  between: builtin("between", "range"),
+  in: builtin("in", "multi"),
+  notIn: builtin("notIn", "multi"),
+  isEmpty: builtin("isEmpty", "none"),
+  isNotEmpty: builtin("isNotEmpty", "none"),
 }
 
 export type OperatorMap = Readonly<Record<string, OperatorDefinition>>

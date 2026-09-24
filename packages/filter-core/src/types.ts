@@ -26,6 +26,16 @@ export type Arity = "none" | "single" | "range" | "multi"
 export interface OperatorDefinition {
   id: OperatorId
   arity: Arity
+  /**
+   * For client-side filtering. `actual` is the row value as a list (empty = no
+   * value); both sides went through the field type's `toComparable`.
+   */
+  match?(actual: Primitive[], expected: FilterValue): boolean
+}
+
+export interface MatchOptions {
+  /** Case- and accent-insensitive text matching (`Đà Nẵng` ≈ `da nang`). */
+  accentInsensitive: boolean
 }
 
 export type Primitive = string | number | boolean

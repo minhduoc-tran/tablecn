@@ -8,6 +8,7 @@ export type {
   FilterState,
   FilterValue,
   Join,
+  MatchOptions,
   OperatorDefinition,
   OperatorId,
   Primitive,
@@ -45,6 +46,9 @@ export type { FilterAction, ReducerContext } from "./reducer"
 export { createId } from "./create-id"
 
 export { decodeFilters, encodeFilters } from "./url-codec"
+
+export { applyFilter, createRowMatcher } from "./client-filter/apply-filter"
+export type { ClientFilterContext } from "./client-filter/apply-filter"
 
 export { getAppliedRules } from "./serializers/applied-rules"
 export type { AppliedRule } from "./serializers/applied-rules"

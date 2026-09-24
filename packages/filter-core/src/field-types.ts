@@ -1,8 +1,14 @@
+import {
+  toDateOnly,
+  toSearchText,
+  toTimestamp,
+} from "./client-filter/comparable-values"
 import type {
   Arity,
   BuiltinFieldTypeId,
   FieldTypeId,
   FilterValue,
+  MatchOptions,
   OperatorId,
   Primitive,
 } from "./types"
@@ -14,6 +20,11 @@ export interface FieldTypeDefinition {
   defaultOperator: OperatorId
   /** Coerces raw input (URL, form) to the canonical value; `undefined` = invalid. */
   parseValue(raw: unknown, arity: Arity): FilterValue | undefined
+  /**
+   * Client-side filtering: maps a row value and a rule value to what operators
+   * compare; `null` = empty. Defaults to primitives as they are.
+   */
+  toComparable?(value: unknown, options: MatchOptions): Primitive | null
 }
 
 type ParsePrimitive = (raw: unknown) => Primitive | undefined
@@ -115,18 +126,21 @@ export const BUILTIN_FIELD_TYPES: Readonly<
     ],
     defaultOperator: "contains",
     parseValue: createValueParser(parseString),
+    toComparable: toSearchText,
   },
   number: {
     id: "number",
     operators: ["eq", "ne", ...RANGE_OPERATORS, ...EMPTY_OPERATORS],
     defaultOperator: "eq",
     parseValue: createValueParser(parseNumber),
+    toComparable: (value) => parseNumber(value) ?? null,
   },
   date: {
     id: "date",
     operators: ["eq", ...RANGE_OPERATORS, ...EMPTY_OPERATORS],
     defaultOperator: "eq",
     parseValue: createValueParser(parseDate),
+    toComparable: toDateOnly,
   },
   // No `eq`: exact-instant equality is never what users mean.
   datetime: {
@@ -134,23 +148,27 @@ export const BUILTIN_FIELD_TYPES: Readonly<
     operators: [...RANGE_OPERATORS, ...EMPTY_OPERATORS],
     defaultOperator: "between",
     parseValue: createValueParser(parseDateTime),
+    toComparable: toTimestamp,
   },
   boolean: {
     id: "boolean",
     operators: ["eq"],
     defaultOperator: "eq",
     parseValue: createValueParser(parseBoolean),
+    toComparable: (value) => parseBoolean(value) ?? null,
   },
   select: {
     id: "select",
     operators: ["eq", "ne", ...EMPTY_OPERATORS],
     defaultOperator: "eq",
     parseValue: createValueParser(parseString),
+    toComparable: toSearchText,
   },
   multiSelect: {
     id: "multiSelect",
     operators: ["in", "notIn", ...EMPTY_OPERATORS],
     defaultOperator: "in",
     parseValue: createValueParser(parseString),
+    toComparable: toSearchText,
   },
 }
