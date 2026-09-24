@@ -34,7 +34,7 @@ export interface OperatorDefinition {
 }
 
 export interface MatchOptions {
-  /** Case- and accent-insensitive text matching (`Đà Nẵng` ≈ `da nang`). */
+  /** Accent-insensitive text matching (`Đà Nẵng` ≈ `da nang`); case is always ignored. */
   accentInsensitive: boolean
 }
 

@@ -61,6 +61,15 @@ describe("text", () => {
     ).toEqual([3])
   })
 
+  it("matches decomposed input when accents are kept", () => {
+    const decomposed = [{ id: 1, name: "Đà Nẵng".normalize("NFD") }]
+    expect(
+      ids(decomposed, [rule("name", "contains", "Nẵng")], "and", {
+        accentInsensitive: false,
+      })
+    ).toEqual([1])
+  })
+
   it("negations keep rows without a value", () => {
     const withEmpty = [...rows, { id: 4 }]
     expect(ids(withEmpty, [rule("name", "notContains", "nang")])).toEqual([
@@ -83,6 +92,17 @@ describe("number", () => {
     expect(ids(rows, [rule("amount", "lte", 5)])).toEqual([1, 5])
     expect(ids(rows, [rule("amount", "between", [5, 12])])).toEqual([1, 2])
     expect(ids(rows, [rule("amount", "eq", "12")])).toEqual([2])
+  })
+
+  it("treats unreadable values as present but never matching", () => {
+    const messy: Row[] = [
+      { id: 1, amount: "1,200" },
+      { id: 2, amount: null },
+      { id: 3, amount: 7 },
+    ]
+    expect(ids(messy, [rule("amount", "isEmpty", null)])).toEqual([2])
+    expect(ids(messy, [rule("amount", "isNotEmpty", null)])).toEqual([3])
+    expect(ids(messy, [rule("amount", "ne", 5)])).toEqual([2, 3])
   })
 
   it("matches nothing for a reversed range", () => {
@@ -159,13 +179,14 @@ describe("lists in the row", () => {
 })
 
 describe("select and boolean", () => {
-  it("compares select values as text", () => {
+  it("compares select values exactly, as ids", () => {
     const rows: Row[] = [
       { id: 1, status: 3 },
       { id: 2, status: "ACTIVE" },
     ]
     expect(ids(rows, [rule("status", "eq", "3")])).toEqual([1])
-    expect(ids(rows, [rule("status", "eq", "active")])).toEqual([2])
+    expect(ids(rows, [rule("status", "eq", "ACTIVE")])).toEqual([2])
+    expect(ids(rows, [rule("status", "eq", "active")])).toEqual([])
   })
 
   it("reads boolean strings", () => {
@@ -182,7 +203,7 @@ describe("select and boolean", () => {
 describe("dates", () => {
   it("compares date fields by day, reading Date objects in local time", () => {
     const rows: Row[] = [
-      { id: 1, day: "2026-09-24T23:00:00Z" },
+      { id: 1, day: "2026-09-24T23:00:00" },
       { id: 2, day: new Date(2026, 8, 25, 1, 0) },
       { id: 3, day: "2026-09-26" },
       { id: 4, day: "not a date" },
@@ -191,6 +212,34 @@ describe("dates", () => {
     expect(
       ids(rows, [rule("day", "between", ["2026-09-25", "2026-09-26"])])
     ).toEqual([2, 3])
+  })
+
+  it("reads an instant as the same local day whatever its form", () => {
+    const instant = "2026-09-24T20:00:00Z"
+    const date = new Date(instant)
+    const localDay = [
+      date.getFullYear(),
+      String(date.getMonth() + 1).padStart(2, "0"),
+      String(date.getDate()).padStart(2, "0"),
+    ].join("-")
+    const rows: Row[] = [
+      { id: 1, day: instant },
+      { id: 2, day: date },
+      { id: 3, day: date.getTime() },
+      { id: 4, day: "2026-09-24T20:00:00+00:00" },
+    ]
+    expect(ids(rows, [rule("day", "eq", localDay)])).toEqual([1, 2, 3, 4])
+  })
+
+  it("never matches impossible dates or loose datetime strings", () => {
+    const days: Row[] = [{ id: 1, day: "2026-13-99" }]
+    expect(ids(days, [rule("day", "isNotEmpty", null)])).toEqual([])
+    expect(ids(days, [rule("day", "isEmpty", null)])).toEqual([])
+    const times: Row[] = [
+      { id: 1, at: "12" },
+      { id: 2, at: "Sept 3" },
+    ]
+    expect(ids(times, [rule("at", "gte", "2000-01-01T00:00")])).toEqual([])
   })
 
   it("compares datetime fields as instants, not strings", () => {
@@ -319,5 +368,49 @@ describe("extension points", () => {
         context
       )
     ).toEqual([{ id: 1 }])
+  })
+
+  it("keeps client matching when a built-in is overridden", () => {
+    const registry = createRegistry({
+      operators: [{ id: "contains", arity: "single" }],
+      fieldTypes: [
+        {
+          id: "text",
+          operators: ["contains"],
+          defaultOperator: "contains",
+          parseValue: (raw) => (typeof raw === "string" ? raw : undefined),
+        },
+      ],
+    })
+    expect(
+      applyFilter(
+        [{ id: 1, name: "Đà Nẵng" }],
+        { join: "and", rules: [rule("name", "contains", "da")] },
+        { fields, registry }
+      )
+    ).toHaveLength(1)
+  })
+
+  it("never orders NaN from a custom toComparable", () => {
+    const registry = createRegistry({
+      fieldTypes: [
+        {
+          id: "loose",
+          operators: ["gte", "isEmpty"],
+          defaultOperator: "gte",
+          parseValue: (raw) => (typeof raw === "number" ? raw : undefined),
+          toComparable: (value) =>
+            typeof value === "number" ? value : Number(value),
+        },
+      ],
+    })
+    const context = {
+      fields: [{ name: "x", label: "X", type: "loose" }],
+      registry,
+    }
+    const rows = [{ id: 1, x: "abc" }]
+    expect(
+      applyFilter(rows, { join: "and", rules: [rule("x", "gte", 5)] }, context)
+    ).toEqual([])
   })
 })

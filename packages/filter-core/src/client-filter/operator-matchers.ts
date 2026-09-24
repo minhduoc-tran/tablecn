@@ -13,9 +13,10 @@ const not =
   (items, expected) =>
     !match(items, expected)
 
-// Mixed types (e.g. a text column under a number field) never compare.
+// Mixed types (e.g. a text column under a number field) and NaN never compare.
 function compare(a: Primitive, b: Primitive): number | undefined {
   if (typeof a !== typeof b || typeof a === "boolean") return undefined
+  if (Number.isNaN(a) || Number.isNaN(b)) return undefined
   return a < b ? -1 : a > b ? 1 : 0
 }
 

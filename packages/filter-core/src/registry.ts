@@ -9,7 +9,10 @@ export interface FilterRegistry {
 }
 
 export interface RegistryExtension {
-  /** Added to the built-ins; an entry with a built-in id replaces it. */
+  /**
+   * Added to the built-ins. An entry with a built-in id overrides it field by
+   * field; an operator keeps the built-in `match` only if its arity is unchanged.
+   */
   fieldTypes?: FieldTypeDefinition[]
   operators?: OperatorDefinition[]
 }
@@ -23,14 +26,20 @@ export function createRegistry(
 ): FilterRegistry {
   const operators: Record<string, OperatorDefinition> = { ...BUILTIN_OPERATORS }
   for (const operator of extension.operators ?? []) {
-    operators[operator.id] = operator
+    const base = hasOwn(operators, operator.id)
+      ? operators[operator.id]
+      : undefined
+    operators[operator.id] =
+      base?.arity === operator.arity ? { ...base, ...operator } : operator
   }
 
   const fieldTypes: Record<string, FieldTypeDefinition> = {
     ...BUILTIN_FIELD_TYPES,
   }
   for (const fieldType of extension.fieldTypes ?? []) {
-    fieldTypes[fieldType.id] = fieldType
+    fieldTypes[fieldType.id] = hasOwn(fieldTypes, fieldType.id)
+      ? { ...fieldTypes[fieldType.id]!, ...fieldType }
+      : fieldType
   }
 
   for (const fieldType of Object.values(fieldTypes)) {

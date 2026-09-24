@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest"
 
-import { createValueParser, type FieldTypeDefinition } from "./field-types"
+import {
+  BUILTIN_FIELD_TYPES,
+  createValueParser,
+  type FieldTypeDefinition,
+} from "./field-types"
+import { BUILTIN_OPERATORS } from "./operators"
 import {
   createRegistry,
   DEFAULT_REGISTRY,
@@ -112,5 +117,30 @@ describe("getDefaultOperator", () => {
 
   it("returns null when nothing is offered", () => {
     expect(getDefaultOperator(field({ type: "nope" }))).toBeNull()
+  })
+})
+
+describe("createRegistry overrides", () => {
+  it("overrides built-ins field by field, keeping match only for the same arity", () => {
+    const registry = createRegistry({
+      operators: [
+        { id: "eq", arity: "single" },
+        { id: "in", arity: "single" },
+      ],
+      fieldTypes: [
+        {
+          id: "text",
+          operators: ["eq"],
+          defaultOperator: "eq",
+          parseValue: (raw) => raw as never,
+        },
+      ],
+    })
+    expect(registry.operators.eq?.match).toBe(BUILTIN_OPERATORS.eq.match)
+    expect(registry.operators.in?.match).toBeUndefined()
+    expect(registry.fieldTypes.text?.toComparable).toBe(
+      BUILTIN_FIELD_TYPES.text.toComparable
+    )
+    expect(registry.fieldTypes.text?.operators).toEqual(["eq"])
   })
 })

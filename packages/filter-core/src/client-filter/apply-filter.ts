@@ -22,10 +22,17 @@ export interface ClientFilterContext<Row>
 
 type ToComparable = (value: unknown) => Primitive | null
 
-const readProperty = (row: unknown, field: FieldDefinition) =>
-  row === null || typeof row !== "object"
-    ? undefined
-    : (row as Record<string, unknown>)[field.name]
+// Functions are inherited members (`constructor`, `toString`), not data.
+function readProperty(row: unknown, field: FieldDefinition): unknown {
+  if (row === null || typeof row !== "object") return undefined
+  const value = (row as Record<string, unknown>)[field.name]
+  return typeof value === "function" ? undefined : value
+}
+
+const isMissing = (value: unknown) =>
+  value === null ||
+  value === undefined ||
+  (typeof value === "string" && value.trim() === "")
 
 function toExpected(
   rule: AppliedRule,
@@ -34,7 +41,7 @@ function toExpected(
   if (rule.arity === "none") return null
   if (rule.arity === "single") return toComparable(rule.value) ?? undefined
   const items = rule.value.map(toComparable)
-  if (items.some((item) => item === null)) return undefined
+  if (items.some((item) => item == null)) return undefined
   return items as FilterValue
 }
 
@@ -55,10 +62,14 @@ function compileRule<Row>(
   if (!match || expected === undefined) return () => false
 
   return (row) => {
-    const actual = [getValue(row, rule.definition)]
-      .flat()
-      .map(toComparable)
-      .filter((item) => item !== null)
+    const actual: Primitive[] = []
+    for (const value of [getValue(row, rule.definition)].flat()) {
+      if (isMissing(value)) continue
+      const comparable = toComparable(value)
+      // Present but unreadable (e.g. "1,200" in a number field): not empty, and not a match either.
+      if (comparable == null) return false
+      actual.push(comparable)
+    }
     return match(actual, expected)
   }
 }

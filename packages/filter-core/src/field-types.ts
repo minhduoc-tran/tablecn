@@ -1,5 +1,6 @@
 import {
   toDateOnly,
+  toOptionValue,
   toSearchText,
   toTimestamp,
 } from "./client-filter/comparable-values"
@@ -162,13 +163,13 @@ export const BUILTIN_FIELD_TYPES: Readonly<
     operators: ["eq", "ne", ...EMPTY_OPERATORS],
     defaultOperator: "eq",
     parseValue: createValueParser(parseString),
-    toComparable: toSearchText,
+    toComparable: toOptionValue,
   },
   multiSelect: {
     id: "multiSelect",
     operators: ["in", "notIn", ...EMPTY_OPERATORS],
     defaultOperator: "in",
     parseValue: createValueParser(parseString),
-    toComparable: toSearchText,
+    toComparable: toOptionValue,
   },
 }
