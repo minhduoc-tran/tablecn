@@ -39,3 +39,7 @@ export {
   normalizeState,
 } from "./validation"
 export type { RuleWarning } from "./validation"
+
+export { EMPTY_FILTER_STATE, filterReducer } from "./reducer"
+export type { FilterAction, ReducerContext } from "./reducer"
+export { createId } from "./create-id"
