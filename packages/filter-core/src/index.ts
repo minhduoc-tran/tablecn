@@ -16,3 +16,15 @@ export type {
 
 export { BUILTIN_OPERATORS, getOperatorArity } from "./operators"
 export type { OperatorMap } from "./operators"
+
+export { BUILTIN_FIELD_TYPES, createValueParser } from "./field-types"
+export type { FieldTypeDefinition } from "./field-types"
+
+export {
+  createRegistry,
+  DEFAULT_REGISTRY,
+  getDefaultOperator,
+  getFieldOperators,
+  getFieldType,
+} from "./registry"
+export type { FilterRegistry, RegistryExtension } from "./registry"

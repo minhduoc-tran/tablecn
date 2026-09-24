@@ -1,3 +1,4 @@
+import { hasOwn } from "./has-own"
 import type {
   Arity,
   BuiltinOperatorId,
@@ -31,8 +32,5 @@ export function getOperatorArity(
   id: OperatorId,
   operators: OperatorMap = BUILTIN_OPERATORS
 ): Arity | undefined {
-  // Own-property check so ids like "toString" don't resolve via the prototype.
-  return Object.prototype.hasOwnProperty.call(operators, id)
-    ? operators[id]?.arity
-    : undefined
+  return hasOwn(operators, id) ? operators[id]?.arity : undefined
 }
