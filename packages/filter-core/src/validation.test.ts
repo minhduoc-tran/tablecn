@@ -99,6 +99,47 @@ describe("normalizeRule", () => {
   })
 })
 
+describe("value shape from a custom parseValue", () => {
+  // Passes raw input through untouched, so only the shape check stands between it and serializers.
+  const registry = createRegistry({
+    operators: [{ id: "within", arity: "range" }],
+    fieldTypes: [
+      {
+        id: "raw",
+        operators: ["eq", "within", "in", "isEmpty"],
+        defaultOperator: "eq",
+        parseValue: (raw) => raw as FilterValue,
+      },
+    ],
+  })
+  const rawContext: FilterContext = {
+    fields: [{ name: "x", label: "X", type: "raw" }],
+    registry,
+  }
+
+  it.each<[string, OperatorId, unknown, boolean]>([
+    ["single primitive", "eq", "a", true],
+    ["single object", "eq", { a: 1 }, false],
+    ["single array", "eq", ["a"], false],
+    ["single NaN", "eq", NaN, false],
+    ["range pair", "within", [1, 2], true],
+    ["range too short", "within", [1], false],
+    ["range too long", "within", [1, 2, 3], false],
+    ["range nested", "within", [[1], 2], false],
+    ["multi with object", "in", ["a", {}], false],
+  ])("%s", (_, operator, value, complete) => {
+    expect(
+      isRuleComplete(rule("x", operator, value as FilterValue), rawContext)
+    ).toBe(complete)
+  })
+
+  it("forces null for operators without a value", () => {
+    expect(
+      normalizeRule(rule("x", "isEmpty", { a: 1 } as never), rawContext)?.value
+    ).toBeNull()
+  })
+})
+
 describe("getRuleWarnings", () => {
   const dateContext: FilterContext = {
     fields: [{ name: "createdAt", label: "Created", type: "date" }],

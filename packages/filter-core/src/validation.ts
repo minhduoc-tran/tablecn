@@ -1,23 +1,30 @@
 import { findField, type FilterContext } from "./context"
 import { getOperatorArity } from "./operators"
 import { DEFAULT_REGISTRY, getFieldOperators, getFieldType } from "./registry"
-import type { Arity, FilterRule, FilterState, FilterValue } from "./types"
+import type {
+  Arity,
+  FilterRule,
+  FilterState,
+  FilterValue,
+  Primitive,
+} from "./types"
 
-const isBlank = (value: unknown) =>
-  value === null ||
-  value === undefined ||
-  (typeof value === "string" && value.trim() === "")
+const isFilled = (value: unknown): value is Primitive =>
+  (typeof value === "number" && Number.isFinite(value)) ||
+  typeof value === "boolean" ||
+  (typeof value === "string" && value.trim() !== "")
 
+// Custom `parseValue`s can return any shape, so check it matches the arity.
 function hasRequiredValue(value: FilterValue, arity: Arity): boolean {
   switch (arity) {
     case "none":
       return true
     case "single":
-      return !isBlank(value)
+      return isFilled(value)
     case "range":
-      return Array.isArray(value) && !value.some(isBlank)
+      return Array.isArray(value) && value.length === 2 && value.every(isFilled)
     case "multi":
-      return Array.isArray(value) && value.length > 0 && !value.some(isBlank)
+      return Array.isArray(value) && value.length > 0 && value.every(isFilled)
   }
 }
 
@@ -39,7 +46,8 @@ export function normalizeRule(
   const fieldType = getFieldType(field, registry)
   if (!arity || !fieldType) return null
 
-  const value = fieldType.parseValue(rule.value, arity)
+  const value =
+    arity === "none" ? null : fieldType.parseValue(rule.value, arity)
   if (value === undefined || !hasRequiredValue(value, arity)) return null
 
   return { ...rule, value }
