@@ -1,0 +1,18 @@
+@import "@workspace/ui/globals.css";
+@import "fumadocs-ui/css/shadcn.css";
+@import "fumadocs-ui/css/preset.css";
+
+/* Scan this app's source and MDX content */
+@source "../{app,components,content,lib}/**/*.{ts,tsx,mdx}";
+@source "../mdx-components.tsx";
+
+/* Let Tailwind pick up classes used by Fumadocs UI components */
+@source "../node_modules/fumadocs-ui/dist/**/*.js";
+
+/* Hide scrollbars while keeping scroll (sidebar) */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

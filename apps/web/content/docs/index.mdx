@@ -1,0 +1,54 @@
+---
+title: Introduction
+description: Getting started with the tablecn monorepo.
+---
+
+Welcome to **tablecn** — a Next.js monorepo powered by [shadcn/ui](https://ui.shadcn.com) and documented with [Fumadocs](https://fumadocs.dev).
+
+<Callout title="Tip">
+  Press <kbd>d</kbd> to toggle dark mode, or <kbd>⌘ K</kbd> to search the docs.
+</Callout>
+
+## Project structure
+
+```txt
+tablecn/
+├── apps/web/                  # Next.js app (this site)
+│   └── content/docs/          # MDX docs pages
+└── packages/
+    ├── ui/                    # @workspace/ui — shared shadcn/ui components
+    ├── eslint-config/         # shared ESLint config
+    └── typescript-config/     # shared TypeScript config
+```
+
+## Getting started
+
+Install dependencies and start the dev server:
+
+```npm
+npm install
+npm run dev
+```
+
+## Adding components
+
+Add shadcn/ui components from the repository root. They are placed in `packages/ui/src/components`:
+
+```npm
+npx shadcn@latest add card -c apps/web
+```
+
+Then import them from the `ui` package:
+
+```tsx
+import { Button } from "@workspace/ui/components/button"
+```
+
+## Writing docs
+
+Create a new `.mdx` file in `apps/web/content/docs` — it shows up in the sidebar automatically.
+
+<Cards>
+  <Card title="shadcn/ui" href="https://ui.shadcn.com/docs" description="Component docs and examples" />
+  <Card title="Fumadocs" href="https://fumadocs.dev/docs" description="Learn how to customize these docs" />
+</Cards>
