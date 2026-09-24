@@ -28,3 +28,14 @@ export {
   getFieldType,
 } from "./registry"
 export type { FilterRegistry, RegistryExtension } from "./registry"
+
+export { findField } from "./context"
+export type { FilterContext } from "./context"
+
+export {
+  getRuleWarnings,
+  isRuleComplete,
+  normalizeRule,
+  normalizeState,
+} from "./validation"
+export type { RuleWarning } from "./validation"
