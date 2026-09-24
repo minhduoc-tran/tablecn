@@ -47,6 +47,10 @@ export { createId } from "./create-id"
 
 export { decodeFilters, encodeFilters } from "./url-codec"
 
+export { getOperatorLabel, mergeMessages } from "./messages"
+export type { FilterMessages, FilterMessagesOverrides } from "./messages"
+export { enMessages } from "./locales/en"
+
 export { applyFilter, createRowMatcher } from "./client-filter/apply-filter"
 export type { ClientFilterContext } from "./client-filter/apply-filter"
 
@@ -65,6 +69,7 @@ export type {
   InspectableSerializer,
   QueryParams,
   QuerySerializer,
+  RuleIssue,
   SerializerInspection,
 } from "./serializers/query-params"
 export { jsonApiSerializer } from "./serializers/json-api-serializer"

@@ -11,6 +11,9 @@ export type QuerySerializer<T = QueryParams> = (
   context: FilterContext
 ) => T
 
+/** How a rule fares at the backend, per `SerializerInspection`. */
+export type RuleIssue = "conflict" | "unsupported"
+
 export interface SerializerInspection {
   /** Rules left out of the output: operator off, arity mismatch or dropped by `mapRule`. */
   skipped: string[]

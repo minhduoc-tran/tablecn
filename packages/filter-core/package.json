@@ -17,6 +17,10 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./locales/vi": {
+      "types": "./dist/locales/vi.d.ts",
+      "import": "./dist/locales/vi.js"
+    },
     "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
