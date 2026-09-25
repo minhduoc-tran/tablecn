@@ -37,7 +37,11 @@ export const viTableMessages: TableMessages = {
     last: "Trang cuối",
     morePages: "Các trang khác",
   },
-  selection: { selectAll: "Chọn tất cả", selectRow: "Chọn dòng" },
+  selection: {
+    selectAll: "Chọn tất cả",
+    selectRow: "Chọn dòng",
+    clear: "Bỏ chọn",
+  },
   actions: { reload: "Tải lại", clearFilters: "Xoá bộ lọc", retry: "Thử lại" },
   states: {
     empty: "Không có dữ liệu.",

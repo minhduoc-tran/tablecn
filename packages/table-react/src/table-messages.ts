@@ -24,9 +24,15 @@ export interface TableMessages {
   >
   sorting: Labels<"asc" | "desc" | "clear">
   pagination: Labels<
-    "label" | "rowsPerPage" | "first" | "previous" | "next" | "last" | "morePages"
+    | "label"
+    | "rowsPerPage"
+    | "first"
+    | "previous"
+    | "next"
+    | "last"
+    | "morePages"
   >
-  selection: Labels<"selectAll" | "selectRow">
+  selection: Labels<"selectAll" | "selectRow" | "clear">
   actions: Labels<"reload" | "clearFilters" | "retry">
   states: Labels<"empty" | "error" | "loading">
   /** Column header controls and what screen readers hear while moving a column. */

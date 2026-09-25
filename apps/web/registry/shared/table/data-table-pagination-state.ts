@@ -1,5 +1,12 @@
 import type { DataTableInstance } from "@querycn/table-react"
 
+/** Selected rows on the page; a selected row pushed to another page doesn't count. */
+export function getSelectedPageRows<TData extends object>(
+  table: DataTableInstance<TData>
+) {
+  return table.getRowModel().rows.filter((row) => row.getIsSelected())
+}
+
 /** What the pagination bar shows, read from the table. */
 export function getPaginationState<TData extends object>(
   table: DataTableInstance<TData>
@@ -32,7 +39,7 @@ export function getPaginationState<TData extends object>(
     pageSizes,
     rowCount,
     pageRowCount: pageRows.length,
-    selectedCount: pageRows.filter((row) => row.getIsSelected()).length,
+    selectedCount: getSelectedPageRows(table).length,
     isEmpty: rowCount === 0,
     // Every size would show every row: nothing to pick.
     showPageSizes: rowCount === undefined || rowCount > pageSizes[0]!,

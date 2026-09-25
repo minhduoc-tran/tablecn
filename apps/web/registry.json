@@ -123,6 +123,7 @@
       "dependencies": [
         "@dnd-kit/core@^6.3.1",
         "@dnd-kit/sortable@^10.0.0",
+        "@querycn/filter-react@^0.1.0",
         "@querycn/table-react@^0.1.0",
         "@tanstack/react-table@^9.2.0",
         "lucide-react"
@@ -168,6 +169,21 @@
           "path": "registry/{base}/table/data-table-column-color-menu.tsx",
           "type": "registry:component",
           "target": "@components/data-table/data-table-column-color-menu.tsx"
+        },
+        {
+          "path": "registry/{base}/table/data-table-toolbar.tsx",
+          "type": "registry:component",
+          "target": "@components/data-table/data-table-toolbar.tsx"
+        },
+        {
+          "path": "registry/{base}/table/data-table-reset-filters-button.tsx",
+          "type": "registry:component",
+          "target": "@components/data-table/data-table-reset-filters-button.tsx"
+        },
+        {
+          "path": "registry/{base}/table/data-table-selection-bar.tsx",
+          "type": "registry:component",
+          "target": "@components/data-table/data-table-selection-bar.tsx"
         },
         {
           "path": "registry/shared/table/column-reorder.tsx",
@@ -223,6 +239,11 @@
           "path": "registry/shared/table/use-column-color-picker.ts",
           "type": "registry:hook",
           "target": "@components/data-table/use-column-color-picker.ts"
+        },
+        {
+          "path": "registry/shared/table/use-focus-toolbar-on-unmount.ts",
+          "type": "registry:hook",
+          "target": "@components/data-table/use-focus-toolbar-on-unmount.ts"
         },
         {
           "path": "registry/shared/table/page-range.ts",

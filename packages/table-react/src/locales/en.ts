@@ -37,7 +37,11 @@ export const enTableMessages: TableMessages = {
     last: "Last page",
     morePages: "More pages",
   },
-  selection: { selectAll: "Select all", selectRow: "Select row" },
+  selection: {
+    selectAll: "Select all",
+    selectRow: "Select row",
+    clear: "Clear selection",
+  },
   actions: { reload: "Reload", clearFilters: "Clear filters", retry: "Retry" },
   states: {
     empty: "No results.",
