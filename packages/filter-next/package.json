@@ -1,15 +1,15 @@
 {
-  "name": "@querycn/filter-react",
+  "name": "@querycn/filter-next",
   "version": "0.0.0",
-  "description": "Headless React bindings for @querycn/filter-core: provider, hooks and URL state adapters.",
+  "description": "Next.js App Router bindings for @querycn/filter-react: URL adapter, provider and a server-side filter parser.",
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
   "keywords": [
     "filter",
+    "nextjs",
+    "app-router",
     "react",
-    "headless",
-    "query-builder",
     "data-table",
     "shadcn"
   ],
@@ -18,9 +18,9 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./react-router": {
-      "types": "./dist/react-router.d.ts",
-      "import": "./dist/react-router.js"
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.js"
     },
     "./package.json": "./package.json"
   },
@@ -44,28 +44,25 @@
     "@querycn/filter-core": "workspace:^"
   },
   "peerDependencies": {
-    "react": ">=18",
-    "react-router": ">=6.4"
-  },
-  "peerDependenciesMeta": {
-    "react-router": {
-      "optional": true
-    }
+    "@querycn/filter-react": "workspace:^",
+    "next": ">=14.1",
+    "react": ">=18"
   },
   "devDependencies": {
-    "@testing-library/dom": "^10",
-    "@testing-library/react": "^16",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@querycn/filter-react": "workspace:*",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "@workspace/eslint-config": "workspace:*",
     "@workspace/typescript-config": "workspace:*",
-    "eslint": "^9",
-    "jsdom": "^26",
+    "eslint": "^9.39.5",
+    "jsdom": "^26.1.0",
+    "next": "16.3.3",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "react-router": "^7.18.4",
     "tsup": "^8.5.1",
-    "typescript": "^5",
+    "typescript": "^5.9.3",
     "vitest": "^5.0.1"
   }
 }

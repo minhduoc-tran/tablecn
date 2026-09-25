@@ -18,3 +18,4 @@ export type {
   FieldOptionsResult,
 } from "./use-field-options"
 export { clearFieldOptionsCache } from "./field-options-cache"
+export { applyParamChanges } from "./adapters/apply-param-changes"

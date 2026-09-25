@@ -149,12 +149,64 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^5.0.1
+        version: 5.0.1(jsdom@26.1.0)(vite@8.3.1(esbuild@0.27.7)(jiti@2.7.0)(yaml@2.9.1))
+
+  packages/filter-next:
+    dependencies:
+      '@querycn/filter-core':
+        specifier: workspace:^
+        version: link:../filter-core
+    devDependencies:
+      '@querycn/filter-react':
+        specifier: workspace:*
+        version: link:../filter-react
+      '@testing-library/dom':
+        specifier: ^10.4.2
+        version: 10.4.2
+      '@testing-library/react':
+        specifier: ^16.3.3
+        version: 16.3.3(@testing-library/dom@10.4.2)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@types/react':
+        specifier: ^19.3.0
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: ^19.3.0
+        version: 19.3.0(@types/react@19.3.0)
+      '@workspace/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@workspace/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      eslint:
+        specifier: ^9.39.5
+        version: 9.39.5(jiti@2.7.0)
+      jsdom:
+        specifier: ^26.1.0
+        version: 26.1.0
+      next:
+        specifier: 16.3.3
+        version: 16.3.3(@types/node@20.19.43)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react:
+        specifier: 19.2.4
+        version: 19.2.4
+      react-dom:
+        specifier: 19.2.4
+        version: 19.2.4(react@19.2.4)
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(jiti@2.7.0)(postcss@8.5.28)(typescript@5.9.3)(yaml@2.9.1)
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^5.0.1
         version: 5.0.1(jsdom@26.1.0)(vite@8.3.1(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
 
   packages/filter-react:
     dependencies:
       '@querycn/filter-core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../filter-core
     devDependencies:
       '@testing-library/dom':
@@ -198,7 +250,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^5.0.1
-        version: 5.0.1(jsdom@26.1.0)(vite@8.3.1(esbuild@0.27.7)(jiti@2.7.0)(yaml@2.9.1))
+        version: 5.0.1(jsdom@26.1.0)(vite@8.3.1(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
 
   packages/typescript-config: {}
 
@@ -7791,7 +7843,7 @@ snapshots:
       estree-walker: 3.0.3
       magic-string: 1.4.2
     optionalDependencies:
-      vite: 8.3.1(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
+      vite: 8.3.1(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
 
   '@vitest/spy@5.0.1': {}
 
@@ -11461,7 +11513,6 @@ snapshots:
       fsevents: 2.3.3
       jiti: 2.7.0
       yaml: 2.9.1
-    optional: true
 
   vite@8.3.1(esbuild@0.27.7)(jiti@2.7.0)(yaml@2.9.1):
     dependencies:
@@ -11472,19 +11523,6 @@ snapshots:
       tinyglobby: 0.2.17
     optionalDependencies:
       esbuild: 0.27.7
-      fsevents: 2.3.3
-      jiti: 2.7.0
-      yaml: 2.9.1
-
-  vite@8.3.1(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1):
-    dependencies:
-      lightningcss: 1.33.0
-      picomatch: 4.0.7
-      postcss: 8.5.28
-      rolldown: 1.2.11
-      tinyglobby: 0.2.17
-    optionalDependencies:
-      esbuild: 0.28.2
       fsevents: 2.3.3
       jiti: 2.7.0
       yaml: 2.9.1
@@ -11524,7 +11562,7 @@ snapshots:
       tinybench: 6.1.4
       tinyexec: 1.3.0
       tinyglobby: 0.2.17
-      vite: 8.3.1(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
+      vite: 8.3.1(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
       why-is-node-running: 2.3.0
     optionalDependencies:
       jsdom: 26.1.0

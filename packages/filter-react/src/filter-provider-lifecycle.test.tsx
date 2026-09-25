@@ -50,6 +50,29 @@ describe("adapters that write asynchronously", () => {
     expect(result.current.draft.state).toBe(result.current.applied.state)
   })
 
+  it("drops the pending write when another navigation lands first", () => {
+    const deferred = createDeferredAdapter()
+    let adapter = deferred.adapter
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <FilterProvider fields={FIELDS} adapter={adapter}>
+        {children}
+      </FilterProvider>
+    )
+    const { result, rerender } = renderHook(
+      () => ({ draft: useFilter(), applied: useAppliedFilter() }),
+      { wrapper }
+    )
+    addRule(result, "status", "active")
+    act(() => result.current.draft.apply())
+    expect(result.current.applied.activeCount).toBe(1)
+
+    // Router adapters are rebuilt per URL: a new instance with the same value
+    // means the write was superseded, e.g. by a pagination link.
+    adapter = { ...deferred.adapter }
+    rerender()
+    expect(result.current.applied.activeCount).toBe(0)
+  })
+
   it("is not dirty right after apply", () => {
     const { adapter } = createDeferredAdapter()
     const { result } = setup({ adapter })
