@@ -1,26 +1,40 @@
 ---
-title: Installation
-description: Add a table with search, a filter, sorting and pages to your app in five steps.
+title: Getting Started
+description: Install the tablecn data table and filter in your project.
 ---
 
-**You need:** React 18 or 19, and a project set up with [shadcn/ui](https://ui.shadcn.com/docs/installation) and Tailwind CSS v4. For Next.js, the App Router (14.1+). For react-router, version 6.4+ or 7.
+## Prerequisites
 
-<Steps>
-<Step>
+- React 18 or 19
+- A [shadcn/ui](https://ui.shadcn.com/docs/installation) setup with Tailwind CSS v4
+- For Next.js, the App Router (14.1+). For react-router, version 6.4+ or 7. Any other React app works too.
 
-### Add the registry
+## Choose what to install
 
-Tell the shadcn CLI where to find tablecn. Add this to your `components.json` once:
+tablecn comes as two blocks. Pick what fits your page:
+
+- **`@tablecn/data-table`**: the table, with search, sorting, pages, a column layout users can change, and row selection.
+- **`@tablecn/filter-builder`**: the filter builder, "Where *Status* is *Paid* and *Amount* is over *50*". Use it with the table, or on its own.
+
+Both can be installed from the shadcn registry or from npm:
+
+- **shadcn registry (recommended)** copies the UI source into your project (`components/data-table/` and `components/filter/`), so you own it and can change any of it. The logic comes along as npm packages, installed for you.
+- **npm** installs only the headless logic (`@querycn/*`), as regular dependencies. Use it to build your own UI on top.
+
+## Setup
+
+Since the shadcn registry is the recommended way, tell the shadcn CLI where to find tablecn first. Add it to your `components.json` once (skip this if you only use npm):
 
 ```json title="components.json"
 {
+  "$schema": "https://ui.shadcn.com/schema.json",
   "registries": {
     "@tablecn": "%SITE_URL%/r/{style}/{name}.json"
   }
 }
 ```
 
-Or let the CLI do it:
+Or let the CLI add it:
 
 ```npm
 npx shadcn@latest registry add @tablecn=%SITE_URL%/r/{style}/{name}.json
@@ -28,18 +42,27 @@ npx shadcn@latest registry add @tablecn=%SITE_URL%/r/{style}/{name}.json
 
 The CLI reads the `style` in your `components.json` and gives you the matching version: Radix UI for `radix-*` (and older styles like `new-york`), Base UI for `base-*`, React Aria for `aria-*`.
 
-</Step>
-<Step>
+## Option 1: Table and filter
 
-### Add the table and the filter
+Install via the shadcn registry (recommended):
 
 ```npm
 npx shadcn@latest add @tablecn/data-table @tablecn/filter-builder
 ```
 
-This copies the table into `components/data-table/` and the filter into `components/filter/`. They're yours to edit. The CLI also installs the packages they need (`@querycn/*`, TanStack Table…) and any shadcn components you don't have yet.
+This copies the table into `components/data-table/` and the filter into `components/filter/`, installs the packages they need (`@querycn/*`, TanStack Table…), and adds any shadcn components you don't have yet.
 
-</Step>
+Or install via npm, to build your own UI:
+
+```npm
+npm install @querycn/table-react @querycn/filter-react @tanstack/react-table
+```
+
+`useDataTable` then returns a TanStack table to render as you like. See [How it works](/docs/concepts).
+
+Then put it on a page:
+
+<Steps>
 <Step>
 
 ### Define columns and fields
@@ -239,7 +262,7 @@ On react-router v6, also install `react-router` at the exact version your `react
 
 That's it. Search, filter, sort and page, and watch the URL change. The rows are filtered, sorted and paged in the browser. For large data, let your backend do it: see [Server data](/docs/table/server-data).
 
-## Without the filter
+### Without the filter
 
 The table doesn't need the filter. Skip `@tablecn/filter-builder`, drop `FilterBuilder` and `FilterChips` from the toolbar, and pass an adapter straight to `useDataTable`:
 
@@ -251,6 +274,36 @@ const table = useDataTable({ data, columns, getRowId, adapter })
 ```
 
 Without an adapter or a provider, the search, sort and page stay in memory and the URL is left alone.
+
+## Option 2: Filter only
+
+For a filter over something that isn't a table (cards, a map, a chart), install the filter alone.
+
+Via the shadcn registry (recommended):
+
+```npm
+npx shadcn@latest add @tablecn/filter-builder
+```
+
+Or via npm:
+
+```npm
+npm install @querycn/filter-react
+```
+
+Next.js apps also add `@querycn/filter-next` for the URL adapter. See [Use without the table](/docs/filter/standalone) for the rest.
+
+## Peer dependencies
+
+The packages share some libraries with your app, so they're peer dependencies: your app installs them once, and every package uses that one copy.
+
+| Package | Needs |
+| --- | --- |
+| `@querycn/table-react` | `react` 18+, `@tanstack/react-table` ^9.2, `@querycn/filter-react` |
+| `@querycn/filter-react` | `react` 18+; `react-router` 6.4+ only for its react-router adapter |
+| `@querycn/filter-next` | `next` 14.1+, `react` 18+, `@querycn/filter-react` |
+
+The shadcn registry installs them with the blocks. With npm, install them yourself, as in the commands above.
 
 ## Next steps
 
