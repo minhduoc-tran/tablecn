@@ -154,6 +154,11 @@
           "target": "@components/data-table/data-table-column-header.tsx"
         },
         {
+          "path": "registry/{base}/table/data-table-pagination.tsx",
+          "type": "registry:component",
+          "target": "@components/data-table/data-table-pagination.tsx"
+        },
+        {
           "path": "registry/shared/table/column-reorder.tsx",
           "type": "registry:component",
           "target": "@components/data-table/column-reorder.tsx"
@@ -182,6 +187,16 @@
           "path": "registry/shared/table/use-scroll-edges.ts",
           "type": "registry:hook",
           "target": "@components/data-table/use-scroll-edges.ts"
+        },
+        {
+          "path": "registry/shared/table/data-table-pagination-state.ts",
+          "type": "registry:lib",
+          "target": "@components/data-table/data-table-pagination-state.ts"
+        },
+        {
+          "path": "registry/shared/table/use-keep-focus-in-pagination.ts",
+          "type": "registry:hook",
+          "target": "@components/data-table/use-keep-focus-in-pagination.ts"
         },
         {
           "path": "registry/shared/table/page-range.ts",

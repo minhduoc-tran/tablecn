@@ -1,5 +1,7 @@
 import type { TableMessages } from "../table-messages"
 
+const format = new Intl.NumberFormat("vi-VN").format
+
 export const viTableMessages: TableMessages = {
   columns: {
     menu: "Cột",
@@ -15,11 +17,13 @@ export const viTableMessages: TableMessages = {
   },
   sorting: { asc: "Tăng dần", desc: "Giảm dần", clear: "Bỏ sắp xếp" },
   pagination: {
+    label: "Phân trang",
     rowsPerPage: "Số dòng mỗi trang",
     first: "Trang đầu",
     previous: "Trang trước",
     next: "Trang sau",
     last: "Trang cuối",
+    morePages: "Các trang khác",
   },
   selection: { selectAll: "Chọn tất cả", selectRow: "Chọn dòng" },
   actions: { reload: "Tải lại", clearFilters: "Xoá bộ lọc", retry: "Thử lại" },
@@ -41,9 +45,13 @@ export const viTableMessages: TableMessages = {
     cancelled: (column) => `Đã huỷ di chuyển cột ${column}.`,
   },
   counts: {
+    number: format,
     page: (page, pageCount) =>
-      pageCount === undefined ? `Trang ${page}` : `Trang ${page}/${pageCount}`,
-    selected: (selected, total) => `Đã chọn ${selected}/${total}`,
-    rows: (count) => `${count} dòng`,
+      pageCount === undefined
+        ? `Trang ${format(page)}`
+        : `Trang ${format(page)}/${format(pageCount)}`,
+    selected: (selected, total) =>
+      `Đã chọn ${format(selected)}/${format(total)}`,
+    rows: (count) => `${format(count)} dòng`,
   },
 }

@@ -50,6 +50,7 @@ export {
 export type {
   DataTableColumnDef,
   DataTableFeatures,
+  DataTableMeta,
 } from "./data-table-features"
 export { mergeTableMessages } from "./table-messages"
 export type { TableMessages, TableMessagesOverrides } from "./table-messages"

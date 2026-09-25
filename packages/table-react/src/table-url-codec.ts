@@ -27,8 +27,8 @@ export interface TableUrlState {
   pagination: PaginationState
 }
 
-const DEFAULT_PAGE_SIZES = [10, 20, 50, 100]
-const DEFAULT_PAGE_SIZE = 20
+export const DEFAULT_PAGE_SIZES: readonly number[] = [10, 20, 50, 100]
+export const DEFAULT_PAGE_SIZE = 20
 const DEFAULT_MAX_SORT_COLUMNS = 3
 
 function resolveOptions(options: TableUrlOptions) {

@@ -91,6 +91,14 @@ describe("useDataTable in client mode", () => {
     expect(result.current.getPageCount()).toBe(3)
   })
 
+  it("tells the UI which page sizes the URL accepts", () => {
+    expect(setup().result.current.options.meta?.pageSizes).toEqual([
+      10, 20, 50, 100,
+    ])
+    const custom = setup("", { url: { pageSizes: [75, 25] } })
+    expect(custom.result.current.options.meta?.pageSizes).toEqual([20, 25, 75])
+  })
+
   it("sorts through the URL and goes back to page 1", () => {
     const { adapter, result } = setup("?page=2&per_page=10")
     act(() => result.current.getColumn("amount")!.toggleSorting(true))

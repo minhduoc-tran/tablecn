@@ -15,7 +15,11 @@ import {
   dataTableFeatures,
   type DataTableColumnDef,
 } from "./data-table-features"
-import type { TableUrlOptions } from "./table-url-codec"
+import {
+  DEFAULT_PAGE_SIZE,
+  DEFAULT_PAGE_SIZES,
+  type TableUrlOptions,
+} from "./table-url-codec"
 import { getDefaultLayout, getLayoutColumns } from "./table-layout-state"
 import type { LayoutStorage } from "./layout-storage"
 import { useTableLayout } from "./use-table-layout"
@@ -138,9 +142,24 @@ export function useDataTable<TData extends RowData>(
     () => ({
       ...getDefaultLayout(layoutColumns),
       sorting: url?.defaultSorting ?? [],
-      pagination: { pageIndex: 0, pageSize: url?.defaultPageSize ?? 20 },
+      pagination: {
+        pageIndex: 0,
+        pageSize: url?.defaultPageSize ?? DEFAULT_PAGE_SIZE,
+      },
     }),
     [layoutColumns, url?.defaultSorting, url?.defaultPageSize]
+  )
+
+  // The URL takes the default size too, even when it isn't in `pageSizes`.
+  const pageSizes = useMemo(
+    () =>
+      [
+        ...new Set([
+          ...(url?.pageSizes ?? DEFAULT_PAGE_SIZES),
+          url?.defaultPageSize ?? DEFAULT_PAGE_SIZE,
+        ]),
+      ].sort((a, b) => a - b),
+    [url?.pageSizes, url?.defaultPageSize]
   )
 
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
@@ -183,6 +202,7 @@ export function useDataTable<TData extends RowData>(
     // Saves the layout once per drag instead of on every pointer move.
     columnResizeMode: "onEnd",
     columnResizeDirection: options.dir ?? "ltr",
+    meta: { pageSizes },
   })
 }
 

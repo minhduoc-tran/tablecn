@@ -15,7 +15,9 @@ export interface TableMessages {
     | "resetLayout"
   >
   sorting: Labels<"asc" | "desc" | "clear">
-  pagination: Labels<"rowsPerPage" | "first" | "previous" | "next" | "last">
+  pagination: Labels<
+    "label" | "rowsPerPage" | "first" | "previous" | "next" | "last" | "morePages"
+  >
   selection: Labels<"selectAll" | "selectRow">
   actions: Labels<"reload" | "clearFilters" | "retry">
   states: Labels<"empty" | "error" | "loading">
@@ -30,6 +32,8 @@ export interface TableMessages {
     cancelled: (column: string) => string
   }
   counts: {
+    /** Formats numbers shown on their own: page buttons and page sizes. */
+    number: (value: number) => string
     /** `page` is 1-based; `pageCount` is `undefined` while unknown. */
     page: (page: number, pageCount: number | undefined) => string
     selected: (selected: number, total: number) => string

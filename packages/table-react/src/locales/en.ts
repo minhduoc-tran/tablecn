@@ -1,5 +1,7 @@
 import type { TableMessages } from "../table-messages"
 
+const format = new Intl.NumberFormat("en-US").format
+
 export const enTableMessages: TableMessages = {
   columns: {
     menu: "Columns",
@@ -15,11 +17,13 @@ export const enTableMessages: TableMessages = {
   },
   sorting: { asc: "Ascending", desc: "Descending", clear: "Clear sort" },
   pagination: {
+    label: "Pagination",
     rowsPerPage: "Rows per page",
     first: "First page",
     previous: "Previous page",
     next: "Next page",
     last: "Last page",
+    morePages: "More pages",
   },
   selection: { selectAll: "Select all", selectRow: "Select row" },
   actions: { reload: "Reload", clearFilters: "Clear filters", retry: "Retry" },
@@ -41,9 +45,13 @@ export const enTableMessages: TableMessages = {
     cancelled: (column) => `Moving column ${column} was cancelled.`,
   },
   counts: {
+    number: format,
     page: (page, pageCount) =>
-      pageCount === undefined ? `Page ${page}` : `Page ${page} of ${pageCount}`,
-    selected: (selected, total) => `${selected} of ${total} selected`,
-    rows: (count) => (count === 1 ? "1 row" : `${count} rows`),
+      pageCount === undefined
+        ? `Page ${format(page)}`
+        : `Page ${format(page)} of ${format(pageCount)}`,
+    selected: (selected, total) =>
+      `${format(selected)} of ${format(total)} selected`,
+    rows: (count) => (count === 1 ? "1 row" : `${format(count)} rows`),
   },
 }

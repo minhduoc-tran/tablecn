@@ -20,6 +20,8 @@ describe("table messages", () => {
     expect(enTableMessages.counts.page(2, undefined)).toBe("Page 2")
     expect(viTableMessages.counts.page(2, 5)).toBe("Trang 2/5")
     expect(enTableMessages.counts.rows(1)).toBe("1 row")
+    expect(enTableMessages.counts.rows(1234)).toBe("1,234 rows")
+    expect(viTableMessages.counts.rows(1234)).toBe("1.234 dòng")
   })
 
   it("merges overrides per group", () => {
