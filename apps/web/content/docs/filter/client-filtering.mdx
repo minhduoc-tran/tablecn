@@ -5,7 +5,7 @@ description: Filter rows that are already in the browser with the same rules.
 
 When all the data is on the client (a few hundred rows, a static list), there's no backend to send the filter to. `applyFilter` runs the applied rules against your rows:
 
-```tsx
+```tsx title="components/orders-table.tsx"
 "use client"
 
 import { applyFilter } from "@querycn/filter-core"
@@ -26,7 +26,7 @@ The [preview on the overview page](/docs/filter) works exactly like this.
 
 ## API
 
-```ts
+```ts title="Types"
 applyFilter<Row>(rows: readonly Row[], state: FilterState, context: ClientFilterContext<Row>): Row[]
 createRowMatcher<Row>(state: FilterState, context: ClientFilterContext<Row>): (row: Row) => boolean
 ```
@@ -52,7 +52,7 @@ createRowMatcher<Row>(state: FilterState, context: ClientFilterContext<Row>): (r
 
 `useAppliedFilter().context` already has `fields` and `registry`. Add the rest when needed:
 
-```ts
+```ts title="Custom getValue"
 applyFilter(orders, state, {
   ...context,
   // nested data, or a value computed from the row

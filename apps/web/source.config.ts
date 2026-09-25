@@ -1,3 +1,4 @@
+import { remarkMdxMermaid } from "fumadocs-core/mdx-plugins"
 import { defineConfig, defineDocs } from "fumadocs-mdx/config"
 import convert from "npm-to-yarn"
 
@@ -31,7 +32,8 @@ function remarkSiteUrl() {
 export default defineConfig({
   mdxOptions: {
     // First, so the npm tabs below are generated from the replaced command
-    remarkPlugins: (plugins) => [remarkSiteUrl, ...plugins],
+    // ```mermaid code blocks become <Mermaid chart="…" />
+    remarkPlugins: (plugins) => [remarkSiteUrl, remarkMdxMermaid, ...plugins],
     // ```npm code blocks become pnpm / npm / yarn / bun tabs
     remarkNpmOptions: {
       persist: { id: "package-manager" },

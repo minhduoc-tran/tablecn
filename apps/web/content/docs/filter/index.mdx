@@ -7,7 +7,7 @@ import { FilterPreview } from "@/components/docs/filter-preview"
 
 <FilterPreview />
 
-Try it: click **Filter**, pick a field, an operator and a value, then press **Apply** (or <kbd>Enter</kbd>). The rows above are filtered in the browser. Under the table you can see what would go into the URL (this preview keeps it in memory) and the query a JSON:API backend would receive.
+Try it: click **Filter**, pick a field, an operator and a value, then press **Apply** (or <kbd>Enter</kbd>). The rows above are filtered in the browser. The filter is written to this page's URL (look at the address bar, then reload or share it), and under the table you can see the query a JSON:API backend would receive.
 
 ## A standalone core
 
@@ -31,16 +31,18 @@ The filter is the first building block of tablecn, but it doesn't need the rest 
 
 ## How it works
 
-```txt
-fields ──► draft rules ──► Apply ──► ?status__eq=paid&... ────► applied filter
-             (editing)                      (URL)                   │
-                                                                    ├─► serializer ──► backend query
-                                                                    └─► applyFilter ──► rows in the browser
+```mermaid
+flowchart TD
+  fields["Fields you declare"] --> draft["Draft rules<br/>(being edited)"]
+  draft -- "Apply" --> url["URL<br/><code>status__eq=paid</code>"]
+  url -- "decode" --> applied["Applied filter"]
+  applied -- "serializer" --> backend["Backend query"]
+  applied -- "applyFilter" --> rows["Rows in the browser"]
 ```
 
 1. **You declare the fields** users can filter on: a name, a label, a type and, for selects, the options. See [Fields](/docs/filter/fields).
 2. **Users edit a draft.** Rules can be incomplete while they type. Nothing touches the URL yet.
-3. **Apply** keeps the complete rules and writes them to the URL as compact JSON. Incomplete rules are dropped. See [URL state](/docs/filter/url-state).
+3. **Apply** keeps the complete rules and writes them to the URL, one readable param per rule (`status__eq=paid`). Incomplete rules are dropped. See [URL state](/docs/filter/url-state).
 4. **Everyone reads the applied filter**: the client through `useAppliedFilter()`, the server through `decodeFilters` or `parseFilters`. Both decode the same URL the same way, and anything malformed is dropped instead of throwing.
 5. **A serializer turns it into a request.** The default produces `filter[status][eq]=paid`, and you can switch to django-filter, PostgREST or your own format. See [Serializers](/docs/filter/serializers). Data that's already in the browser can be filtered with [`applyFilter`](/docs/filter/client-filtering) instead.
 
@@ -48,7 +50,7 @@ fields ──► draft rules ──► Apply ──► ?status__eq=paid&... ─�
 
 Everything revolves around one small, JSON-friendly shape:
 
-```ts
+```ts title="Types"
 interface FilterState {
   join: "and" | "or"
   rules: FilterRule[]

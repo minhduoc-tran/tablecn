@@ -7,7 +7,7 @@ description: How the applied filter is encoded in the URL, and the adapters that
 
 Each applied rule is one query param, `field__operator=value`:
 
-```txt
+```txt title="URL"
 /orders?status__eq=paid&amount__between=10,50&tags__in=urgent,vip&deletedAt__isEmpty
 ```
 
@@ -27,7 +27,7 @@ Other params (`page`, `sort`…) are left alone. When a filter is applied, every
 
 The provider does this for you. Outside React (a backend, a script, a test) use the core functions:
 
-```ts
+```ts title="Core functions"
 import { decodeFilters, encodeFilters } from "@querycn/filter-core"
 
 const context = { fields: orderFields }
@@ -55,7 +55,7 @@ decodeFilters(new URL(request.url).searchParams, context)
 - each rule is checked on its own, and rules with an unknown field, an operator the field doesn't offer, or a value of the wrong shape are dropped (see [complete rules](/docs/filter/operators#complete-rules));
 - `null` or an empty string gives an empty filter.
 
-```ts
+```ts title="Dropped params"
 decodeFilters("status__eq=paid&nope__eq=1&amount__between=1&page=2", context)
 // → { join: "and", rules: [{ id: "u0", field: "status", operator: "eq", value: "paid" }] }
 ```
@@ -66,7 +66,7 @@ Decoded rules get positional ids: `u0`, `u1`, and so on. The server and the clie
 
 To match a URL scheme you already have, pass a `urlFormat` to the provider, and the same one to `decodeFilters`/`parseFilters` on the server. A format maps one rule to one param and back. This one writes `_name=["like","%acme%"]`:
 
-```ts
+```ts title="lib/legacy-url-format.ts"
 import type { UrlFormat } from "@querycn/filter-core"
 
 const toUrlOperator: Record<string, string> = { contains: "like", eq: "eq", in: "in" }
@@ -96,7 +96,7 @@ export const legacyUrlFormat: UrlFormat = {
 }
 ```
 
-```tsx
+```tsx title="Usage"
 <FilterProvider fields={orderFields} adapter={adapter} urlFormat={legacyUrlFormat} />
 
 parseFilters(await props.searchParams, { fields: orderFields, urlFormat: legacyUrlFormat })
@@ -132,7 +132,7 @@ The browser adapter only sees the URL in the browser. During server rendering an
 
 `onApply` runs when applying changes the filter. The params it returns are written in the same navigation. The usual case is going back to the first page:
 
-```tsx
+```tsx title="Reset page on apply"
 <FilterProvider
   fields={orderFields}
   adapter={adapter}
@@ -146,7 +146,7 @@ It receives the new applied state, in case the params depend on it.
 
 An adapter is a small object holding a query string. This one keeps the filter in `localStorage`, applying each patch with `applyParamChanges`:
 
-```ts
+```ts title="lib/storage-adapter.ts"
 import { applyParamChanges, type UrlStateAdapter } from "@querycn/filter-react"
 
 export function createStorageAdapter(key: string): UrlStateAdapter {

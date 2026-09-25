@@ -5,7 +5,7 @@ description: Declare what users can filter on — names, labels, types, operator
 
 A field is one thing users can filter by, usually a column. You pass the list to the provider (`fields`), and core functions receive it as part of the context (`{ fields }`).
 
-```ts
+```ts title="lib/order-fields.ts"
 import type { FieldDefinition } from "@querycn/filter-core"
 
 export const orderFields: FieldDefinition[] = [
@@ -120,7 +120,7 @@ Need another type, like a rating or a money amount with a currency? See [custom 
 
 `operators` restricts a field to a subset of its type's operators, in the order you list them:
 
-```ts
+```ts title="Restricted operators"
 { name: "sku", label: "SKU", type: "text", operators: ["eq", "startsWith"] }
 ```
 
@@ -132,7 +132,7 @@ When the user picks a field, the default operator is the first of these that's o
 
 Static options for `select` and `multiSelect`. Values are strings. The search box matches labels, ignoring case and accents (`da nang` finds `Đà Nẵng`).
 
-```ts
+```ts title="Static options"
 {
   name: "status",
   label: "Status",
@@ -148,7 +148,7 @@ Static options for `select` and `multiSelect`. Values are strings. The search bo
 
 For long or changing lists. The UI calls it with the search text and an `AbortSignal`:
 
-```ts
+```ts title="lib/customer-fields.ts"
 async function searchCustomers(search: string, signal: AbortSignal) {
   const response = await fetch(`/api/customers?q=${encodeURIComponent(search)}`, { signal })
   const customers: { id: string; name: string }[] = await response.json()
@@ -173,7 +173,7 @@ Define the function at module scope. A new function on every render means a new 
 
 A shared link can contain `customerId` values the user hasn't loaded yet. Without help, chips and the select would show the raw ids. `resolveLabels` fetches their labels:
 
-```ts
+```ts title="Resolved labels"
 {
   name: "customerId",
   label: "Customer",
@@ -193,7 +193,7 @@ It is only asked about values that have no label yet (not in `options`, not in a
 
 Free-form data for your own code. The filter doesn't read it, but it travels with the field into [`getAppliedRules`](/docs/filter/serializers#custom-serializers) and `mapRule`, which makes it a good place for backend details:
 
-```ts
+```ts title="Field meta"
 { name: "customer", label: "Customer", type: "text", meta: { column: "customers.full_name" } }
 ```
 
@@ -218,7 +218,7 @@ A field list without functions is plain data, so it can come from a config file 
 ]
 ```
 
-```ts
+```ts title="fields.ts"
 import type { FieldDefinition } from "@querycn/filter-core"
 
 import orderFields from "./order-fields.json"

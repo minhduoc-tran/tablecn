@@ -5,13 +5,13 @@ description: Turn the applied filter into what your backend understands — JSON
 
 A serializer is a function from the applied filter to a request:
 
-```ts
+```ts title="Types"
 type QuerySerializer<T = QueryParams> = (state: FilterState, context: FilterContext) => T
 ```
 
 Pass one to the provider and read its output from `useAppliedFilter().query`:
 
-```tsx
+```tsx title="Usage"
 import { djangoSerializer } from "@querycn/filter-core"
 
 const serializer = djangoSerializer() // module scope: keep the identity stable
@@ -21,7 +21,7 @@ const serializer = djangoSerializer() // module scope: keep the identity stable
 
 Serializers only see complete, normalized rules, so they never have to handle half-typed input. They are plain functions from `@querycn/filter-core` and run anywhere, including on the server:
 
-```ts
+```ts title="Server"
 const query = serializer(parseFilters(searchParams, { fields }), { fields })
 ```
 
@@ -31,7 +31,7 @@ const query = serializer(parseFilters(searchParams, { fields }), { fields })
 
 The outputs below all come from this filter, as it appears in the URL:
 
-```txt
+```txt title="URL"
 ?status__eq=active&amount__between=10,50&tags__in=urgent,vip&name__notContains=test&createdAt__isEmpty&paid__eq=true
 ```
 
@@ -39,7 +39,7 @@ The outputs below all come from this filter, as it appears in the URL:
 
 The default. JSON:API-style bracket params, one key per field and operator:
 
-```ts
+```ts title="Usage"
 import { jsonApiSerializer } from "@querycn/filter-core"
 
 jsonApiSerializer()
@@ -74,7 +74,7 @@ filter[status][eq]=active
   }}
 />
 
-```ts
+```ts title="Custom options"
 jsonApiSerializer({
   prefix: "q",
   arrayFormat: "comma",
@@ -88,7 +88,7 @@ jsonApiSerializer({
 
 [django-filter](https://django-filter.readthedocs.io) lookups:
 
-```ts
+```ts title="Usage"
 import { djangoSerializer } from "@querycn/filter-core"
 
 djangoSerializer()
@@ -122,7 +122,7 @@ status=active&amount__range=10,50&tags__in=urgent,vip&createdAt__isnull=true&pai
   }}
 />
 
-```ts
+```ts title="Custom lookups"
 djangoSerializer({ lookups: { ne: "ne", contains: "contains" } })
 // status__ne=paid  customer__contains=an
 ```
@@ -134,7 +134,7 @@ djangoSerializer({ lookups: { ne: "ne", contains: "contains" } })
 
 [PostgREST](https://docs.postgrest.org/en/stable/references/api/tables_views.html) (and Supabase's REST API) operators:
 
-```ts
+```ts title="Usage"
 import { postgrestSerializer } from "@querycn/filter-core"
 
 postgrestSerializer()
@@ -165,7 +165,7 @@ or=(status.eq.active,and(amount.gte.10,amount.lte.50),tags.in.(urgent,vip),name.
 
 Override or add operators with `operators`. Each entry returns the filters for one rule, or `[]` to skip it. Pass user input through `quote`:
 
-```ts
+```ts title="Custom operator"
 postgrestSerializer({
   operators: {
     // full-text search instead of ilike
@@ -179,7 +179,7 @@ postgrestSerializer({
 
 All built-in serializers (and `createParamsSerializer`) accept `mapRule`. It sees each rule before encoding, and returns the rule to send, a changed copy, or `undefined` to skip it. The URL stays the same: only the request changes.
 
-```ts
+```ts title="mapRule"
 jsonApiSerializer({
   mapRule: (rule) => {
     // alias: the UI and URL say "customer", the API wants "customer.name"
@@ -209,7 +209,7 @@ Rules:
 
 The built-in serializers are **inspectable**: besides being callable, they have two methods the UI uses.
 
-```ts
+```ts title="Inspect"
 const serializer = djangoSerializer()
 
 serializer.supports("ne") // false: not offered in the operator picker
@@ -220,7 +220,7 @@ serializer.inspect(state, { fields })
 - `supports(operator)`: whether the backend can express the operator at all. The UI hides unsupported operators, and fields left without any.
 - `inspect(state, context)`: which applied rules were **skipped** (operator off, arity mismatch, dropped by `mapRule`, a comma in a list) and which **conflict**, meaning they repeat a key an earlier rule already sent. Most backends read only one value per key:
 
-```ts
+```ts title="Conflict"
 jsonApiSerializer()({ join: "and", rules: [statusIsPaid, statusIsPending] }, context)
 // { "filter[status][eq]": ["paid", "pending"] }  → conflicts: [id of the second rule]
 ```
@@ -231,7 +231,7 @@ The provider runs `inspect` on apply and exposes the result as `ruleIssues`. The
 
 For another query-param format, write only the per-rule part and get `inspect`, `supports`, OR handling and `mapRule` for free. This one produces [Strapi](https://docs.strapi.io/cms/api/rest/filters) filters:
 
-```ts
+```ts title="lib/strapi-serializer.ts"
 import { createParamsSerializer, type OperatorId } from "@querycn/filter-core"
 
 const STRAPI: Partial<Record<OperatorId, string>> = {
@@ -273,7 +273,7 @@ export const strapiSerializer = createParamsSerializer({
 
 A serializer can return anything: a JSON body, a GraphQL `where`, arguments for an ORM. Use `getAppliedRules` to get the complete rules with their arity and field definition:
 
-```ts
+```ts title="lib/prisma-where.ts"
 import { getAppliedRules, type AppliedRule, type QuerySerializer } from "@querycn/filter-core"
 import type { Prisma } from "@prisma/client"
 
@@ -301,8 +301,7 @@ export const prismaWhere: QuerySerializer<Prisma.OrderWhereInput> = (state, cont
 }
 ```
 
-```ts
-// app/orders/page.tsx (server)
+```ts title="app/orders/page.tsx"
 const filter = parseFilters(await props.searchParams, { fields: orderFields })
 const orders = await prisma.order.findMany({ where: prismaWhere(filter, { fields: orderFields }) })
 ```

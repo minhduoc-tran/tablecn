@@ -10,13 +10,13 @@ description: Run the tablecn monorepo locally.
 
 ## Install dependencies
 
-```bash
+```bash title="Terminal"
 pnpm install
 ```
 
 ## Start the dev server
 
-```bash
+```bash title="Terminal"
 pnpm dev
 ```
 
@@ -26,7 +26,7 @@ Open [http://localhost:3000](http://localhost:3000) for the app and [/docs](/doc
 
 Run these from the repository root:
 
-```bash
+```bash title="Terminal"
 pnpm typecheck
 pnpm lint
 pnpm test
@@ -36,7 +36,7 @@ pnpm test
 
 The filter UI lives in `apps/web/registry/{radix,base,aria}/filter`, described once in `apps/web/registry.json`. Rebuild the registry after changing either:
 
-```bash
+```bash title="Terminal"
 pnpm registry:build
 ```
 
@@ -44,6 +44,6 @@ This writes `apps/web/public/r/{radix,base,aria}/filter-builder.json`: one JSON 
 
 ## Build for production
 
-```bash
+```bash title="Terminal"
 pnpm build
 ```

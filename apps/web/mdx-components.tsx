@@ -11,6 +11,7 @@ import {
   DocsPre,
 } from "@/components/docs/mdx/docs-code-block"
 import { Card, Cards } from "@/components/docs/mdx/docs-cards"
+import { Mermaid } from "@/components/docs/mdx/docs-mermaid"
 
 export function getMDXComponents(components?: MDXComponents): MDXComponents {
   return {
@@ -24,6 +25,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     CodeBlockTabs,
     CodeBlockTabsList,
     CodeBlockTabsTrigger,
+    Mermaid,
     Tab,
     Tabs,
     TypeTable,

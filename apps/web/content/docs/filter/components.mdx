@@ -9,7 +9,7 @@ All components must be rendered inside a `FilterProvider` (or `NextFilterProvide
 
 ## Usage
 
-```tsx
+```tsx title="Usage"
 import { FilterBuilder } from "@/components/filter/filter-builder"
 import { FilterChips } from "@/components/filter/filter-chips"
 
@@ -45,7 +45,7 @@ import { FilterChips } from "@/components/filter/filter-chips"
 
 The panel on its own: rule rows, AND/OR, **Add filter**, **Clear all** and **Apply**. **Clear all** applies at once: it doesn't wait for **Apply**. Use it where a popover doesn't fit, such as a sidebar or a sheet:
 
-```tsx
+```tsx title="Sidebar panel"
 import { FilterBuilderPanel } from "@/components/filter/filter-builder-panel"
 
 <aside className="w-[28rem] border-l p-4">
@@ -152,7 +152,7 @@ export function MyValueInput(props: FilterValueSlotProps) {
 }
 ```
 
-```tsx
+```tsx title="Usage"
 <FilterBuilder valueInput={MyValueInput} />
 ```
 
@@ -174,7 +174,7 @@ Field types without an entry get a text input, which handles `single` and `range
 
 The Radix UI and Base UI date inputs use the shadcn `Calendar` (react-day-picker). It shows English month names and weeks starting on Sunday until you pass a locale. Edit `filter-date-value-input.tsx`:
 
-```tsx
+```tsx title="components/filter/filter-date-value-input.tsx"
 import { vi } from "react-day-picker/locale"
 
 <Calendar locale={vi} /* … */ />

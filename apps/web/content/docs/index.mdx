@@ -36,7 +36,7 @@ The table itself (built on [TanStack Table](https://tanstack.com/table)) is next
 
 Each layer only depends on the ones above it, so you pick how much you take:
 
-```txt
+```txt title="Package layers"
 @querycn/filter-core        ← backend only: parse the URL, build the query
   └─ @querycn/filter-react  ← React with your own UI
        ├─ @querycn/filter-next   ← Next.js App Router
@@ -47,7 +47,7 @@ Each layer only depends on the ones above it, so you pick how much you take:
 
 This site lives in the same monorepo as the packages:
 
-```txt
+```txt title="Monorepo layout"
 tablecn/
 ├── apps/web/                      # this site (Next.js + Fumadocs)
 │   ├── content/docs/              # MDX docs pages

@@ -114,14 +114,14 @@ export async function GET(request: NextRequest) {
 
 When all rows are already on the client, a server round trip on every apply is wasted. Set `shallow`: the URL is updated through the History API, and nothing is requested from the server.
 
-```tsx
+```tsx title="Shallow provider"
 <NextFilterProvider fields={orderFields} shallow>
   <FilterBuilder />
   <OrdersTable orders={orders} />
 </NextFilterProvider>
 ```
 
-```tsx
+```tsx title="app/orders/orders-table.tsx"
 "use client"
 
 import { applyFilter } from "@querycn/filter-core"
@@ -140,7 +140,7 @@ Leave `shallow` off when a server component reads `searchParams`: it wouldn't se
 
 The adapter reads the URL with `useSearchParams`. On a route that Next.js prerenders statically, `next build` fails unless the provider is inside a `<Suspense>` boundary:
 
-```tsx
+```tsx title="app/orders/page.tsx"
 import { Suspense } from "react"
 
 export default function Page() {

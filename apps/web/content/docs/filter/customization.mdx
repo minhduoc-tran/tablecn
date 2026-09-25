@@ -7,7 +7,7 @@ description: Translate the UI, add field types and operators.
 
 Every string the UI shows comes from a messages object. English is the default. Pass overrides to the provider; they're merged group by group, so you only list what changes:
 
-```tsx
+```tsx title="Override messages"
 <FilterProvider
   fields={orderFields}
   messages={{
@@ -19,7 +19,7 @@ Every string the UI shows comes from a messages object. English is the default. 
 
 Vietnamese ships with the core package:
 
-```tsx
+```tsx title="Vietnamese locale"
 import { viMessages } from "@querycn/filter-core/locales/vi"
 
 <FilterProvider fields={orderFields} messages={viMessages} />
@@ -74,7 +74,7 @@ export const filterRegistry = createRegistry({
 
 Then use it everywhere the fields are used:
 
-```tsx
+```tsx title="Usage"
 const fields: FieldDefinition[] = [{ name: "rating", label: "Rating", type: "rating" }]
 
 <FilterProvider fields={fields} registry={filterRegistry} />         // client
@@ -110,7 +110,7 @@ For the UI, add a value input for the new type: see [custom value inputs](/docs/
 
 An entry with a built-in id overrides that type field by field. For example, to offer `startsWith` on selects:
 
-```ts
+```ts title="Extended select type"
 import { BUILTIN_FIELD_TYPES, createRegistry } from "@querycn/filter-core"
 
 createRegistry({
@@ -126,7 +126,7 @@ To limit operators for a single field, you don't need a registry: use the field'
 
 An operator is an id, an arity, and optionally a `match` function for client-side filtering:
 
-```ts
+```ts title="lib/filter-registry.ts"
 import { BUILTIN_FIELD_TYPES, createRegistry } from "@querycn/filter-core"
 
 export const filterRegistry = createRegistry({

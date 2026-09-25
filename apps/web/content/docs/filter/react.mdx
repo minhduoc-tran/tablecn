@@ -16,7 +16,7 @@ The provider keeps two filters:
 
 ## FilterProvider
 
-```tsx
+```tsx title="Usage"
 import { FilterProvider } from "@querycn/filter-react"
 
 <FilterProvider fields={orderFields} adapter={adapter}>
@@ -72,7 +72,7 @@ import { FilterProvider } from "@querycn/filter-react"
 
 The applied filter and what's derived from it. Use it in the parts of the page that load or show data.
 
-```tsx
+```tsx title="components/orders-table.tsx"
 import { useAppliedFilter } from "@querycn/filter-react"
 
 function OrdersTable() {
@@ -100,7 +100,7 @@ Outside a provider, `useAppliedFilter` returns an empty filter instead of throwi
 
 The draft, plus every editing action. It re-renders on each keystroke, so use it inside the builder UI only.
 
-```tsx
+```tsx title="components/my-filter-panel.tsx"
 import { useFilter } from "@querycn/filter-react"
 
 function MyFilterPanel() {
@@ -143,7 +143,7 @@ The same actions, `context`, `messages` and `supportsOperator` as `useFilter`, w
 
 Everything a rule row needs:
 
-```tsx
+```tsx title="components/my-rule-row.tsx"
 import type { FilterRule } from "@querycn/filter-core"
 import { useFilterRule } from "@querycn/filter-react"
 
@@ -189,7 +189,7 @@ const MyRuleRow = React.memo(function MyRuleRow({ rule }: { rule: FilterRule }) 
 
 Options for a `select` or `multiSelect` field, static or loaded. It implements the behavior described in [Fields → loadOptions](/docs/filter/fields#loadoptions).
 
-```tsx
+```tsx title="Usage"
 const { options, loading, error, query, search, retry, getLabel } = useFieldOptions(field, {
   selected: currentValues, // labels to resolve, e.g. the rule's value
   enabled: open,           // load the list only while the dropdown is open

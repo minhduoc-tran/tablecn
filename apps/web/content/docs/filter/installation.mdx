@@ -190,7 +190,7 @@ Without an `adapter`, the filter lives in memory: nothing is written to the URL.
 
 Anywhere under the provider, `useAppliedFilter()` gives the applied filter and the query built from it. The default serializer produces JSON:API style params:
 
-```tsx
+```tsx title="components/orders-table.tsx"
 import { toSearchParams } from "@querycn/filter-core"
 import { useAppliedFilter } from "@querycn/filter-react"
 
