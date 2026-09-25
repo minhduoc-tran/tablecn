@@ -56,8 +56,8 @@ export function HomeHero() {
           </Button>
         </div>
         <CopyCommand
-          command={`npx shadcn@latest add ${siteConfig.url}/r/radix/data-table.json`}
-          className="w-full max-w-2xl animate-in delay-300 duration-700 fill-mode-both fade-in"
+          command="npx shadcn@latest add @tablecn/data-table"
+          className="animate-in delay-300 duration-700 fill-mode-both fade-in"
         />
       </div>
     </section>

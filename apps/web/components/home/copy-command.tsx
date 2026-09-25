@@ -23,12 +23,12 @@ export function CopyCommand({
   return (
     <div
       className={cn(
-        "flex min-w-0 items-center gap-3 rounded-lg border bg-background/80 py-1.5 ps-4 pe-1.5 font-mono text-sm shadow-xs backdrop-blur",
+        "inline-flex max-w-full min-w-0 items-center gap-2.5 rounded-full border bg-background/80 py-1 ps-4 pe-1 text-left font-mono text-sm shadow-xs backdrop-blur",
         className
       )}
     >
       <span className="text-muted-foreground select-none">$</span>
-      <code className="min-w-0 flex-1 truncate">{command}</code>
+      <code className="min-w-0 truncate">{command}</code>
       <button
         type="button"
         aria-label={copied ? "Copied" : "Copy command"}
@@ -37,7 +37,7 @@ export function CopyCommand({
             ?.writeText(command)
             .then(() => setCopied(true))
         }}
-        className="flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+        className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
       >
         {copied ? (
           <CheckIcon className="size-4" />

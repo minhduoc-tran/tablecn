@@ -14,33 +14,51 @@ description: Add the data-table block, define columns, and keep sorting, pages a
 - TanStack Table v9.2+ (installed for you)
 - For the filter: the [filter packages](/docs/filter/installation)
 
-## 1. Add the UI
+## 1. Add the registry
 
-The `data-table` block exists in three versions, one per primitive library. Pick the one matching the `style` in your `components.json`:
+Add the `@tablecn` registry to your `components.json` once:
 
-| `style` in components.json | Primitives | Registry URL |
-| --- | --- | --- |
-| `radix-*` (e.g. `radix-nova`) | Radix UI | `%SITE_URL%/r/radix/data-table.json` |
-| `base-*` (e.g. `base-nova`) | Base UI | `%SITE_URL%/r/base/data-table.json` |
-| `aria-*` (e.g. `aria-nova`) | React Aria | `%SITE_URL%/r/aria/data-table.json` |
+```json title="components.json"
+{
+  "registries": {
+    "@tablecn": "%SITE_URL%/r/{style}/{name}.json"
+  }
+}
+```
+
+Or let the CLI add it:
 
 ```npm
-npx shadcn@latest add %SITE_URL%/r/radix/data-table.json
+npx shadcn@latest registry add @tablecn=%SITE_URL%/r/{style}/{name}.json
+```
+
+The CLI fills in `{style}` from your `components.json`, so you get the version built for your primitive library:
+
+| `style` in components.json | Primitives |
+| --- | --- |
+| `radix-*` (e.g. `radix-nova`), or an older style like `new-york` | Radix UI |
+| `base-*` (e.g. `base-nova`) | Base UI |
+| `aria-*` (e.g. `aria-nova`) | React Aria |
+
+## 2. Add the UI
+
+```npm
+npx shadcn@latest add @tablecn/data-table
 ```
 
 The CLI:
 
-- copies the table, its header, pagination, the **Columns** menu, the toolbar and their helpers into `components/data-table/` (or wherever your `components` alias points), rewriting imports to your aliases;
+- copies the table, its header, pagination, the **Columns** menu, the toolbar, the search box and their helpers into `components/data-table/` (or wherever your `components` alias points), rewriting imports to your aliases;
 - installs `@querycn/table-react`, `@querycn/filter-react`, `@tanstack/react-table`, `@tanstack/react-virtual`, `@dnd-kit/core`, `@dnd-kit/sortable` and `lucide-react`;
-- adds the shadcn components it builds on if you don't have them: `button`, `checkbox`, `dropdown-menu`, `popover`, `select`, `separator`, `skeleton`, `table` and `tooltip`.
+- adds the shadcn components it builds on if you don't have them: `button`, `checkbox`, `dropdown-menu`, `input-group`, `popover`, `select`, `separator`, `skeleton`, `table` and `tooltip`.
 
-For the filter UI in the toolbar, add the [`filter-builder`](/docs/filter/installation#1-add-the-ui) block too.
+For the filter UI in the toolbar, add the [`filter-builder`](/docs/filter/installation#2-add-the-ui) block too.
 
 <Callout title="Only want the logic?">
   Skip this step and install the package yourself: `npm install @querycn/table-react @querycn/filter-react @tanstack/react-table`. `useDataTable` returns a TanStack table, so any table UI can render it.
 </Callout>
 
-## 2. Define the columns
+## 3. Define the columns
 
 Columns are [TanStack column definitions](https://tanstack.com/table/latest/docs/guide/column-defs). Build them with `createDataTableColumnHelper`, which types the [`meta` keys](/docs/table/columns#meta) the table reads:
 
@@ -70,7 +88,7 @@ export const orderColumns = [
 
 Define them outside the component, or in `useMemo`: TanStack Table expects `columns` and `data` to keep their identity between renders.
 
-## 3. Render the table in a FilterProvider
+## 4. Render the table in a FilterProvider
 
 `useDataTable` reads and writes the URL through an adapter. Under a `FilterProvider` it uses the provider's adapter, so the filter, sort and page share one URL. The provider's `onApply` returns `resetPagePatch()`, so a new filter goes back to page 1 in the same navigation:
 
@@ -81,6 +99,7 @@ import { useDataTable } from "@querycn/table-react"
 
 import { DataTable } from "@/components/data-table/data-table"
 import { DataTablePagination } from "@/components/data-table/data-table-pagination"
+import { DataTableSearch } from "@/components/data-table/data-table-search"
 import { DataTableToolbar } from "@/components/data-table/data-table-toolbar"
 import { FilterBuilder } from "@/components/filter/filter-builder"
 import { FilterChips } from "@/components/filter/filter-chips"
@@ -97,6 +116,7 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
   return (
     <div className="flex flex-col gap-3">
       <DataTableToolbar table={table}>
+        <DataTableSearch table={table} />
         <FilterBuilder />
         <FilterChips />
       </DataTableToolbar>

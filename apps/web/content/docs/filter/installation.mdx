@@ -14,18 +14,36 @@ description: Install the filter packages and the UI, then wire them up in Next.j
 - Next.js 14.1+ (App Router) for `@querycn/filter-next`
 - react-router 6.4+ or 7 for the react-router adapter
 
-## 1. Add the UI
+## 1. Add the registry
 
-The `filter-builder` block exists in three versions, one per primitive library. Pick the one matching the `style` in your `components.json`:
+Add the `@tablecn` registry to your `components.json` once:
 
-| `style` in components.json | Primitives | Registry URL |
-| --- | --- | --- |
-| `radix-*` (e.g. `radix-nova`) | Radix UI | `%SITE_URL%/r/radix/filter-builder.json` |
-| `base-*` (e.g. `base-nova`) | Base UI | `%SITE_URL%/r/base/filter-builder.json` |
-| `aria-*` (e.g. `aria-nova`) | React Aria | `%SITE_URL%/r/aria/filter-builder.json` |
+```json title="components.json"
+{
+  "registries": {
+    "@tablecn": "%SITE_URL%/r/{style}/{name}.json"
+  }
+}
+```
+
+Or let the CLI add it:
 
 ```npm
-npx shadcn@latest add %SITE_URL%/r/radix/filter-builder.json
+npx shadcn@latest registry add @tablecn=%SITE_URL%/r/{style}/{name}.json
+```
+
+The CLI fills in `{style}` from your `components.json`, so you get the version built for your primitive library:
+
+| `style` in components.json | Primitives |
+| --- | --- |
+| `radix-*` (e.g. `radix-nova`), or an older style like `new-york` | Radix UI |
+| `base-*` (e.g. `base-nova`) | Base UI |
+| `aria-*` (e.g. `aria-nova`) | React Aria |
+
+## 2. Add the UI
+
+```npm
+npx shadcn@latest add @tablecn/filter-builder
 ```
 
 The CLI:
@@ -38,7 +56,7 @@ The CLI:
   Skip this step and install the packages yourself: `npm install @querycn/filter-core @querycn/filter-react`. Then build your UI with the [hooks](/docs/filter/react).
 </Callout>
 
-## 2. Declare the fields
+## 3. Declare the fields
 
 Put the fields in their own module. In Next.js, keep `"use client"` out of it, so both server and client code can import the same array.
 
@@ -63,7 +81,7 @@ export const orderFields: FieldDefinition[] = [
 
 Every option is described in [Fields](/docs/filter/fields).
 
-## 3. Wire the provider
+## 4. Wire the provider
 
 `FilterProvider` holds the draft and the applied filter. Its `adapter` decides where the applied filter is stored. Choose your setup:
 
@@ -186,7 +204,7 @@ Works with react-router 6.4+ and 7. On v6, also install `react-router` at the ex
 
 Without an `adapter`, the filter lives in memory: nothing is written to the URL.
 
-## 4. Fetch with the applied filter
+## 5. Fetch with the applied filter
 
 Anywhere under the provider, `useAppliedFilter()` gives the applied filter and the query built from it. The default serializer produces JSON:API style params:
 
