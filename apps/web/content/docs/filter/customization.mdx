@@ -1,0 +1,160 @@
+---
+title: Customization
+description: Translate the UI, add field types and operators.
+---
+
+## Messages and locales
+
+Every string the UI shows comes from a messages object. English is the default. Pass overrides to the provider; they're merged group by group, so you only list what changes:
+
+```tsx
+<FilterProvider
+  fields={orderFields}
+  messages={{
+    actions: { open: "Filters", apply: "Show results" },
+    operators: { contains: "includes" },
+  }}
+/>
+```
+
+Vietnamese ships with the core package:
+
+```tsx
+import { viMessages } from "@querycn/filter-core/locales/vi"
+
+<FilterProvider fields={orderFields} messages={viMessages} />
+```
+
+Keep the object at module scope or in `useMemo`; a new one on every render rebuilds the context.
+
+Field labels and option labels are part of your `fields`, so translate those where you define them.
+
+| Group | Contains |
+| --- | --- |
+| `operators` | A label per operator id: `eq: "is"`, `between: "is between"`. Add custom operators here. |
+| `operatorsByType` | Labels that read better for one field type, e.g. `{ date: { gt: "is after" } }`. |
+| `join` | `where` (before the first rule), `and`, `or`, `toggle` (accessible name of the AND/OR switch). |
+| `actions` | `open`, `addRule`, `removeRule`, `clearAll`, `apply`, `cancel`, `retry`. |
+| `placeholders` | `field`, `operator`, `value`, `search`, `from`, `to`, `date`, `datetime`. |
+| `rangeSeparator` | Between the two values of a range, `"–"`. |
+| `counts` | Functions: `selected(n)`, `more(n)`, `activeFilters(n)`, e.g. `activeFilters: (n) => n + " filters"`. |
+| `empty` | `rules`, `fields`, `options`: empty-state texts. |
+| `loading`, `errors.loadOptions` | Async option states. |
+| `boolean` | `true` / `false` labels, `"Yes"` / `"No"`. |
+| `warnings` | `reversedRange`, `conflict`, `unsupported`. |
+
+An operator's label is looked up in `operatorsByType[fieldType]`, then `operators`, then falls back to the id itself.
+
+Outside React, `mergeMessages(enMessages, overrides)` gives the same merged object, and `getOperatorLabel(messages, operator, fieldType)` a label.
+
+## Custom field types
+
+A field type decides which operators a field offers, how raw input becomes a value, and how rows compare on the client. Register new ones with `createRegistry`:
+
+```ts title="lib/filter-registry.ts"
+import { createRegistry, createValueParser } from "@querycn/filter-core"
+
+const toRating = (raw: unknown) => {
+  const n = typeof raw === "number" ? raw : typeof raw === "string" ? Number(raw) : NaN
+  return Number.isInteger(n) && n >= 1 && n <= 5 ? n : undefined
+}
+
+export const filterRegistry = createRegistry({
+  fieldTypes: [
+    {
+      id: "rating",
+      operators: ["eq", "gte", "lte", "isEmpty", "isNotEmpty"],
+      defaultOperator: "gte",
+      parseValue: createValueParser(toRating),
+      toComparable: (value) => toRating(value) ?? null,
+    },
+  ],
+})
+```
+
+Then use it everywhere the fields are used:
+
+```tsx
+const fields: FieldDefinition[] = [{ name: "rating", label: "Rating", type: "rating" }]
+
+<FilterProvider fields={fields} registry={filterRegistry} />         // client
+parseFilters(searchParams, { fields, registry: filterRegistry })     // server
+applyFilter(rows, state, { fields, registry: filterRegistry })       // or useAppliedFilter().context
+```
+
+Without the registry, a field of an unknown type offers no operators and its rules are dropped when decoded.
+
+<TypeTable
+  type={{
+    id: { description: "The name used in field definitions' type.", type: "string", required: true },
+    operators: { description: "Operators offered, in display order. Must all exist in the registry.", type: "OperatorId[]", required: true },
+    defaultOperator: { description: "Must be one of operators.", type: "OperatorId", required: true },
+    parseValue: {
+      description: "Turns raw input (URL, form) into the canonical value for an arity; undefined means invalid. createValueParser builds one from a single-item parser.",
+      type: "(raw: unknown, arity: Arity) => FilterValue | undefined",
+      required: true,
+    },
+    toComparable: {
+      description: "Client-side filtering: maps row and rule values to what operators compare. null means empty.",
+      type: "(value: unknown, options: { accentInsensitive: boolean }) => string | number | boolean | null",
+      default: "primitives as they are",
+    },
+  }}
+/>
+
+`createRegistry` throws at startup if a type references an operator that doesn't exist, or a default operator that isn't in its list. Those are configuration bugs.
+
+For the UI, add a value input for the new type: see [custom value inputs](/docs/filter/components#custom-value-inputs). Without one, it gets a text input.
+
+### Changing a built-in type
+
+An entry with a built-in id overrides that type field by field. For example, to offer `startsWith` on selects:
+
+```ts
+import { BUILTIN_FIELD_TYPES, createRegistry } from "@querycn/filter-core"
+
+createRegistry({
+  fieldTypes: [
+    { ...BUILTIN_FIELD_TYPES.select, operators: [...BUILTIN_FIELD_TYPES.select.operators, "startsWith"] },
+  ],
+})
+```
+
+To limit operators for a single field, you don't need a registry: use the field's [`operators`](/docs/filter/fields#operators-and-defaultoperator).
+
+## Custom operators
+
+An operator is an id, an arity, and optionally a `match` function for client-side filtering:
+
+```ts
+import { BUILTIN_FIELD_TYPES, createRegistry } from "@querycn/filter-core"
+
+export const filterRegistry = createRegistry({
+  operators: [
+    {
+      id: "notBetween",
+      arity: "range",
+      // `actual`: the row's values (empty list = no value), already through toComparable
+      match: (actual, expected) => {
+        const [from, to] = expected as [number, number]
+        return actual.length > 0 && actual.every((n) => typeof n === "number" && (n < from || n > to))
+      },
+    },
+  ],
+  fieldTypes: [
+    { ...BUILTIN_FIELD_TYPES.number, operators: [...BUILTIN_FIELD_TYPES.number.operators, "notBetween"] },
+  ],
+})
+```
+
+Then:
+
+1. **Label it**: `messages={{ operators: { notBetween: "is not between" } }}`. Without a label, the UI shows the id.
+2. **Teach your serializer**:
+   - `jsonApiSerializer` sends the id as is: `filter[amount][notBetween]=10&filter[amount][notBetween]=50`. Rename it with `operators: { notBetween: "not_between" }`.
+   - `djangoSerializer` needs a lookup: `lookups: { notBetween: "not_range" }`, backed by a filter on your side.
+   - `postgrestSerializer` needs an entry: `operators: { notBetween: (rule, quote) => … }`.
+
+   Until you add them, the django and PostgREST serializers' `supports` returns `false`, and the UI doesn't offer the operator.
+
+Overriding a built-in operator keeps its `match` only if the arity stays the same.

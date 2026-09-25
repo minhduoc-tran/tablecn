@@ -1,0 +1,49 @@
+---
+title: Development
+description: Run the tablecn monorepo locally.
+---
+
+## Requirements
+
+- Node.js 20.6 or later
+- pnpm 10 (the repo pins it in `packageManager`)
+
+## Install dependencies
+
+```bash
+pnpm install
+```
+
+## Start the dev server
+
+```bash
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) for the app and [/docs](/docs) for the documentation. `pnpm dev` builds the shadcn registry into `apps/web/public/r` first.
+
+## Checks
+
+Run these from the repository root:
+
+```bash
+pnpm typecheck
+pnpm lint
+pnpm test
+```
+
+## Registry
+
+The filter UI lives in `apps/web/registry/{radix,base,aria}/filter`, described once in `apps/web/registry.json`. Rebuild the registry after changing either:
+
+```bash
+pnpm registry:build
+```
+
+This writes `apps/web/public/r/{radix,base,aria}/filter-builder.json`: one JSON file per primitive library, each holding the component sources and their dependencies. Next.js serves them at `/r/<base>/filter-builder.json`, which is what `npx shadcn add` downloads. The folder is generated, so it's not committed.
+
+## Build for production
+
+```bash
+pnpm build
+```

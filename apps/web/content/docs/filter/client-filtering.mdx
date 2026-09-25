@@ -1,0 +1,87 @@
+---
+title: Client-side filtering
+description: Filter rows that are already in the browser with the same rules.
+---
+
+When all the data is on the client (a few hundred rows, a static list), there's no backend to send the filter to. `applyFilter` runs the applied rules against your rows:
+
+```tsx
+"use client"
+
+import { applyFilter } from "@querycn/filter-core"
+import { useAppliedFilter } from "@querycn/filter-react"
+
+function OrdersTable({ orders }: { orders: Order[] }) {
+  const { state, context } = useAppliedFilter()
+  const rows = React.useMemo(() => applyFilter(orders, state, context), [orders, state, context])
+  // render rows…
+}
+```
+
+The [preview on the overview page](/docs/filter) works exactly like this.
+
+<Callout title="Not for paginated data" type="warn">
+  Filtering one page of a paginated API on the client gives wrong results: matching rows on other pages are never seen. Send the filter to the backend with a [serializer](/docs/filter/serializers) instead.
+</Callout>
+
+## API
+
+```ts
+applyFilter<Row>(rows: readonly Row[], state: FilterState, context: ClientFilterContext<Row>): Row[]
+createRowMatcher<Row>(state: FilterState, context: ClientFilterContext<Row>): (row: Row) => boolean
+```
+
+`createRowMatcher` compiles the rules once and returns a predicate. Use it where you need a function rather than a filtered array, such as a table library's filter function or a stream.
+
+<TypeTable
+  type={{
+    fields: { description: "The field definitions.", type: "readonly FieldDefinition[]", required: true },
+    registry: { description: "Needed with custom field types or operators.", type: "FilterRegistry" },
+    getValue: {
+      description: "Reads a field's value from a row. May return a list, e.g. a row's tags.",
+      type: "(row: Row, field: FieldDefinition) => unknown",
+      default: "row[field.name]",
+    },
+    accentInsensitive: {
+      description: "Text matching ignores accents (\"da nang\" matches \"Đà Nẵng\"). Case is always ignored.",
+      type: "boolean",
+      default: "true",
+    },
+  }}
+/>
+
+`useAppliedFilter().context` already has `fields` and `registry`. Add the rest when needed:
+
+```ts
+applyFilter(orders, state, {
+  ...context,
+  // nested data, or a value computed from the row
+  getValue: (order, field) =>
+    field.name === "customer" ? order.customer.name : (order as Record<string, unknown>)[field.name],
+})
+```
+
+## How values are compared
+
+Each field type turns both the row value and the rule value into something comparable first:
+
+| Type | Row values accepted | Compared as |
+| --- | --- | --- |
+| `text` | strings, numbers, booleans | lowercased text, accents stripped (by default) |
+| `number` | numbers, numeric strings | numbers |
+| `date` | `"YYYY-MM-DD"`, ISO strings, `Date`, epoch ms | the calendar day |
+| `datetime` | ISO strings, `Date`, epoch ms | timestamps |
+| `boolean` | `true`/`false`, `"true"`/`"false"` | booleans |
+| `select`, `multiSelect` | strings, numbers | exact values (option ids, not text) |
+
+Details worth knowing:
+
+- **Dates.** A string without a time zone (`"2026-09-25"`, `"2026-09-25T23:30"`) is taken as that day. Instants (`Date`, epoch ms, ISO strings with `Z` or an offset) are converted to the **local** day, the one your table shows.
+- **Lists.** When `getValue` returns an array, a rule matches if any item matches: `tags in [urgent]` matches a row tagged `["vip", "urgent"]`. Negations mean no item matches.
+- **Empty values.** `null`, `undefined`, `""` and `[]` are empty: they match `isEmpty`, and never match comparisons like `eq` or `gt`. They do pass negations such as `ne` or `notContains`, just as "not paid" includes rows with no status.
+- **Unreadable values.** A row value that's present but can't be read for the type (`"1,200"` in a number column, `"yesterday"` in a date column) matches nothing, not even `isEmpty`.
+- **Number text.** A rule value that isn't a number (someone typed `12,5`) matches no row.
+- **Rules that can't be evaluated** never match: under AND they exclude every row. An empty table gets noticed; a silently ignored filter doesn't.
+- **AND/OR.** An OR filter with no rules matches everything, like an AND filter with none.
+
+Custom field types control this through `toComparable`, and custom operators through `match`. See [Customization](/docs/filter/customization).

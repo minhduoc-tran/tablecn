@@ -1,0 +1,174 @@
+---
+title: Next.js
+description: Use the filter with the App Router — filter on the server, or only in the browser.
+---
+
+```npm
+npm install @querycn/filter-core @querycn/filter-react @querycn/filter-next
+```
+
+`@querycn/filter-next` supports the App Router only (Next.js 14.1+). It exports:
+
+- `NextFilterProvider` and `useNextAdapter` from `@querycn/filter-next` (client);
+- `parseFilters` from `@querycn/filter-next/server`, for server components and route handlers.
+
+The examples use Next.js 15.5+ conventions: `searchParams` is a Promise and `PageProps<"/route">` is a generated global type. On Next.js 14, `searchParams` is a plain object: `parseFilters(props.searchParams, { fields })`.
+
+## Keep fields in a shared module
+
+Server and client code both need the same `fields`. Put them in a module **without** `"use client"`:
+
+```ts title="app/orders/fields.ts"
+import type { FieldDefinition } from "@querycn/filter-core"
+
+export const orderFields: FieldDefinition[] = [
+  { name: "status", label: "Status", type: "select", options: [/* … */] },
+  { name: "amount", label: "Amount", type: "number" },
+]
+```
+
+If a field has `loadOptions` or `resolveLabels`, it still works: the server only uses names, types and operators. What you can't do is pass `fields` **as a prop** from a server component to a client component, because functions can't be serialized. Import the module on both sides instead.
+
+## Filtering on the server
+
+The default. Applying a filter calls `router.replace` with the new `?filters=`. The page re-renders on the server and reads the filter from `searchParams`.
+
+```tsx title="app/orders/orders-filter.tsx"
+"use client"
+
+import { NextFilterProvider } from "@querycn/filter-next"
+
+import { FilterBuilder } from "@/components/filter/filter-builder"
+import { FilterChips } from "@/components/filter/filter-chips"
+import { orderFields } from "./fields"
+
+export function OrdersFilter() {
+  return (
+    <NextFilterProvider fields={orderFields} onApply={() => ({ page: null })}>
+      <div className="flex flex-wrap items-center gap-2">
+        <FilterBuilder />
+        <FilterChips />
+      </div>
+    </NextFilterProvider>
+  )
+}
+```
+
+```tsx title="app/orders/page.tsx"
+import { jsonApiSerializer, toSearchParams } from "@querycn/filter-core"
+import { parseFilters } from "@querycn/filter-next/server"
+
+import { orderFields } from "./fields"
+import { OrdersFilter } from "./orders-filter"
+
+const serializer = jsonApiSerializer()
+
+export default async function Page(props: PageProps<"/orders">) {
+  const filter = parseFilters(await props.searchParams, { fields: orderFields })
+
+  // Forward it to an API…
+  const query = serializer(filter, { fields: orderFields })
+  const orders = await fetch(`${process.env.API_URL}/orders?${toSearchParams(query)}`).then((r) => r.json())
+  // …or build a database query from it (see Serializers → custom serializers).
+
+  return (
+    <>
+      <OrdersFilter />
+      <OrdersTable orders={orders} />
+    </>
+  )
+}
+```
+
+`parseFilters` decodes exactly like the client, with the same validation: a malformed or outdated link gives fewer rules, never an error.
+
+<Callout title="Serializers are functions">
+  A serializer can't be passed from a server component to `NextFilterProvider`. Create it in the client component (or a shared module) if the UI should know about it, so it can hide unsupported operators and show warnings.
+</Callout>
+
+### In a route handler
+
+```ts title="app/api/orders/route.ts"
+import type { NextRequest } from "next/server"
+import { parseFilters } from "@querycn/filter-next/server"
+
+import { orderFields } from "@/app/orders/fields"
+
+export async function GET(request: NextRequest) {
+  const filter = parseFilters(request.nextUrl.searchParams, { fields: orderFields })
+  // …
+}
+```
+
+`parseFilters` accepts a `URLSearchParams` or a page's `searchParams` object.
+
+<TypeTable
+  type={{
+    fields: { description: "The same fields as the client.", type: "readonly FieldDefinition[]", required: true },
+    registry: { description: "Needed if you use custom field types or operators.", type: "FilterRegistry" },
+    param: { description: "Query param holding the filter.", type: "string", default: '"filters"' },
+  }}
+/>
+
+## Filtering in the browser
+
+When all rows are already on the client, a server round trip on every apply is wasted. Set `shallow`: the URL is updated through the History API, and nothing is requested from the server.
+
+```tsx
+<NextFilterProvider fields={orderFields} shallow>
+  <FilterBuilder />
+  <OrdersTable orders={orders} />
+</NextFilterProvider>
+```
+
+```tsx
+"use client"
+
+import { applyFilter } from "@querycn/filter-core"
+import { useAppliedFilter } from "@querycn/filter-react"
+
+function OrdersTable({ orders }: { orders: Order[] }) {
+  const { state, context } = useAppliedFilter()
+  const rows = React.useMemo(() => applyFilter(orders, state, context), [orders, state, context])
+  // …
+}
+```
+
+Leave `shallow` off when a server component reads `searchParams`: it wouldn't see the change.
+
+## Static routes and `<Suspense>`
+
+The adapter reads the URL with `useSearchParams`. On a route that Next.js prerenders statically, `next build` fails unless the provider is inside a `<Suspense>` boundary:
+
+```tsx
+import { Suspense } from "react"
+
+export default function Page() {
+  return (
+    <Suspense fallback={<FilterSkeleton />}>
+      <OrdersFilter />
+    </Suspense>
+  )
+}
+```
+
+The part inside the boundary then renders on the client only. Pages that await `searchParams` are dynamic already and don't need it.
+
+## NextFilterProvider
+
+Takes every [`FilterProvider` prop](/docs/filter/react#filterprovider) except `adapter`, plus:
+
+<TypeTable
+  type={{
+    param: { description: "Query param holding the filter.", type: "string", default: '"filters"' },
+    shallow: {
+      description: "Update the URL without a server request, for data filtered in the browser.",
+      type: "boolean",
+      default: "false",
+    },
+  }}
+/>
+
+To combine the adapter with your own provider setup, use the hook: `const adapter = useNextAdapter({ shallow: true })`.
+
+Both modes replace the history entry, keep the path, hash and other params, and don't scroll. `basePath` is handled.

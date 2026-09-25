@@ -1,0 +1,169 @@
+---
+title: URL state
+description: How the applied filter is encoded in the URL, and the adapters that read and write it.
+---
+
+## The `filters` param
+
+The applied filter is stored in one query param, `filters`, as compact JSON:
+
+```json
+{"and":[["status","eq","paid"],["amount","between",[10,50]],["tags","in",["urgent","vip"]],["deletedAt","isEmpty"]]}
+```
+
+- The only key is the join: `"and"` or `"or"`.
+- Each rule is an array: `[field, operator]` for operators without a value, `[field, operator, value]` for the rest.
+- Values are already normalized: numbers are numbers, booleans are booleans, dates are `"YYYY-MM-DD"`.
+- Rule ids are not stored.
+
+In the address bar it is percent-encoded, so it's long and hard to read:
+
+```txt
+/orders?filters=%7B%22and%22%3A%5B%5B%22status%22%2C%22eq%22%2C%22paid%22%5D%5D%7D
+```
+
+That's the price of a format that handles any value (commas, brackets, quotes, emoji) without escaping rules of its own. Links still copy, share and bookmark fine.
+
+When no rule is complete, the param is removed rather than written empty.
+
+### Encoding and decoding
+
+The provider does this for you. Outside React (a backend, a script, a test) use the core functions:
+
+```ts
+import { decodeFilters, encodeFilters } from "@querycn/filter-core"
+
+const context = { fields: orderFields }
+
+encodeFilters(
+  {
+    join: "and",
+    rules: [
+      { id: "a", field: "status", operator: "eq", value: "paid" },
+      { id: "b", field: "amount", operator: "between", value: ["10", "50"] },
+      { id: "c", field: "customer", operator: "contains", value: "" }, // incomplete
+    ],
+  },
+  context
+)
+// → '{"and":[["status","eq","paid"],["amount","between",[10,50]]]}'
+
+decodeFilters(new URL(request.url).searchParams.get("filters"), context)
+// → { join: "and", rules: [{ id: "u0", field: "status", … }, { id: "u1", … }] }
+```
+
+`decodeFilters` never throws. A URL is user input, so:
+
+- invalid JSON, or JSON of the wrong shape, gives an empty filter;
+- each rule is checked on its own, and rules with an unknown field, an operator the field doesn't offer, or a value of the wrong shape are dropped (see [complete rules](/docs/filter/operators#complete-rules));
+- `null` or an empty string gives an empty filter.
+
+```ts
+decodeFilters('{"and":[["status","eq","paid"],["nope","eq",1],["amount","between",[1]]]}', context)
+// → { join: "and", rules: [{ id: "u0", field: "status", operator: "eq", value: "paid" }] }
+```
+
+Decoded rules get positional ids: `u0`, `u1`, and so on. The server and the client decode the same URL to the same state, so server-rendered markup matches after hydration.
+
+## Adapters
+
+An adapter tells `FilterProvider` where the applied filter lives. Pass one as `adapter`:
+
+| Adapter | Import | Use it for |
+| --- | --- | --- |
+| memory (default) | built in | Filters that shouldn't touch the URL: dialogs, tests. |
+| `useBrowserUrlAdapter()` | `@querycn/filter-react` | Plain React and Vite apps without a client router. |
+| `useReactRouterAdapter()` | `@querycn/filter-react/react-router` | react-router 6.4+ and 7. |
+| `useNextAdapter()` | `@querycn/filter-next` | Next.js App Router (or `<NextFilterProvider>`). |
+| `createMemoryAdapter(initial?)` | `@querycn/filter-react` | Memory with a starting value. It has no `readServer`, so on server-rendered pages seed it only with values the server knows too. |
+
+All URL adapters:
+
+- accept `{ param }` to use another name than `filters`, e.g. two filtered lists on one page;
+- **replace** the current history entry instead of pushing a new one, so applying a filter ten times doesn't add ten Back steps;
+- keep the path, the hash and the other query params. Those are re-encoded on write: same values, possibly different escaping (`a,b` becomes `a%2Cb`).
+
+```tsx
+const adapter = useBrowserUrlAdapter({ param: "orderFilters" })
+```
+
+The browser adapter only sees the URL in the browser. During server rendering and hydration it reports an empty filter, then the real one right after. The Next.js and react-router adapters read the URL through the router, so their server render already has the filter.
+
+### Changing other params on apply
+
+`onApply` runs when applying changes the filter. The params it returns are written in the same navigation. The usual case is going back to the first page:
+
+```tsx
+<FilterProvider
+  fields={orderFields}
+  adapter={adapter}
+  onApply={() => ({ page: null })} // null removes the param
+/>
+```
+
+It receives the new applied state, in case the params depend on it.
+
+### Custom adapters
+
+An adapter is a small object. This one keeps the filter in `localStorage`:
+
+```ts
+import type { UrlStateAdapter } from "@querycn/filter-react"
+
+export function createStorageAdapter(key: string): UrlStateAdapter {
+  const listeners = new Set<() => void>()
+  return {
+    read: () => localStorage.getItem(key),
+    write: (value) => {
+      if (value === null) localStorage.removeItem(key)
+      else localStorage.setItem(key, value)
+      listeners.forEach((listener) => listener())
+    },
+    subscribe: (onChange) => {
+      // `storage` fires for changes made in other tabs
+      const onStorage = (event: StorageEvent) => event.key === key && onChange()
+      listeners.add(onChange)
+      window.addEventListener("storage", onStorage)
+      return () => {
+        listeners.delete(onChange)
+        window.removeEventListener("storage", onStorage)
+      }
+    },
+    readServer: () => null,
+  }
+}
+```
+
+Create it once (module scope or `useState(() => …)`), not on every render.
+
+<TypeTable
+  type={{
+    read: {
+      description: "Returns the encoded filter, or null. Must return the same string until the value changes.",
+      type: "() => string | null",
+      required: true,
+    },
+    write: {
+      description: "Stores the value (null removes it). otherParams are extra URL params to change in the same navigation; adapters without a URL ignore them.",
+      type: "(value: string | null, otherParams?: Record<string, string | null>) => void",
+      required: true,
+    },
+    subscribe: {
+      description: "Needed when the value can change outside React, e.g. back/forward or another tab.",
+      type: "(onChange: () => void) => () => void",
+    },
+    readServer: {
+      description: "Value during server rendering and hydration. Return null if the value is only known in the browser, so hydration matches.",
+      type: "() => string | null",
+      default: "read",
+    },
+  }}
+/>
+
+Adapters back `useSyncExternalStore`, so their methods are called without `this`.
+
+## Router notes
+
+- **react-router + `<ScrollRestoration>`**: if the URL has a hash, every apply scrolls to its target, because react-router scrolls to the hash before checking `preventScrollReset`. Use `getKey` based on the pathname, or avoid hashes on filtered pages.
+- **react-router + `useBlocker`**: when a blocker stops the navigation, the value just written waits until the URL changes again.
+- **Next.js**: see [Next.js](/docs/filter/nextjs) for `shallow`, `<Suspense>` and `basePath`.

@@ -1,0 +1,209 @@
+---
+title: Installation
+description: Install the filter packages and the UI, then wire them up in Next.js, Vite or react-router.
+---
+
+<Callout title="Not published yet" type="warn">
+  `@querycn/filter-*` are not on npm yet, and the registry isn't deployed. The steps below are how installation will work for `0.1.0`. Until then, run this repo locally (see [Development](/docs/development)) and install from your local copy of this site.
+</Callout>
+
+## Requirements
+
+- React 18 or 19
+- For the UI: a project set up with [shadcn/ui](https://ui.shadcn.com/docs/installation) and Tailwind CSS v4
+- Next.js 14.1+ (App Router) for `@querycn/filter-next`
+- react-router 6.4+ or 7 for the react-router adapter
+
+## 1. Add the UI
+
+The `filter-builder` block exists in three versions, one per primitive library. Pick the one matching the `style` in your `components.json`:
+
+| `style` in components.json | Primitives | Registry URL |
+| --- | --- | --- |
+| `radix-*` (e.g. `radix-nova`) | Radix UI | `%SITE_URL%/r/radix/filter-builder.json` |
+| `base-*` (e.g. `base-nova`) | Base UI | `%SITE_URL%/r/base/filter-builder.json` |
+| `aria-*` (e.g. `aria-nova`) | React Aria | `%SITE_URL%/r/aria/filter-builder.json` |
+
+```npm
+npx shadcn@latest add %SITE_URL%/r/radix/filter-builder.json
+```
+
+The CLI:
+
+- copies 16 files into `components/filter/` (or wherever your `components` alias points), rewriting imports to your aliases;
+- installs `@querycn/filter-core`, `@querycn/filter-react` and `lucide-react` (plus `react-aria-components` and `@internationalized/date` for React Aria);
+- adds the shadcn components it builds on if you don't have them: `badge`, `button`, `calendar`, `input`, `popover`, `select`, and `command` for Radix and Base UI.
+
+<Callout title="Only want the logic?">
+  Skip this step and install the packages yourself: `npm install @querycn/filter-core @querycn/filter-react`. Then build your UI with the [hooks](/docs/filter/react).
+</Callout>
+
+## 2. Declare the fields
+
+Put the fields in their own module. In Next.js, keep `"use client"` out of it, so both server and client code can import the same array.
+
+```ts title="lib/order-fields.ts"
+import type { FieldDefinition } from "@querycn/filter-core"
+
+export const orderFields: FieldDefinition[] = [
+  { name: "customer", label: "Customer", type: "text" },
+  {
+    name: "status",
+    label: "Status",
+    type: "select",
+    options: [
+      { label: "Paid", value: "paid" },
+      { label: "Pending", value: "pending" },
+    ],
+  },
+  { name: "amount", label: "Amount", type: "number" },
+  { name: "createdAt", label: "Created", type: "date" },
+]
+```
+
+Every option is described in [Fields](/docs/filter/fields).
+
+## 3. Wire the provider
+
+`FilterProvider` holds the draft and the applied filter. Its `adapter` decides where the applied filter is stored. Choose your setup:
+
+<Tabs items={["Next.js", "Vite / plain React", "react-router"]}>
+<Tab value="Next.js">
+
+Install the Next.js bindings:
+
+```npm
+npm install @querycn/filter-next
+```
+
+`NextFilterProvider` is `FilterProvider` with the App Router adapter built in. Render it from a client component, because props like `onApply` and `loadOptions` are functions:
+
+```tsx title="app/orders/orders-filter.tsx"
+"use client"
+
+import { NextFilterProvider } from "@querycn/filter-next"
+
+import { FilterBuilder } from "@/components/filter/filter-builder"
+import { FilterChips } from "@/components/filter/filter-chips"
+import { orderFields } from "@/lib/order-fields"
+
+export function OrdersFilter() {
+  return (
+    <NextFilterProvider fields={orderFields} onApply={() => ({ page: null })}>
+      <div className="flex flex-wrap items-center gap-2">
+        <FilterBuilder />
+        <FilterChips />
+      </div>
+    </NextFilterProvider>
+  )
+}
+```
+
+Read the applied filter in the page, on the server:
+
+```tsx title="app/orders/page.tsx"
+import { parseFilters } from "@querycn/filter-next/server"
+
+import { orderFields } from "@/lib/order-fields"
+import { OrdersFilter } from "./orders-filter"
+
+export default async function Page(props: PageProps<"/orders">) {
+  const filter = parseFilters(await props.searchParams, { fields: orderFields })
+  const orders = await getOrders(filter) // your data access
+
+  return (
+    <>
+      <OrdersFilter />
+      <OrdersTable orders={orders} />
+    </>
+  )
+}
+```
+
+The examples use Next.js 15.5+ types (`PageProps`, async `searchParams`); on Next.js 14, pass `props.searchParams` directly. Applying writes `?filters=…` with `router.replace`, so the page re-renders on the server with the new filter. See [Next.js](/docs/filter/nextjs) for client-only filtering, route handlers and `<Suspense>`.
+
+</Tab>
+<Tab value="Vite / plain React">
+
+`useBrowserUrlAdapter` keeps the filter in `?filters=` through the History API:
+
+```tsx title="src/orders-page.tsx"
+import { FilterProvider, useBrowserUrlAdapter } from "@querycn/filter-react"
+
+import { FilterBuilder } from "@/components/filter/filter-builder"
+import { FilterChips } from "@/components/filter/filter-chips"
+import { orderFields } from "@/lib/order-fields"
+
+export function OrdersPage() {
+  const adapter = useBrowserUrlAdapter()
+
+  return (
+    <FilterProvider fields={orderFields} adapter={adapter}>
+      <div className="flex flex-wrap items-center gap-2">
+        <FilterBuilder />
+        <FilterChips />
+      </div>
+      <OrdersTable />
+    </FilterProvider>
+  )
+}
+```
+
+Don't use it next to a client-side router: navigations the router makes with `pushState` aren't observed. Use the router's adapter instead.
+
+</Tab>
+<Tab value="react-router">
+
+The adapter ships as a subpath of `@querycn/filter-react`, so apps without react-router don't load it:
+
+```tsx title="src/routes/orders.tsx"
+import { FilterProvider } from "@querycn/filter-react"
+import { useReactRouterAdapter } from "@querycn/filter-react/react-router"
+
+import { FilterBuilder } from "@/components/filter/filter-builder"
+import { FilterChips } from "@/components/filter/filter-chips"
+import { orderFields } from "@/lib/order-fields"
+
+export function OrdersRoute() {
+  const adapter = useReactRouterAdapter()
+
+  return (
+    <FilterProvider fields={orderFields} adapter={adapter}>
+      <div className="flex flex-wrap items-center gap-2">
+        <FilterBuilder />
+        <FilterChips />
+      </div>
+      <OrdersTable />
+    </FilterProvider>
+  )
+}
+```
+
+Works with react-router 6.4+ and 7. On v6, also install `react-router` at the exact version your `react-router-dom` depends on: two copies mean two router contexts, and `useLocation` fails.
+
+</Tab>
+</Tabs>
+
+Without an `adapter`, the filter lives in memory: nothing is written to the URL.
+
+## 4. Fetch with the applied filter
+
+Anywhere under the provider, `useAppliedFilter()` gives the applied filter and the query built from it. The default serializer produces JSON:API style params:
+
+```tsx
+import { toSearchParams } from "@querycn/filter-core"
+import { useAppliedFilter } from "@querycn/filter-react"
+
+function OrdersTable() {
+  const { query, queryKey } = useAppliedFilter()
+  // query: { "filter[status][eq]": "paid", "filter[amount][gte]": "10" }
+
+  const { data } = useQuery({
+    queryKey: ["orders", queryKey],
+    queryFn: () => fetch(`/api/orders?${toSearchParams(query)}`).then((r) => r.json()),
+  })
+  // …
+}
+```
+
+`queryKey` is the encoded filter (or `null`): a stable string for cache keys and effect dependencies. To send another format, pass a [serializer](/docs/filter/serializers). If the rows are already in the browser, filter them with [`applyFilter`](/docs/filter/client-filtering) instead.

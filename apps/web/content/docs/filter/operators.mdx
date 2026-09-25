@@ -1,0 +1,92 @@
+---
+title: Operators & values
+description: The built-in operators, the value each one takes, and when a rule counts as complete.
+---
+
+## Arity
+
+Every operator has an **arity**: the shape of the value it takes. The UI picks the value input from it, and validation checks the value against it.
+
+| Arity | Value | Example rule in the URL |
+| --- | --- | --- |
+| `none` | no value (`null`) | `["deletedAt","isEmpty"]` |
+| `single` | one value | `["status","eq","paid"]` |
+| `range` | a `[from, to]` pair | `["amount","between",[10,50]]` |
+| `multi` | a non-empty list | `["tags","in",["urgent","vip"]]` |
+
+Changing the operator keeps the value when the arity stays the same (`eq` → `ne`) and clears it otherwise (`eq` → `between`).
+
+## Built-in operators
+
+| Id | Arity | English label | Offered on |
+| --- | --- | --- | --- |
+| `eq` | single | is | text, number, date, boolean, select |
+| `ne` | single | is not | text, number, select |
+| `contains` | single | contains | text |
+| `notContains` | single | does not contain | text |
+| `startsWith` | single | starts with | text |
+| `endsWith` | single | ends with | text |
+| `gt` | single | is greater than | number, date, datetime |
+| `gte` | single | is greater than or equal to | number, date, datetime |
+| `lt` | single | is less than | number, date, datetime |
+| `lte` | single | is less than or equal to | number, date, datetime |
+| `between` | range | is between | number, date, datetime |
+| `in` | multi | is any of | multiSelect |
+| `notIn` | multi | is none of | multiSelect |
+| `isEmpty` | none | is empty | every type except boolean |
+| `isNotEmpty` | none | is not empty | every type except boolean |
+
+Dates read better with their own wording: on `date` and `datetime` fields, `eq`, `gt`, `gte`, `lt` and `lte` are labelled "is on", "is after", "is on or after", "is before" and "is on or before". Labels come from [messages](/docs/filter/customization#messages-and-locales), so you can change any of them.
+
+`between` includes both ends. For `date` fields, a `between` of `2026-09-01` and `2026-09-30` means the whole of September on the client side ([`applyFilter`](/docs/filter/client-filtering)). What it means on your backend is up to the backend: `2026-09-30` compared with a timestamp column is usually midnight at the start of that day. [`mapRule`](/docs/filter/serializers#maprule) can adjust it.
+
+## Complete rules
+
+While editing, a rule can be anything: no field yet, no operator, half a range. When the filter is applied, only **complete** rules are kept. A rule is complete when:
+
+1. its `field` is one of your fields;
+2. its `operator` is offered for that field (its type's list, narrowed by the field's `operators`);
+3. its value matches the arity and the field type:
+   - `single`: a non-empty value;
+   - `range`: two non-empty values;
+   - `multi`: at least one value, none empty;
+   - and each value parses for the type (a real date, a number or number-like text, `true`/`false`…).
+
+The same check runs when a URL is decoded. That's why a hand-edited or outdated link never crashes anything: rules that don't pass are dropped one by one.
+
+Values are also **normalized** on the way: `"42"` in a number field becomes `42`, `"true"` in a boolean field becomes `true`. Text that isn't a number stays text in a number field (see [Fields](/docs/filter/fields#type)).
+
+You can run the check yourself:
+
+```ts
+import { isRuleComplete, normalizeRule, normalizeState } from "@querycn/filter-core"
+
+const context = { fields: orderFields }
+
+normalizeRule({ id: "1", field: "amount", operator: "gt", value: "42" }, context)
+// → { id: "1", field: "amount", operator: "gt", value: 42 }
+
+normalizeRule({ id: "2", field: "amount", operator: "between", value: ["10", ""] }, context)
+// → null (half a range)
+
+isRuleComplete({ id: "3", field: "status", operator: "contains", value: "p" }, context)
+// → false (select fields don't offer `contains`)
+
+normalizeState(draft, context) // drops incomplete rules, normalizes the rest
+```
+
+## Warnings
+
+Some rules are valid but probably not what the user meant. They are still applied; the UI shows a warning icon next to them.
+
+| Warning | When |
+| --- | --- |
+| `reversedRange` | A `between` whose start is after its end, e.g. `50 – 10`. Shown while editing. |
+| `conflict` | The serializer sent the same key twice, and most backends only read one of them. Shown after applying. |
+| `unsupported` | The serializer can't express the rule, so the backend never sees it. Shown after applying. |
+
+`reversedRange` comes from `getRuleWarnings(rule, context)` in core. `conflict` and `unsupported` come from the [serializer's `inspect`](/docs/filter/serializers#inspect-and-supports). In React, `useRuleWarnings(rule)` combines both.
+
+## Custom operators
+
+Operators are data, so you can add your own (for example `notBetween` or a full-text `matches`) or change a built-in one. See [custom operators](/docs/filter/customization#custom-operators).

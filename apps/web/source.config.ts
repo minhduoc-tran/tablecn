@@ -1,6 +1,8 @@
 import { defineConfig, defineDocs } from "fumadocs-mdx/config"
 import convert from "npm-to-yarn"
 
+import { siteConfig } from "./lib/site-config"
+
 // MDX docs collection, read from `content/docs`
 export const docs = defineDocs({
   dir: "content/docs",
@@ -14,8 +16,22 @@ function convertLines(command: string, to: "pnpm" | "yarn" | "bun") {
     .join("\n")
 }
 
+/** `%SITE_URL%` in code becomes the deployed origin, so install commands work as copied */
+function remarkSiteUrl() {
+  type Node = { type: string; value?: string; children?: Node[] }
+  const walk = (node: Node) => {
+    if ((node.type === "code" || node.type === "inlineCode") && node.value) {
+      node.value = node.value.replaceAll("%SITE_URL%", siteConfig.url)
+    }
+    node.children?.forEach(walk)
+  }
+  return walk
+}
+
 export default defineConfig({
   mdxOptions: {
+    // First, so the npm tabs below are generated from the replaced command
+    remarkPlugins: (plugins) => [remarkSiteUrl, ...plugins],
     // ```npm code blocks become pnpm / npm / yarn / bun tabs
     remarkNpmOptions: {
       persist: { id: "package-manager" },

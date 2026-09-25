@@ -1,0 +1,183 @@
+---
+title: Components
+description: The filter-builder block — what's in it, its props, and how to adapt it.
+---
+
+The `filter-builder` registry block is the UI from the [preview](/docs/filter). It's copied into your project (see [Installation](/docs/filter/installation#1-add-the-ui)), so every file is yours to edit. The Radix UI, Base UI and React Aria versions have the same files and props.
+
+All components must be rendered inside a `FilterProvider` (or `NextFilterProvider`).
+
+## Usage
+
+```tsx
+import { FilterBuilder } from "@/components/filter/filter-builder"
+import { FilterChips } from "@/components/filter/filter-chips"
+
+<div className="flex flex-wrap items-center gap-2">
+  <FilterBuilder />
+  <FilterChips />
+</div>
+```
+
+- **FilterBuilder** is a **Filter** button showing how many filters are applied. It opens the panel in a popover. Opening an empty filter starts with one blank rule, and closing without applying drops the edits.
+- **FilterChips** shows the applied rules ("Status is Paid"). Each chip's × removes that rule right away.
+
+## FilterBuilder
+
+<TypeTable
+  type={{
+    allowJoinToggle: {
+      description: "Lets users switch between AND and OR on the second rule. When false, rules keep the current join.",
+      type: "boolean",
+      default: "true",
+    },
+    valueInput: {
+      description: "Replaces the value input of every row. See Custom value inputs.",
+      type: "React.ComponentType<FilterValueSlotProps>",
+      default: "FilterValueInput",
+    },
+    className: { description: "Classes for the trigger button.", type: "string" },
+    contentClassName: { description: "Classes for the popover around the panel.", type: "string" },
+  }}
+/>
+
+## FilterBuilderPanel
+
+The panel on its own: rule rows, AND/OR, **Add filter**, **Clear all** and **Apply**. **Clear all** applies at once: it doesn't wait for **Apply**. Use it where a popover doesn't fit, such as a sidebar or a sheet:
+
+```tsx
+import { FilterBuilderPanel } from "@/components/filter/filter-builder-panel"
+
+<aside className="w-[28rem] border-l p-4">
+  <FilterBuilderPanel onApply={() => setSheetOpen(false)} />
+</aside>
+```
+
+<TypeTable
+  type={{
+    allowJoinToggle: { description: "As in FilterBuilder.", type: "boolean", default: "true" },
+    valueInput: { description: "As in FilterBuilder.", type: "React.ComponentType<FilterValueSlotProps>" },
+    onApply: { description: "Runs after Apply, e.g. to close a sheet.", type: "() => void" },
+    className: { description: "Classes for the panel.", type: "string" },
+  }}
+/>
+
+The panel is a `<form>`, and **Apply** is its submit button:
+
+- <kbd>Enter</kbd> in a text field applies.
+- Every other button is `type="button"`, so nothing else submits.
+- Submitting never reaches a form around the component (React propagates events through portals, so the popover would otherwise submit your page's form).
+
+Don't render the standalone panel inside your own `<form>`: nested forms are invalid HTML. `FilterBuilder` is fine there, since its panel renders in a portal.
+
+When the panel is used on its own, the chips' × applies at once, which also drops unapplied edits in the panel.
+
+## FilterChips
+
+<TypeTable
+  type={{
+    className: { description: "Classes for the chip list.", type: "string" },
+  }}
+/>
+
+Renders nothing when no filter is applied. Values are shown the way users entered them: option labels (resolved with `resolveLabels` if needed), `Yes`/`No`, dates in the user's locale. After a chip is removed, focus moves to the next chip, or the previous one for the last. Removing the only chip removes the list, so focus falls back to the page; move it to your Filter button if you prefer.
+
+## Keyboard and accessibility
+
+- The trigger announces the count ("2 filters") to screen readers; the badge is decorative.
+- After **Add filter**, focus goes to the new row. After removing a row or clearing all, it goes to **Add filter**.
+- Picking an operator moves focus to the value input.
+- Warning icons open on press rather than hover, so they work on touch screens. Each has an accessible label with the warning text.
+- Buttons have labels from [messages](/docs/filter/customization#messages-and-locales), e.g. "Remove filter: Status is Paid".
+
+React Aria's popover is modal: clicking outside, for example on a chip's ×, only closes the panel. With Radix UI and Base UI, the click also goes through.
+
+## Files
+
+| File | Exports | Role |
+| --- | --- | --- |
+| `filter-builder.tsx` | `FilterBuilder` | Trigger button + popover |
+| `filter-builder-panel.tsx` | `FilterBuilderPanel` | Rules, join, Add / Clear all / Apply |
+| `filter-chips.tsx` | `FilterChips` | Applied rules as removable chips |
+| `filter-rule-row.tsx` | `FilterRuleRow`, `FilterValueSlotProps` | One rule: field, operator, value, warnings, remove |
+| `filter-field-select.tsx` | `FilterFieldSelect` | Searchable field picker |
+| `filter-operator-select.tsx` | `FilterOperatorSelect` | Operator picker |
+| `filter-join-select.tsx` | `FilterJoinSelect` | AND / OR |
+| `filter-value-input.tsx` | `FilterValueInput`, `filterValueInputs` | Picks the value input by field type |
+| `filter-text-value-input.tsx` | `TextValueInput`, `NumberValueInput`, `DateTimeValueInput` | Text-like inputs, single or range |
+| `filter-boolean-value-input.tsx` | `BooleanValueInput` | Yes / No |
+| `filter-select-value-input.tsx` | `SelectValueInput` | Options, single or multiple, static or async |
+| `filter-date-value-input.tsx` | `DateValueInput` | Calendar, single day or range |
+| `filter-combobox.tsx` | `FilterCombobox` | Searchable list used by the selects |
+| `filter-rule-warnings.tsx` | `FilterRuleWarnings`, `FilterDraftRuleWarnings` | Warning icon and popover |
+| `filter-rule-summary.ts` | `useRuleSummary` | A rule in words, for chips |
+| `filter-date-format.ts` | `formatDateOnly`, `toDateTimeLocal`… | Locale-aware date display, hydration-safe |
+
+## Custom value inputs
+
+Each row renders the value input through a slot. The default, `FilterValueInput`, picks one by field type from `filterValueInputs`. To add an input for a [custom field type](/docs/filter/customization#custom-field-types), or replace a built-in one, pass your own map:
+
+```tsx title="components/filter/my-value-input.tsx"
+"use client"
+
+import {
+  FilterValueInput,
+  filterValueInputs,
+} from "@/components/filter/filter-value-input"
+import type { FilterValueSlotProps } from "@/components/filter/filter-rule-row"
+
+function RatingInput({ id, rule, setValue }: FilterValueSlotProps) {
+  const value = typeof rule.value === "number" ? rule.value : 0
+  return (
+    <div id={id} role="radiogroup" aria-label="Rating" className="flex gap-1">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type="button"
+          role="radio"
+          aria-checked={value === star}
+          onClick={() => setValue(star)}
+        >
+          {star <= value ? "★" : "☆"}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+const inputs = { ...filterValueInputs, rating: RatingInput }
+
+export function MyValueInput(props: FilterValueSlotProps) {
+  return <FilterValueInput {...props} inputs={inputs} />
+}
+```
+
+```tsx
+<FilterBuilder valueInput={MyValueInput} />
+```
+
+Define the component at module scope: rows are memoized, and a new component on every render would remount the inputs.
+
+The slot receives:
+
+| Prop | Description |
+| --- | --- |
+| `id` | Put it on the first focusable element: it gets focus after an operator is picked. |
+| `rule` | The draft rule. `rule.value` is whatever was last set, possibly partial. |
+| `field` | The field definition. |
+| `arity` | `"single"`, `"range"` or `"multi"`. Render one input, two, or a multi-select. |
+| `setValue(value)` | Updates the draft. Raw text is fine; it's parsed on apply. |
+
+Field types without an entry get a text input, which handles `single` and `range` values.
+
+## Calendar locale
+
+The Radix UI and Base UI date inputs use the shadcn `Calendar` (react-day-picker). It shows English month names and weeks starting on Sunday until you pass a locale. Edit `filter-date-value-input.tsx`:
+
+```tsx
+import { vi } from "react-day-picker/locale"
+
+<Calendar locale={vi} /* … */ />
+```
+
+Chips and the date input's button already format dates with the browser's locale.

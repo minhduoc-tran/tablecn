@@ -1,0 +1,77 @@
+---
+title: Overview
+description: A conditional filter builder that lives in the URL and speaks your backend's query language.
+---
+
+import { FilterPreview } from "@/components/docs/filter-preview"
+
+<FilterPreview />
+
+Try it: click **Filter**, pick a field, an operator and a value, then press **Apply** (or <kbd>Enter</kbd>). The rows above are filtered in the browser. Under the table you can see what would go into the URL (this preview keeps it in memory) and the query a JSON:API backend would receive.
+
+## A standalone core
+
+The filter is the first building block of tablecn, but it doesn't need the rest of it. You can install only the filter packages and use them wherever users narrow down a list:
+
+- **With the ready-made UI.** Add the `filter-builder` block from the registry. You get the builder popover, rule rows, value inputs and chips, as source code in your project.
+- **With your own UI.** Use `@querycn/filter-react` hooks and render whatever you like. The hooks handle the draft, validation, the URL and the backend query.
+- **Without React.** `@querycn/filter-core` has no dependencies. Decode `?filters=` in an API route, check it against your fields, and turn it into query params, a SQL builder call or an ORM `where`.
+
+## Features
+
+- **Seven field types**: `text`, `number`, `date`, `datetime`, `boolean`, `select`, `multiSelect`. You can [add your own](/docs/filter/customization#custom-field-types).
+- **Fifteen operators**, from `eq` and `contains` to `between`, `in` and `isEmpty`, each with a fixed value shape. You can add custom ones too.
+- **AND / OR** between rules.
+- **URL state.** The applied filter is one query param, so links are shareable and back/forward work. Adapters exist for the browser history API, react-router and the Next.js App Router.
+- **Backend serializers** for JSON:API style params, django-filter and PostgREST, plus helpers to write your own. They report rules the backend can't handle, and the UI flags them.
+- **Client-side filtering** with the same rules, accent- and case-insensitive for text.
+- **Async options** for select fields: search-as-you-type, caching, and labels resolved for values that come from a URL.
+- **Localized.** English and Vietnamese messages are included, and every label can be overridden.
+- **Three UI flavours**: Radix UI, Base UI and React Aria, with the same props.
+
+## How it works
+
+```txt
+fields ──► draft rules ──► Apply ──► ?filters={"and":[...]} ──► applied filter
+             (editing)                      (URL)                   │
+                                                                    ├─► serializer ──► backend query
+                                                                    └─► applyFilter ──► rows in the browser
+```
+
+1. **You declare the fields** users can filter on: a name, a label, a type and, for selects, the options. See [Fields](/docs/filter/fields).
+2. **Users edit a draft.** Rules can be incomplete while they type. Nothing touches the URL yet.
+3. **Apply** keeps the complete rules and writes them to the URL as compact JSON. Incomplete rules are dropped. See [URL state](/docs/filter/url-state).
+4. **Everyone reads the applied filter**: the client through `useAppliedFilter()`, the server through `decodeFilters` or `parseFilters`. Both decode the same URL the same way, and anything malformed is dropped instead of throwing.
+5. **A serializer turns it into a request.** The default produces `filter[status][eq]=paid`, and you can switch to django-filter, PostgREST or your own format. See [Serializers](/docs/filter/serializers). Data that's already in the browser can be filtered with [`applyFilter`](/docs/filter/client-filtering) instead.
+
+## The data model
+
+Everything revolves around one small, JSON-friendly shape:
+
+```ts
+interface FilterState {
+  join: "and" | "or"
+  rules: FilterRule[]
+}
+
+interface FilterRule {
+  id: string              // client-only key, never serialized
+  field: string           // a field name from your `fields`
+  operator: string | null // e.g. "eq", "between"; null while not picked
+  value: FilterValue
+}
+
+type Primitive = string | number | boolean
+type FilterValue = null | Primitive | [Primitive, Primitive] | Primitive[]
+```
+
+The shape of `value` follows the operator's [arity](/docs/filter/operators#arity): nothing for `isEmpty`, one value for `eq`, a pair for `between`, a list for `in`.
+
+<Cards>
+  <Card title="Installation" href="/docs/filter/installation" description="Packages, the registry block, and wiring for Next.js, Vite and react-router." />
+  <Card title="Fields" href="/docs/filter/fields" description="Every field option, with examples." />
+</Cards>
+
+## Credits
+
+The design started as a port of [FilterCN](https://www.npmjs.com/package/filtercn) (MIT) and was rewritten from scratch as separate core, React and UI layers.

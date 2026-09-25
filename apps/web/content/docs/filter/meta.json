@@ -1,0 +1,16 @@
+{
+  "title": "Filter",
+  "pages": [
+    "index",
+    "installation",
+    "fields",
+    "operators",
+    "url-state",
+    "react",
+    "nextjs",
+    "serializers",
+    "client-filtering",
+    "components",
+    "customization"
+  ]
+}
