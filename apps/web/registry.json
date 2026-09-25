@@ -114,6 +114,44 @@
           "dependencies": ["react-aria-components", "@internationalized/date"]
         }
       }
+    },
+    {
+      "name": "data-table",
+      "type": "registry:block",
+      "title": "Data Table",
+      "description": "A data table on TanStack Table v9: sorting and pages in the URL, a saved column layout and row selection, built on @querycn/table-react.",
+      "dependencies": [
+        "@querycn/table-react@^0.1.0",
+        "@tanstack/react-table@^9.2.0",
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "button",
+        "checkbox",
+        "dropdown-menu",
+        "select",
+        "separator",
+        "skeleton",
+        "table",
+        "tooltip"
+      ],
+      "files": [
+        {
+          "path": "registry/shared/table/page-range.ts",
+          "type": "registry:lib",
+          "target": "@components/data-table/page-range.ts"
+        },
+        {
+          "path": "registry/shared/table/measure-column-width.ts",
+          "type": "registry:lib",
+          "target": "@components/data-table/measure-column-width.ts"
+        }
+      ],
+      "bases": {
+        "aria": {
+          "dependencies": ["react-aria-components"]
+        }
+      }
     }
   ]
 }
