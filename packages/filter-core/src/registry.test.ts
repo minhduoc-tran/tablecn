@@ -118,6 +118,17 @@ describe("getDefaultOperator", () => {
   it("returns null when nothing is offered", () => {
     expect(getDefaultOperator(field({ type: "nope" }))).toBeNull()
   })
+
+  it("skips operators that aren't allowed", () => {
+    const f = field({ defaultOperator: "eq" })
+    expect(getDefaultOperator(f, undefined, (id) => id !== "eq")).toBe(
+      "contains"
+    )
+    expect(getDefaultOperator(f, undefined, (id) => id === "endsWith")).toBe(
+      "endsWith"
+    )
+    expect(getDefaultOperator(f, undefined, () => false)).toBeNull()
+  })
 })
 
 describe("createRegistry overrides", () => {

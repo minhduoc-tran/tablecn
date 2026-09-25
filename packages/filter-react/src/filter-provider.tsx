@@ -31,8 +31,10 @@ import type {
 } from "./adapters/url-state-adapter-types"
 import {
   AppliedFilterContext,
+  FilterActionsContext,
   FilterDraftContext,
   type AppliedFilterValue,
+  type FilterActionsValue,
   type FilterDraftValue,
 } from "./filter-contexts"
 import {
@@ -42,11 +44,6 @@ import {
 import { useAdapterValue } from "./use-adapter-value"
 
 const DEFAULT_SERIALIZER = jsonApiSerializer()
-
-type DraftActions = Omit<
-  FilterDraftValue,
-  "context" | "messages" | "state" | "isDirty" | "canAddRule"
->
 
 // Refs must be current before the next event handler runs; React 18 warns about layout effects on the server.
 const useIsomorphicLayoutEffect =
@@ -111,12 +108,21 @@ export function FilterProvider({
     setDraft(next)
   }, [])
 
+  const supportsOperator = useCallback(
+    (operator: string) => serializerSupports(serializer, operator),
+    [serializer]
+  )
+
   const dispatch = useCallback(
     (action: FilterAction) =>
       replaceDraft(
-        filterReducer(latest.current.draft, action, { ...context, maxRules })
+        filterReducer(latest.current.draft, action, {
+          ...context,
+          maxRules,
+          supportsOperator,
+        })
       ),
-    [replaceDraft, context, maxRules]
+    [replaceDraft, context, maxRules, supportsOperator]
   )
 
   const commit = useCallback(
@@ -135,8 +141,11 @@ export function FilterProvider({
     [context, write, replaceDraft]
   )
 
-  const actions = useMemo<DraftActions>(
+  const actions = useMemo<FilterActionsValue>(
     () => ({
+      context,
+      messages,
+      supportsOperator,
       addRule: (field) => dispatch({ type: "addRule", field }),
       removeRule: (id) => dispatch({ type: "removeRule", id }),
       setField: (id, field) => dispatch({ type: "setField", id, field }),
@@ -147,21 +156,18 @@ export function FilterProvider({
       apply: () => commit(latest.current.draft),
       reset: () => commit(EMPTY_FILTER_STATE),
       discard: () => replaceDraft(latest.current.applied),
-      supportsOperator: (operator) => serializerSupports(serializer, operator),
     }),
-    [dispatch, commit, replaceDraft, serializer]
+    [context, messages, supportsOperator, dispatch, commit, replaceDraft]
   )
 
   const draftValue = useMemo<FilterDraftValue>(
     () => ({
       ...actions,
-      context,
-      messages,
       state: draft,
       isDirty: encodeFilters(draft, context) !== queryKey,
       canAddRule: maxRules === undefined || draft.rules.length < maxRules,
     }),
-    [actions, context, messages, draft, queryKey, maxRules]
+    [actions, context, draft, queryKey, maxRules]
   )
 
   const removeAppliedRule = useCallback(
@@ -191,9 +197,11 @@ export function FilterProvider({
 
   return (
     <AppliedFilterContext.Provider value={appliedValue}>
-      <FilterDraftContext.Provider value={draftValue}>
-        {children}
-      </FilterDraftContext.Provider>
+      <FilterActionsContext.Provider value={actions}>
+        <FilterDraftContext.Provider value={draftValue}>
+          {children}
+        </FilterDraftContext.Provider>
+      </FilterActionsContext.Provider>
     </AppliedFilterContext.Provider>
   )
 }

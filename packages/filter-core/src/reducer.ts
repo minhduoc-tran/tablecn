@@ -24,6 +24,8 @@ export interface ReducerContext extends FilterContext {
   /** Upper bound on rules; `addRule` is ignored once reached. */
   maxRules?: number
   createId?: () => string
+  /** Keeps default operators to those the serializer can send. */
+  supportsOperator?: (operator: OperatorId) => boolean
 }
 
 export const EMPTY_FILTER_STATE: FilterState = { join: "and", rules: [] }
@@ -50,7 +52,11 @@ function defaultOperatorFor(
 ): OperatorId | null {
   const field = findField(context, fieldName)
   return field
-    ? getDefaultOperator(field, context.registry ?? DEFAULT_REGISTRY)
+    ? getDefaultOperator(
+        field,
+        context.registry ?? DEFAULT_REGISTRY,
+        context.supportsOperator
+      )
     : null
 }
 

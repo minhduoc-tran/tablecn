@@ -134,6 +134,22 @@ describe("setField", () => {
       state
     )
   })
+
+  it("picks a default the serializer supports", () => {
+    const ctx = { ...context, supportsOperator: (id: string) => id !== "eq" }
+    const added = reduce(
+      EMPTY_FILTER_STATE,
+      { type: "addRule", field: "code" },
+      ctx
+    )
+    expect(added.rules[0]?.operator).toBe("contains")
+    const switched = reduce(
+      withRules(rule({ field: "name" })),
+      { type: "setField", id: "r1", field: "code" },
+      ctx
+    )
+    expect(switched.rules[0]?.operator).toBe("contains")
+  })
 })
 
 describe("setOperator", () => {

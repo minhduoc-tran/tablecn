@@ -8,7 +8,11 @@
       "type": "registry:block",
       "title": "Filter Builder",
       "description": "A filter builder for data tables: field, operator and value rows applied to the URL, built on @querycn/filter-react.",
-      "dependencies": ["@querycn/filter-core", "@querycn/filter-react"],
+      "dependencies": [
+        "@querycn/filter-core",
+        "@querycn/filter-react",
+        "lucide-react"
+      ],
       "registryDependencies": [
         "badge",
         "button",
@@ -24,8 +28,28 @@
           "path": "registry/{base}/filter/filter-builder.tsx",
           "type": "registry:component",
           "target": "@components/filter/filter-builder.tsx"
+        },
+        {
+          "path": "registry/{base}/filter/filter-field-select.tsx",
+          "type": "registry:component",
+          "target": "@components/filter/filter-field-select.tsx"
+        },
+        {
+          "path": "registry/{base}/filter/filter-operator-select.tsx",
+          "type": "registry:component",
+          "target": "@components/filter/filter-operator-select.tsx"
+        },
+        {
+          "path": "registry/{base}/filter/filter-rule-row.tsx",
+          "type": "registry:component",
+          "target": "@components/filter/filter-rule-row.tsx"
         }
-      ]
+      ],
+      "bases": {
+        "aria": {
+          "dependencies": ["react-aria-components"]
+        }
+      }
     }
   ]
 }

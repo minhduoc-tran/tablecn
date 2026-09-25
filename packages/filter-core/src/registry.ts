@@ -83,12 +83,16 @@ export function getFieldOperators(
   return field.operators.filter((id) => allowed.includes(id))
 }
 
-/** `field.defaultOperator` → type default → first available, if each is offered. */
+/**
+ * `field.defaultOperator` → type default → first available, if each is offered.
+ * `isAllowed` narrows what counts as offered, e.g. to what the serializer supports.
+ */
 export function getDefaultOperator(
   field: FieldDefinition,
-  registry: FilterRegistry = DEFAULT_REGISTRY
+  registry: FilterRegistry = DEFAULT_REGISTRY,
+  isAllowed: (operator: OperatorId) => boolean = () => true
 ): OperatorId | null {
-  const available = getFieldOperators(field, registry)
+  const available = getFieldOperators(field, registry).filter(isAllowed)
   const candidates = [
     field.defaultOperator,
     getFieldType(field, registry)?.defaultOperator,

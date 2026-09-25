@@ -22,13 +22,8 @@ interface FilterConfigValue {
   messages: FilterMessages
 }
 
-/** The rules being edited, not yet applied. */
-export interface FilterDraftValue extends FilterConfigValue {
-  state: FilterState
-  /** Applying would change the applied filter; incomplete rules don't count. */
-  isDirty: boolean
-  /** `false` once `maxRules` is reached. */
-  canAddRule: boolean
+/** Editing actions and config; keeps its identity while the draft changes. */
+export interface FilterActionsValue extends FilterConfigValue {
   /** Whether the serializer can send this operator; hide the others. */
   supportsOperator: (operator: OperatorId) => boolean
   addRule: (field?: string) => void
@@ -43,6 +38,15 @@ export interface FilterDraftValue extends FilterConfigValue {
   reset: () => void
   /** Drops unapplied edits. */
   discard: () => void
+}
+
+/** The rules being edited, not yet applied. */
+export interface FilterDraftValue extends FilterActionsValue {
+  state: FilterState
+  /** Applying would change the applied filter; incomplete rules don't count. */
+  isDirty: boolean
+  /** `false` once `maxRules` is reached. */
+  canAddRule: boolean
 }
 
 export interface AppliedFilterValue<T = QueryParams> extends FilterConfigValue {
@@ -76,6 +80,10 @@ export const EMPTY_APPLIED_FILTER: AppliedFilterValue<unknown> = {
 }
 
 export const FilterDraftContext = createContext<FilterDraftValue | null>(null)
+
+export const FilterActionsContext = createContext<FilterActionsValue | null>(
+  null
+)
 
 export const AppliedFilterContext =
   createContext<AppliedFilterValue<unknown>>(EMPTY_APPLIED_FILTER)
