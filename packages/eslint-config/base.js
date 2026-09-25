@@ -27,6 +27,13 @@ export const config = [
     },
   },
   {
-    ignores: ["dist/**", ".next/**", "**/.turbo/**", "**/coverage/**"],
+    ignores: [
+      "dist/**",
+      ".next/**",
+      "**/.turbo/**",
+      "**/coverage/**",
+      // tsup writes and deletes these temp files during a build that runs alongside lint
+      "**/*.bundled_*.mjs",
+    ],
   },
 ]
