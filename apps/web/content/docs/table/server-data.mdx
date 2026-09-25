@@ -3,7 +3,7 @@ title: Server data
 description: Client mode for rows already in the browser, server mode for a backend that filters, sorts and pages.
 ---
 
-`useDataTable` has two modes. They differ in who does the work: the browser, or your backend.
+`useDataTable` has two modes. The difference is who does the work: the browser, or your backend.
 
 | | Client mode (default) | Server mode |
 | --- | --- | --- |
@@ -14,7 +14,7 @@ description: Client mode for rows already in the browser, server mode for a back
 
 ## Client mode
 
-Pass every row. The applied filter runs on them with [`applyFilter`](/docs/filter/client-filtering), then TanStack Table sorts and pages:
+Pass every row. The table filters, searches, sorts and pages them in the browser:
 
 ```tsx title="components/orders-table.tsx"
 "use client"
@@ -31,34 +31,17 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
 }
 ```
 
-`data` must keep its identity between renders (state, a query result, a `useMemo`), as for any TanStack table.
-
-By default a filter field reads `row[field.name]`. When a field's name isn't a key of the row (nested data, a computed value), pass `getFilterValue`:
-
-```tsx title="Nested values"
-const getFilterValue = (order: Order, field: FieldDefinition) =>
-  field.name === "customer" ? order.customer.name : order[field.name as keyof Order]
-
-useDataTable({ data: orders, columns, getRowId, getFilterValue })
-```
-
-Keep `getFilterValue` stable too: define it at module level or wrap it in `useCallback`. A new function each render filters the rows again each render.
-
-The [search](/docs/table/url-state#searching) looks in every column with an accessor, through the column's own accessor (so `customer.name` works). To narrow it, list the column ids:
-
-```tsx title="Searched columns"
-const searchColumns = ["id", "customer", "city"] // module level, or useMemo
-
-useDataTable({ data: orders, columns, getRowId, searchColumns })
-```
-
-An id no column has is left out, with a warning in the console. If none of the ids match, every column is searched, so a typo doesn't empty the table.
+`data` must keep its identity between renders (state, a query result, a `useMemo`), as for any TanStack table. To tune how rows are matched (nested values, which columns the search looks in), see [Filtering](/docs/table/filtering#client-mode-rows-in-the-browser).
 
 ## Server mode
 
 With `mode: "server"`, `data` is the current page and `rowCount` is the total across pages. `rowCount` is `undefined` while it's unknown, such as during the first fetch. The pagination then shows the page without a total, and a full page means another one may follow.
 
-The table needs to know what to fetch before it can render the result. `useTableQuery` reads the filter, sort and page from the URL and turns them into your backend's params. Call it first, fetch, then pass the rows to `useDataTable`.
+It takes three steps:
+
+1. **Choose the filter's format** with a `serializer` on the provider.
+2. **Build the request** with `useTableQuery`: it reads the filter, search, sort and page from the URL and returns your backend's params.
+3. **Fetch, then pass the page** to `useDataTable` with `mode: "server"`.
 
 ```tsx title="app/orders/orders-page.tsx"
 "use client"
@@ -124,6 +107,8 @@ export function OrdersTable() {
   )
 }
 ```
+
+Good to know:
 
 - `NO_ORDERS` is a module constant: `?? []` inline would be a new array on every render.
 - `keepPreviousData` keeps the old page on screen while the next one loads. `isLoading` shows skeleton rows when there are none yet, and dims the old rows otherwise.
@@ -226,6 +211,6 @@ On the client, pass `url={orderTableUrl}` to `useDataTable` (and to `useTableQue
 Row selection holds within one page. It clears when the page, sort or filter changes, since the selected rows may no longer be on screen. `getRowId` keeps the selection across refetches of the same page.
 
 <Cards>
-  <Card title="Components" href="/docs/table/components" description="DataTable, pagination, toolbar and their props." />
-  <Card title="Filter serializers" href="/docs/filter/serializers" description="The filter's part of the request." />
+  <Card title="Components" href="/docs/components/table" description="DataTable, pagination, toolbar and their props." />
+  <Card title="Connect your API" href="/docs/filter/serializers" description="The filter's part of the request." />
 </Cards>

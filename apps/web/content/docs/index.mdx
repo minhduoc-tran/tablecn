@@ -1,69 +1,65 @@
 ---
 title: Introduction
-description: Data table building blocks for shadcn/ui — logic on npm, UI you own.
+description: A data table for shadcn/ui with a built-in filter builder. Search, filters, sorting and pages live in the URL.
 ---
 
-**tablecn** is a set of building blocks for the data tables every admin panel ends up with: filtering, sorting, paging and the URL state that ties them together. It follows the [shadcn/ui](https://ui.shadcn.com) way of working:
+import { TablePreview } from "@/components/docs/table-preview"
 
-- **Logic ships as npm packages** under the `@querycn` scope. They are headless, typed and tested, and you update them like any dependency.
-- **UI ships through a shadcn registry.** The CLI copies the components into your project, so you can restyle or rewrite them. Every component comes in three versions: [Radix UI](https://www.radix-ui.com), [Base UI](https://base-ui.com) and [React Aria](https://react-spectrum.adobe.com/react-aria/).
+<TablePreview />
+
+**Try it:** search, click a header to sort, go to another page, or click **Filter** and add a condition like *Status is Paid*. Then look at the address bar: everything that decides which rows you see is in the URL, so you can reload or share the link and get the same view.
+
+Now drag a header to move it, resize a column, or open **Columns** to pin, hide or color one. That's the column *layout*. It's saved in your browser, so it's still there on your next visit.
+
+## What is tablecn?
+
+**tablecn** is the data table every admin panel ends up needing, built on [TanStack Table](https://tanstack.com/table) and [shadcn/ui](https://ui.shadcn.com):
+
+- **A table** with search, sorting, pages, row selection, and columns users can arrange.
+- **A filter builder** that lets users combine conditions like *Status is Paid and Amount is at least 10*.
+- **One URL** that holds the search, the filter, the sort and the page, and a request builder that turns it into what your API expects.
+
+It follows the shadcn/ui way of working:
+
+- **The UI is copied into your project** by the shadcn CLI, so you can restyle or rewrite any of it. It comes in three versions: [Radix UI](https://www.radix-ui.com), [Base UI](https://base-ui.com) and [React Aria](https://react-spectrum.adobe.com/react-aria/).
+- **The logic is on npm** under the `@querycn` scope: typed, tested, and updated like any dependency.
 
 <Callout title="Work in progress">
   The packages are not published to npm yet. The docs describe the current state of the `main` branch.
 </Callout>
 
-## What's inside
+## Features
 
-Two pieces are ready. The **filter** is a conditional filter builder ("Where *Status* is *Paid* and *Amount* is between *10* and *50*") that keeps its state in the URL and turns it into whatever your backend understands.
-
-The filter is a **standalone core**. It doesn't depend on the table, so you can use it on its own: above a list of cards, in a report, or only on the server to parse `?status__eq=paid` in an API route.
-
-The **table** is built on [TanStack Table](https://tanstack.com/table). It keeps sorting and pages in the same URL as the filter, reads the applied filter, and lets users shape a column layout that's saved in their browser.
-
-<Cards>
-  <Card title="Filter" href="/docs/filter" description="What it does, how the pieces fit, and a live preview." />
-  <Card title="Table" href="/docs/table" description="Sorting, pages, layout and the filter together, with a live preview." />
-</Cards>
+- **Filter builder**: 7 field types, 15 operators, AND / OR, and options loaded from your API as users type.
+- **Search** across columns, ignoring case and accents: `nguyen` finds "Nguyễn".
+- **Sorting** by one or several columns, and **pages** with a rows-per-page picker.
+- **Shareable URLs** like `?q=nguyen&status__eq=paid&sort=-amount&page=2`. Back / Forward work, and a new filter goes back to page 1.
+- **Client or server data.** Give it every row and it does the work in the browser, or give it one page and let it build the request for JSON:API-style APIs, django-filter or PostgREST.
+- **A layout users own**: show, hide, reorder, pin, resize and color columns, saved per table.
+- **Row selection** with a bar for bulk actions, plus loading, empty and error states.
+- **Virtualization** for pages with thousands of rows.
+- **Accessible** from the keyboard and with screen readers, and **translatable** (English and Vietnamese included).
 
 ## Packages
 
-| Package | What it is | Runs on |
-| --- | --- | --- |
-| `@querycn/filter-core` | Rules model, validation, URL codec, backend serializers, client-side filtering. Zero dependencies. | Anywhere: browser, Node, edge, any framework |
-| `@querycn/filter-react` | Headless provider and hooks, URL adapters (browser history, react-router). | React 18+ |
-| `@querycn/filter-next` | Next.js App Router adapter and `parseFilters` for server components. | Next.js 14.1+ |
-| `@querycn/table-react` | `useDataTable` on TanStack Table v9: URL sorting and pages, saved column layout, server params. | React 18+ |
-| `filter-builder` (registry) | The filter UI: builder popover, rule rows, value inputs, chips. | shadcn/ui projects |
-| `data-table` (registry) | The table UI: table, column headers, pagination, Columns menu, toolbar. | shadcn/ui projects |
+| Package | What it is |
+| --- | --- |
+| `data-table` (registry) | The table UI: table, headers, pagination, **Columns** menu, search box, toolbar. |
+| `filter-builder` (registry) | The filter UI: **Filter** button, panel, value inputs, chips. |
+| `@querycn/table-react` | `useDataTable`: a TanStack Table with URL state, the filter wired in, and a saved layout. |
+| `@querycn/filter-react` | The filter's provider and hooks, and the URL adapters (browser history, react-router). |
+| `@querycn/filter-next` | The Next.js App Router adapter, and `parseFilters` for server components. |
+| `@querycn/filter-core` | The filter's logic: rules, validation, URL format, request builders. No dependencies. |
 
-Each layer only depends on the ones above it, so you pick how much you take:
+You don't need to install these one by one: adding the two registry blocks installs what they use.
 
-```txt title="Package layers"
-@querycn/filter-core        ← backend only: parse the URL, build the query
-  └─ @querycn/filter-react  ← React with your own UI
-       ├─ @querycn/filter-next   ← Next.js App Router
-       ├─ filter-builder (registry) ← ready-made shadcn UI
-       └─ @querycn/table-react   ← the table on TanStack Table
-            └─ data-table (registry) ← ready-made shadcn UI
-```
+<Callout title="Only need a filter?">
+  The filter works without the table, for example above a list of cards or in an API route. See [Use without the table](/docs/filter/standalone).
+</Callout>
 
-## Project structure
+## Next steps
 
-This site lives in the same monorepo as the packages:
-
-```txt title="Monorepo layout"
-tablecn/
-├── apps/web/                      # this site (Next.js + Fumadocs)
-│   ├── content/docs/              # MDX docs pages
-│   ├── registry/{radix,base,aria} # filter and table UI, one folder per primitive library
-│   ├── registry.json              # shadcn registry definition
-│   └── public/r/                  # built registry (generated, not committed)
-└── packages/
-    ├── filter-core/               # @querycn/filter-core
-    ├── filter-react/              # @querycn/filter-react
-    ├── filter-next/               # @querycn/filter-next
-    ├── table-react/               # @querycn/table-react
-    └── ui/                        # shared shadcn/ui components for this site
-```
-
-See [Development](/docs/development) to run it locally.
+<Cards>
+  <Card title="Installation" href="/docs/installation" description="A table with search, filter, sorting and pages, in five steps." />
+  <Card title="How it works" href="/docs/concepts" description="Columns, fields, the URL and the API request, explained with one example." />
+</Cards>

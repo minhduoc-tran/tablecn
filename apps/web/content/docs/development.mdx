@@ -3,6 +3,25 @@ title: Development
 description: Run the tablecn monorepo locally.
 ---
 
+## Project structure
+
+The docs site lives in the same monorepo as the packages:
+
+```txt title="Monorepo layout"
+tablecn/
+├── apps/web/                      # this site (Next.js + Fumadocs)
+│   ├── content/docs/              # MDX docs pages
+│   ├── registry/{radix,base,aria} # table and filter UI, one folder per primitive library
+│   ├── registry.json              # shadcn registry definition
+│   └── public/r/                  # built registry
+└── packages/
+    ├── filter-core/               # @querycn/filter-core
+    ├── filter-react/              # @querycn/filter-react
+    ├── filter-next/               # @querycn/filter-next
+    ├── table-react/               # @querycn/table-react
+    └── ui/                        # shared shadcn/ui components for this site
+```
+
 ## Requirements
 
 - Node.js 20.6 or later
@@ -34,7 +53,7 @@ pnpm test
 
 ## Registry
 
-The filter UI lives in `apps/web/registry/{radix,base,aria}/filter`, described once in `apps/web/registry.json`. Rebuild the registry after changing either:
+The table and filter UI live in `apps/web/registry/{radix,base,aria}/{table,filter}`, described once in `apps/web/registry.json`. Rebuild the registry after changing either:
 
 ```bash title="Terminal"
 pnpm registry:build

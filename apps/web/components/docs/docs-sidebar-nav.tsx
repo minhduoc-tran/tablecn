@@ -12,17 +12,26 @@ interface SidebarGroup {
 }
 
 /**
- * Groups the Fumadocs page tree for the sidebar:
- * top-level pages go into "Sections", each folder becomes its own group.
+ * Groups the Fumadocs page tree for the sidebar, in meta.json order:
+ * a top-level `---Label---` separator starts a group for the pages after it,
+ * and each folder becomes its own group.
  */
 function getSidebarGroups(tree: PageTree.Root): SidebarGroup[] {
-  const sections: SidebarGroup = { label: "Sections", items: [] }
-  const groups: SidebarGroup[] = [sections]
+  const groups: SidebarGroup[] = []
+  let current: SidebarGroup | undefined
 
   for (const node of tree.children) {
-    if (node.type === "page") {
-      sections.items.push(node)
+    if (node.type === "separator") {
+      current = { label: String(node.name ?? ""), items: [] }
+      groups.push(current)
+    } else if (node.type === "page") {
+      if (!current) {
+        current = { label: "Sections", items: [] }
+        groups.push(current)
+      }
+      current.items.push(node)
     } else if (node.type === "folder") {
+      current = undefined
       const items = [
         ...(node.index ? [node.index] : []),
         ...node.children.filter((child): child is PageTree.Item => child.type === "page"),

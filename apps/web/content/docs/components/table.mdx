@@ -1,11 +1,11 @@
 ---
-title: Components
-description: The data-table block — what's in it, its props, and how the pieces fit.
+title: Table components
+description: The table, pagination, toolbar, search box and Columns menu, with their props.
 ---
 
-The `data-table` registry block is the UI from the [preview](/docs/table). It's copied into your project (see [Installation](/docs/table/installation)), so every file is yours to edit. The Radix UI, Base UI and React Aria versions have the same files and props.
+The `data-table` block is the table UI from the [preview](/docs). The CLI copies it into `components/data-table/` (see [Installation](/docs/installation)), so every file is yours to edit. The Radix UI, Base UI and React Aria versions have the same files and props.
 
-Every component takes the `table` returned by [`useDataTable`](/docs/table/installation). They don't need a provider, and they don't depend on the filter: without a `FilterProvider`, the filter parts simply don't show.
+Every component takes the `table` returned by `useDataTable`. They don't need a provider, and they don't depend on the filter: without a `FilterProvider`, the filter parts simply don't show.
 
 ## Usage
 
@@ -94,8 +94,9 @@ The table scrolls inside its own container. Give it a height (`className="max-h-
 The header cells are rendered for you (`DataTableColumnHeader`, one per column):
 
 - **Click** a sortable header to sort: ascending, descending, then off. <kbd>Shift</kbd>+click adds the column to the sort, and a small number shows its place.
-- **Drag** a header to reorder; the grip appears when it has keyboard focus.
-- **Drag** the header's end edge to resize, or double-click it to fit the content. See [Layout & persistence](/docs/table/layout).
+- **Drag** a header to reorder: the whole column follows the pointer and a line marks where it will land. The grip appears when it has keyboard focus.
+- **Drag** the header's end edge to resize: a line through the rows previews the new edge, and the width applies on release. Double-click the edge to fit the content. See [Layout & persistence](/docs/table/layout).
+- **⋯** (on hover or focus) or a **right-click** opens the column's menu: sort, pin, fit to content, color and hide. See [The column menu](/docs/table/layout#the-column-menu).
 - `meta.required` adds a red `*` after the title. See [Columns](/docs/table/columns).
 
 ## createSelectionColumn
@@ -166,7 +167,7 @@ Above the table: your controls on the left; **Clear filters**, reload and **Colu
 
 ## DataTableSearch
 
-A search box for the rows, written to the URL as `?q=`. In client mode it looks in the searched columns, ignoring case and accents; in server mode it's sent to the backend. See [Searching](/docs/table/url-state#searching).
+A search box for the rows, written to the URL as `?q=`. In client mode it looks in the searched columns, ignoring case and accents; in server mode it's sent to the backend. See [The search box](/docs/table/filtering#the-search-box).
 
 <TypeTable
   type={{

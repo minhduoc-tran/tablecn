@@ -1,0 +1,101 @@
+---
+title: Filtering
+description: How the filter and the search narrow the table's rows, and how to tune them.
+---
+
+The table has two ways to narrow the rows:
+
+- **The search box** (`?q=nguyen`): free text, looked up in several columns at once. Quick to use.
+- **The filter** (`?status__eq=paid`): precise conditions on one field each, like *Amount is between 10 and 50*. Shown as chips.
+
+Both are set up in [Installation](/docs/installation). This page explains what they do with your rows.
+
+## How the table uses the filter
+
+Put a `FilterProvider` (or `NextFilterProvider`) around the component that calls `useDataTable`. The table finds it on its own:
+
+```tsx title="Filter + table"
+<NextFilterProvider fields={orderFields} onApply={() => resetPagePatch()}>
+  <OrdersTable orders={orders} /> {/* useDataTable inside reads the applied filter */}
+</NextFilterProvider>
+```
+
+- The filter and the table share one URL, through the provider's adapter.
+- **Clear filters** in the toolbar clears the filter and the search together.
+- `onApply={() => resetPagePatch()}` goes back to page 1 in the same URL update when the filter changes.
+
+What happens next depends on where your rows come from.
+
+## Client mode: rows in the browser
+
+The table filters the rows itself. Each field reads `row[field.name]`, so a field named `status` reads `order.status`. No extra setup is needed when field names match your row keys.
+
+### Nested or computed values
+
+When a field's name isn't a key of the row, tell the table where to read it with `getFilterValue`:
+
+```tsx title="Nested values"
+const getFilterValue = (order: Order, field: FieldDefinition) =>
+  field.name === "customer" ? order.customer.name : order[field.name as keyof Order]
+
+useDataTable({ data: orders, columns, getRowId, getFilterValue })
+```
+
+It may return a list (like a row's tags): a rule then matches if any item matches. Define the function outside your component, or wrap it in `useCallback`, so the rows aren't filtered again on every render.
+
+### How values are compared
+
+| Field type | Row values it understands | Compared as |
+| --- | --- | --- |
+| `text` | strings, numbers, booleans | text, ignoring case and accents (`da nang` matches `Đà Nẵng`) |
+| `number` | numbers, numeric strings | numbers |
+| `date` | `"2026-09-25"`, ISO strings, `Date`, timestamps | the calendar day |
+| `datetime` | ISO strings, `Date`, timestamps | exact moments |
+| `boolean` | `true` / `false`, `"true"` / `"false"` | yes / no |
+| `select`, `multiSelect` | strings, numbers | option values (not labels) |
+
+Good to know:
+
+- **Empty values** (`null`, `undefined`, `""`, `[]`) match *is empty* and never match comparisons like *is* or *is greater than*. They do match negations: "Status is not Paid" includes rows with no status.
+- **Dates with a time** (a `Date`, `…Z`, `+07:00`) are compared on the user's local day, the one the table shows.
+- **Values that can't be read** for the type, like `"1,200"` in a number field, match nothing, not even *is empty*.
+- **Rules that can't be checked**, like a number rule whose value is `12,5`, match no row. An empty table gets noticed; a filter that's silently ignored doesn't.
+
+## Server mode: your backend filters
+
+In server mode, the table doesn't touch the rows. The applied filter goes into the request, next to the search, sort and page, and your backend returns the matching page. The provider's `serializer` decides the format:
+
+```tsx title="Filter in django-filter format"
+const serializer = djangoSerializer()
+
+<NextFilterProvider fields={orderFields} serializer={serializer} onApply={() => resetPagePatch()}>
+```
+
+See [Server data](/docs/table/server-data) for the full setup, and [Connect your API](/docs/filter/serializers) for the filter formats.
+
+## The search box
+
+The search box writes `?q=` once typing pauses (300 ms), or right away on <kbd>Enter</kbd>.
+
+- **Client mode** keeps rows where every word appears in some column, ignoring case and accents: `nguyen ha noi` finds "Nguyễn Văn An" in "Hà Nội". It looks in every column with an accessor.
+- **Server mode** sends the text to your backend. See [Server data](/docs/table/server-data#searching).
+
+To search only some columns in client mode, list their ids:
+
+```tsx title="Searched columns"
+const searchColumns = ["id", "customer", "city"] // outside the component
+
+useDataTable({ data: orders, columns, getRowId, searchColumns })
+```
+
+An id no column has is skipped, with a warning in the console. If none match, every column is searched, so a typo doesn't empty the table.
+
+From code, set the search with `table.options.meta.setSearch("…")`, and read it from `table.options.meta.search`.
+
+## Next steps
+
+<Cards>
+  <Card title="Fields" href="/docs/filter/fields" description="Field types, operators, and options loaded from your API." />
+  <Card title="Server data" href="/docs/table/server-data" description="Let your backend filter, sort and page." />
+  <Card title="Filter components" href="/docs/components/filter" description="Props of the Filter button, panel and chips." />
+</Cards>

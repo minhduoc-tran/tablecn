@@ -1,109 +1,33 @@
 ---
-title: React API
-description: FilterProvider and the hooks behind the UI — use them to build your own.
+title: Custom UI
+description: Build your own filter UI with the hooks behind the ready-made one.
 ---
 
-`@querycn/filter-react` is headless. The registry UI is built entirely on the hooks below, so anything it does, your own components can do too.
+The ready-made filter UI is built entirely on the hooks from `@querycn/filter-react`. Use them to build your own: a sidebar of checkboxes, quick-filter buttons, a different builder. The hooks handle the state, validation, the URL and the API request; you only render.
 
-## Draft and applied
+Need small changes? It's usually easier to edit the [copied components](/docs/components/filter).
 
-The provider keeps two filters:
+## Which hook do I need?
 
-- the **draft**: what the user is editing. Rules can be incomplete. Changing it re-renders only the components reading it.
-- the **applied** filter: what's in the URL and what your data follows. It changes only on `apply()`, `reset()`, `removeRule()` from `useAppliedFilter` (a chip's ×), or when the URL changes (back/forward, a shared link).
+| You want to… | Use |
+| --- | --- |
+| Load or show data for the applied filter | [`useAppliedFilter`](#useappliedfilter) |
+| Build the editing panel: add rules, Apply, Clear all | [`useFilter`](#usefilter) |
+| Render one rule row: field, operator and value pickers | [`useFilterRule`](#usefilterrule) |
+| Show warnings on a rule | [`useRuleWarnings`](#userulewarnings) |
+| Show options for a select field, static or loaded | [`useFieldOptions`](#usefieldoptions) |
 
-`apply()` keeps the complete rules of the draft and writes them. `discard()` throws the draft away and starts again from the applied filter. The builder popover calls `discard()` when it closes without applying.
+All of them must be used inside a `FilterProvider`.
 
-## FilterProvider
+## A minimal builder
 
-```tsx title="Usage"
-import { FilterProvider } from "@querycn/filter-react"
-
-<FilterProvider fields={orderFields} adapter={adapter}>
-  {children}
-</FilterProvider>
-```
-
-<TypeTable
-  type={{
-    fields: {
-      description: "What users can filter on. See Fields.",
-      type: "readonly FieldDefinition[]",
-      required: true,
-    },
-    adapter: {
-      description: "Where the applied filter is stored. See URL state.",
-      type: "UrlStateAdapter",
-      default: "in memory",
-    },
-    urlFormat: {
-      description: "How rules map to query params. See URL state.",
-      type: "UrlFormat",
-      default: "defaultUrlFormat",
-    },
-    serializer: {
-      description: "Builds `query` for useAppliedFilter. Built-in serializers also tell the UI which operators to offer.",
-      type: "QuerySerializer",
-      default: "jsonApiSerializer()",
-    },
-    registry: {
-      description: "Custom field types and operators, from createRegistry().",
-      type: "FilterRegistry",
-      default: "DEFAULT_REGISTRY",
-    },
-    maxRules: {
-      description: "Upper bound on rules. Adding more is ignored and canAddRule turns false.",
-      type: "number",
-    },
-    messages: {
-      description: "Overrides for UI strings, merged over English. See Customization.",
-      type: "FilterMessagesOverrides",
-    },
-    onApply: {
-      description: "Runs when applying changes the filter. Returned params are written in the same navigation, e.g. { page: null }.",
-      type: "(state: FilterState) => Record<string, string | null> | void",
-    },
-  }}
-/>
-
-`fields`, `registry`, `serializer` and `messages` should keep their identity between renders: define them at module scope or wrap them in `useMemo`. A new one rebuilds the context and the query.
-
-## useAppliedFilter
-
-The applied filter and what's derived from it. Use it in the parts of the page that load or show data.
-
-```tsx title="components/orders-table.tsx"
-import { useAppliedFilter } from "@querycn/filter-react"
-
-function OrdersTable() {
-  const { query, queryKey, activeCount } = useAppliedFilter()
-  // …
-}
-```
-
-| Property | Type | Description |
-| --- | --- | --- |
-| `state` | `FilterState` | Complete rules only, with positional ids (`u0`, `u1`…). |
-| `activeCount` | `number` | Number of applied rules, e.g. for a badge. |
-| `query` | `T` (default `QueryParams`) | The serializer's output. Recomputed only when the applied filter changes. |
-| `queryKey` | `string` | The filter's query params, e.g. `status__eq=paid`; `""` when empty. A stable string for cache keys and effect dependencies. |
-| `ruleIssues` | `Record<string, RuleIssue[]>` | Per rule id, `"conflict"` or `"unsupported"` from the serializer's `inspect`. |
-| `removeRule(id)` | `(id: string) => void` | Removes one applied rule right away, e.g. from a chip. |
-| `context` | `{ fields, registry }` | Ready to pass to core functions like `applyFilter`. |
-| `messages` | `FilterMessages` | The merged UI strings. |
-
-With a custom serializer, pass its output type: `useAppliedFilter<Prisma.OrderWhereInput>()`. The type isn't checked against the serializer.
-
-Outside a provider, `useAppliedFilter` returns an empty filter instead of throwing, so a table component can call it whether or not a filter is set up.
-
-## useFilter
-
-The draft, plus every editing action. It re-renders on each keystroke, so use it inside the builder UI only.
+A panel with rule rows, using plain HTML elements:
 
 ```tsx title="components/my-filter-panel.tsx"
-import { useFilter } from "@querycn/filter-react"
+import type { FilterRule } from "@querycn/filter-core"
+import { useFilter, useFilterRule } from "@querycn/filter-react"
 
-function MyFilterPanel() {
+export function MyFilterPanel() {
   const { state, isDirty, addRule, apply, reset } = useFilter()
   return (
     <form onSubmit={(event) => { event.preventDefault(); apply() }}>
@@ -114,42 +38,9 @@ function MyFilterPanel() {
     </form>
   )
 }
-```
-
-| Property | Description |
-| --- | --- |
-| `state` | The draft `FilterState`, incomplete rules included. |
-| `isDirty` | Applying would change the applied filter. Incomplete rules don't count. |
-| `canAddRule` | `false` once `maxRules` is reached. |
-| `addRule(field?)` | Adds a rule, optionally with a field (and its default operator) picked. |
-| `removeRule(id)` | Removes a draft rule. |
-| `setField(id, field)` | Changes the field; resets the operator to the field's default and clears the value. |
-| `setOperator(id, operator)` | Changes the operator; keeps the value if the arity is the same. |
-| `setValue(id, value)` | Sets the raw value. It's parsed and checked on apply, so partial input like `"1."` is fine. |
-| `setJoin(join)` | `"and"` or `"or"`. |
-| `apply()` | Writes the complete rules to the adapter. |
-| `reset()` | Clears the filter and applies at once. |
-| `discard()` | Drops unapplied edits. |
-| `supportsOperator(id)` | Whether the serializer can send this operator. |
-| `context`, `messages` | As in `useAppliedFilter`. |
-
-Actions read the latest draft, so `setValue(…)` followed by `apply()` in the same handler applies the new value.
-
-## useFilterActions
-
-The same actions, `context`, `messages` and `supportsOperator` as `useFilter`, without `state`, `isDirty` and `canAddRule`. It keeps its identity while the draft changes, so memoized components using it don't re-render on every keystroke.
-
-## useFilterRule
-
-Everything a rule row needs:
-
-```tsx title="components/my-rule-row.tsx"
-import type { FilterRule } from "@querycn/filter-core"
-import { useFilterRule } from "@querycn/filter-react"
 
 const MyRuleRow = React.memo(function MyRuleRow({ rule }: { rule: FilterRule }) {
-  const { field, fields, operators, arity, setField, setOperator, setValue, remove } =
-    useFilterRule(rule)
+  const { fields, operators, arity, setField, setOperator, setValue, remove } = useFilterRule(rule)
 
   return (
     <div>
@@ -173,41 +64,153 @@ const MyRuleRow = React.memo(function MyRuleRow({ rule }: { rule: FilterRule }) 
 })
 ```
 
+## Draft and applied
+
+The provider keeps two versions of the filter:
+
+- **The draft** is what users are editing. Rules can be incomplete. `useFilter` and `useFilterRule` work on it.
+- **The applied filter** is what's in the URL, and what your data follows. `useAppliedFilter` reads it.
+
+`apply()` copies the complete draft rules to the applied filter. `discard()` throws the draft away and starts again from the applied filter; the ready-made popover calls it when closed without applying. The applied filter also changes on `reset()`, on a chip's ×, and when the URL changes (Back / Forward, a shared link).
+
+## FilterProvider
+
+```tsx title="Usage"
+import { FilterProvider } from "@querycn/filter-react"
+
+<FilterProvider fields={orderFields} adapter={adapter}>
+  {children}
+</FilterProvider>
+```
+
+<TypeTable
+  type={{
+    fields: {
+      description: "What users can filter by. See Fields.",
+      type: "readonly FieldDefinition[]",
+      required: true,
+    },
+    adapter: {
+      description: "Connects the filter to your router. See URL state.",
+      type: "UrlStateAdapter",
+      default: "in memory",
+    },
+    serializer: {
+      description: "Builds the API request. Built-in serializers also tell the UI which operators to offer. See Connect your API.",
+      type: "QuerySerializer",
+      default: "jsonApiSerializer()",
+    },
+    onApply: {
+      description: "Runs when applying changes the filter. The params it returns are written in the same URL update, e.g. { page: null }.",
+      type: "(state: FilterState) => Record<string, string | null> | void",
+    },
+    messages: {
+      description: "UI text, merged over English. See Customization.",
+      type: "FilterMessagesOverrides",
+    },
+    maxRules: {
+      description: "Most rules allowed. Adding more is ignored, and canAddRule turns false.",
+      type: "number",
+    },
+    registry: {
+      description: "Custom field types and operators, from createRegistry(). See Customization.",
+      type: "FilterRegistry",
+      default: "DEFAULT_REGISTRY",
+    },
+    urlFormat: {
+      description: "A custom URL format. See URL state.",
+      type: "UrlFormat",
+      default: "defaultUrlFormat",
+    },
+  }}
+/>
+
+Define `fields`, `serializer`, `messages` and `registry` outside your components (or in `useMemo`). A new one on every render rebuilds everything.
+
+## useAppliedFilter
+
+The applied filter and what's built from it. Use it where you load or show data.
+
+```tsx title="Usage"
+const { query, queryKey, activeCount } = useAppliedFilter()
+```
+
 | Property | Description |
 | --- | --- |
-| `field` | The rule's `FieldDefinition`, or `undefined` before a field is picked. |
-| `fields` | Fields worth offering: those with at least one operator the serializer supports. |
-| `operators` | `{ id, label, supported }[]` for the field, labelled from messages. An operator that came from the URL but the serializer can't send is listed last with `supported: false`. |
-| `arity` | The operator's arity, `null` before one is picked. Pick the value input from it. |
-| `setField`, `setOperator`, `setValue`, `remove` | Bound to this rule. |
+| `query` | The API request params, from the serializer. |
+| `queryKey` | A short string of the filter's URL params (`status__eq=paid`, `""` when empty). Use it as a cache key. |
+| `activeCount` | How many rules are applied, e.g. for a badge. |
+| `state` | The applied `FilterState`: complete rules only. |
+| `removeRule(id)` | Removes one applied rule right away, like a chip's ×. |
+| `ruleIssues` | Warnings per rule id: `"conflict"` or `"unsupported"`. |
+| `context` | `{ fields, registry }`, ready for core functions like `applyFilter`. |
+| `messages` | The UI text. |
+
+With a custom serializer, pass its output type: `useAppliedFilter<Prisma.OrderWhereInput>()`.
+
+Outside a provider, it returns an empty filter instead of throwing, so a table can call it whether or not a filter is set up.
+
+## useFilter
+
+The draft and every editing action. It re-renders on each keystroke, so only use it in the editing UI.
+
+| Property | Description |
+| --- | --- |
+| `state` | The draft `FilterState`, incomplete rules included. |
+| `isDirty` | Applying would change the applied filter. |
+| `canAddRule` | `false` once `maxRules` is reached. |
+| `addRule(field?)` | Adds a rule, optionally with a field already picked. |
+| `removeRule(id)` | Removes a draft rule. |
+| `setField(id, field)` | Changes the field. The operator goes back to the field's default, and the value is cleared. |
+| `setOperator(id, operator)` | Changes the operator. The value is kept if its shape stays the same. |
+| `setValue(id, value)` | Sets the value. Raw text is fine, like `"1."`: it's checked on apply. |
+| `setJoin(join)` | `"and"` or `"or"`. |
+| `apply()` | Applies the complete rules and writes them to the URL. |
+| `reset()` | Clears the filter and applies at once. |
+| `discard()` | Drops the edits that weren't applied. |
+| `supportsOperator(id)` | Whether the serializer can send this operator. |
+
+Actions always read the latest draft, so `setValue(…)` followed by `apply()` in the same handler applies the new value.
+
+`useFilterActions()` returns the same actions without `state`, `isDirty` and `canAddRule`. It doesn't change while users type, so memoized components that only need actions don't re-render.
+
+## useFilterRule
+
+Everything one rule row needs, bound to that rule:
+
+| Property | Description |
+| --- | --- |
+| `field` | The rule's field definition, or `undefined` before one is picked. |
+| `fields` | The fields to offer: those with at least one operator the serializer can send. |
+| `operators` | `{ id, label, supported }[]` for the field. An operator from the URL that the serializer can't send is listed last, with `supported: false`. |
+| `arity` | The operator's value shape (`"none"`, `"single"`, `"range"`, `"multi"`), or `null` before one is picked. Pick the value input from it. |
+| `setField`, `setOperator`, `setValue`, `remove` | Actions for this rule. |
 
 ## useRuleWarnings
 
-`useRuleWarnings(rule)` returns the warning keys for one draft rule: `"reversedRange"` while editing, plus `"conflict"` and `"unsupported"` from the last apply as long as the rule is unchanged. Look up the text in `messages.warnings[key]`. It reads the draft, so render it in a small leaf component rather than in a memoized row.
+`useRuleWarnings(rule)` returns the [warnings](/docs/filter/operators#warnings) for one draft rule, like `["reversedRange"]`. Get the text from `messages.warnings[key]`. It reads the draft, so use it in a small component of its own rather than in a memoized row.
 
 ## useFieldOptions
 
-Options for a `select` or `multiSelect` field, static or loaded. It implements the behavior described in [Fields → loadOptions](/docs/filter/fields#loadoptions).
+Options for a `select` or `multiSelect` field, static or [loaded from your API](/docs/filter/fields#loaded-from-your-api):
 
 ```tsx title="Usage"
 const { options, loading, error, query, search, retry, getLabel } = useFieldOptions(field, {
-  selected: currentValues, // labels to resolve, e.g. the rule's value
-  enabled: open,           // load the list only while the dropdown is open
+  selected: currentValues, // values that need a label
+  enabled: open, // only load the list while the dropdown is open
 })
 ```
 
 | Option | Default | Description |
 | --- | --- | --- |
-| `selected` | `[]` | Values to label with `resolveLabels`. |
-| `enabled` | `true` | `false` while the list is closed: labels still resolve, the list isn't loaded. |
-| `debounceMs` | `300` | Delay before loading a new search. |
+| `selected` | `[]` | Values to fetch labels for, with `resolveLabels`. |
+| `enabled` | `true` | Set to `false` while the list is closed: labels still load, the list doesn't. |
+| `debounceMs` | `300` | How long to wait after typing before loading. |
 
 | Result | Description |
 | --- | --- |
 | `options` | Options for the current search. The previous list stays while the next one loads. |
-| `loading`, `error` | State of the current request. |
+| `loading`, `error` | The current request's state. |
 | `query`, `search(text)` | The search text and its setter. |
-| `retry()` | Reloads the current search after an error. |
-| `getLabel(value)` | The label for a value, or the value itself until it's known. |
-
-`clearFieldOptionsCache(field?)` empties the cache for one field, or for all of them.
+| `retry()` | Loads the current search again after an error. |
+| `getLabel(value)` | A value's label, or the value itself until it's known. |

@@ -1,9 +1,9 @@
 ---
-title: Components
-description: The filter-builder block — what's in it, its props, and how to adapt it.
+title: Filter components
+description: The Filter button, panel and chips, their props, and how to adapt them.
 ---
 
-The `filter-builder` registry block is the UI from the [preview](/docs/filter). It's copied into your project (see [Installation](/docs/filter/installation#2-add-the-ui)), so every file is yours to edit. The Radix UI, Base UI and React Aria versions have the same files and props.
+The `filter-builder` block is the filter UI in the table's toolbar. The CLI copies it into `components/filter/` (see [Installation](/docs/installation)), so every file is yours to edit. The Radix UI, Base UI and React Aria versions have the same files and props.
 
 All components must be rendered inside a `FilterProvider` (or `NextFilterProvider`).
 
@@ -88,7 +88,7 @@ Renders nothing when no filter is applied. Values are shown the way users entere
 - After **Add filter**, focus goes to the new row. After removing a row or clearing all, it goes to **Add filter**.
 - Picking an operator moves focus to the value input.
 - Warning icons open on press rather than hover, so they work on touch screens. Each has an accessible label with the warning text.
-- Buttons have labels from [messages](/docs/filter/customization#messages-and-locales), e.g. "Remove filter: Status is Paid".
+- Buttons have labels from [messages](/docs/filter/customization#translate-the-ui), e.g. "Remove filter: Status is Paid".
 
 React Aria's popover is modal: clicking outside, for example on a chip's ×, only closes the panel. With Radix UI and Base UI, the click also goes through.
 
@@ -115,7 +115,7 @@ React Aria's popover is modal: clicking outside, for example on a chip's ×, onl
 
 ## Custom value inputs
 
-Each row renders the value input through a slot. The default, `FilterValueInput`, picks one by field type from `filterValueInputs`. To add an input for a [custom field type](/docs/filter/customization#custom-field-types), or replace a built-in one, pass your own map:
+Each row renders the value input through a slot. The default, `FilterValueInput`, picks one by field type from `filterValueInputs`. To add an input for a [custom field type](/docs/filter/customization#add-a-field-type), or replace a built-in one, pass your own map:
 
 ```tsx title="components/filter/my-value-input.tsx"
 "use client"

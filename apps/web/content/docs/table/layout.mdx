@@ -1,30 +1,15 @@
 ---
 title: Layout & persistence
-description: Hide, reorder, pin, resize and color columns, and keep the layout across visits.
+description: Let users hide, reorder, pin, resize and color columns, and keep their layout across visits.
 ---
 
-Users can arrange the columns of a `useDataTable` table the way they work, and get the same arrangement back on their next visit. The layout is separate from the [URL state](/docs/table/url-state): sort and page belong to a link, the layout belongs to a user's browser.
+The **layout** is how a user arranges the columns: which are shown, in what order, pinned where, how wide, in what color. Each user keeps their own, saved in their browser.
 
-## What users can change
+It's separate from the [URL state](/docs/table/url-state) on purpose: a shared link shows the same *rows* to everyone, but each person keeps their own *columns*.
 
-| Change | Where |
-| --- | --- |
-| Show or hide a column | The checkboxes in the **Columns** menu |
-| Reorder | Drag a header, or the grip in the **Columns** menu. From the keyboard, focus the grip and use <kbd>Space</kbd>, the arrow keys and <kbd>Space</kbd> again (<kbd>Esc</kbd> cancels). |
-| Pin to the start or the end | A column's **⋯** menu in the **Columns** menu |
-| Resize | Drag the edge of a header, or focus it and use <kbd>←</kbd> / <kbd>→</kbd> (<kbd>Shift</kbd> for bigger steps) |
-| Fit a column to its content | Double-click the edge of a header, or **Fit to content** in the column's menu |
-| Fit every column | **Fit all columns** in the **Columns** menu |
-| Color a column | **Color** in the column's menu: eight presets or a custom color |
-| Go back to the defaults | **Reset layout** in the **Columns** menu |
+## Save the layout
 
-Pinned columns stay in view while the rest scroll sideways, with a shadow on the edge once something scrolls under them. A later pin sits next to the scrolling columns, so columns pinned for good (like the selection column) keep the outer edge.
-
-Column definitions decide what's allowed. `enableHiding: false`, `enablePinning: false`, `enableResizing: false` and `meta.enableOrdering: false` each lock one part. A column that can't be hidden, pinned or reordered (like the selection column) isn't listed in the **Columns** menu. `size`, `minSize` and `maxSize` bound the width. See [Columns](/docs/table/columns).
-
-## Saving the layout
-
-Give the table a `storageKey` and the layout is saved to `localStorage` on every change:
+Give the table a `storageKey`. The layout is then saved to `localStorage` on every change, and restored on the next visit:
 
 ```tsx title="components/orders-table.tsx"
 const table = useDataTable({
@@ -35,49 +20,208 @@ const table = useDataTable({
 })
 ```
 
-Without a `storageKey`, the layout lasts until the table unmounts.
+Use one key per table. Without a `storageKey`, the layout resets when the table unmounts. Tables using the same key stay in sync, in this tab and in others.
 
 <TypeTable
   type={{
     storageKey: {
-      description: "Saves the layout under this key. Use one key per table.",
+      description: "Saves the layout under this key.",
       type: "string",
     },
     layoutVersion: {
-      description: "Bump it when saved layouts no longer fit the columns; layouts saved under another version are ignored.",
+      description: "Bump it when old saved layouts should be thrown away. See below.",
       type: "number",
       default: "0",
     },
     layoutStorage: {
-      description: "Where to save. Pass a stable object, such as sessionStorage or your own getItem/setItem/removeItem. Tabs stay in sync only with localStorage or sessionStorage itself.",
+      description: "Where to save, e.g. sessionStorage or your own getItem / setItem / removeItem. Pass a stable object. Tabs only stay in sync with localStorage or sessionStorage.",
       type: "Pick<Storage, \"getItem\" | \"setItem\" | \"removeItem\">",
       default: "localStorage",
     },
   }}
 />
 
-What's saved: column visibility, order, pinning, widths and colors. Tables using the same key stay in sync, in this tab and in others.
+## What users can change
 
-### When the columns change
+| To… | Users… | Details |
+| --- | --- | --- |
+| Reorder | drag a header, or the grip in the **Columns** menu | [Move columns](#move-columns) |
+| Resize | drag the edge of a header | [Resize columns](#resize-columns) |
+| Fit a column to its content | double-click the edge of a header, or pick **Fit to content** in the column's menu | [Fit to content](#fit-to-content) |
+| Fit every column | pick **Fit all columns** in the **Columns** menu | [Fit to content](#fit-to-content) |
+| Pin to the start or end | pick **Pin to start** or **Pin to end** in the column's menu | [Pin columns](#pin-columns) |
+| Show or hide a column | pick **Hide column** in the column's menu, or tick its checkbox in the **Columns** menu | [Hide columns](#hide-columns) |
+| Color a column | pick **Color** in the column's menu | [Color columns](#color-columns) |
+| Go back to your defaults | pick **Reset layout** in the **Columns** menu | [Reset from code](#reset-from-code) |
 
-A saved layout is read against the current column definitions, so you can ship new columns without breaking anyone's layout:
+### The column menu
 
-- **New columns** get their defaults (hidden or pinned from `meta`) and go at the end of the order.
+Every header has a **⋯** button. It shows when you hover the header or tab to it, and stays visible on touch screens. Right-clicking a header opens the same menu. It holds everything you can do to that one column:
+
+| Item | Does |
+| --- | --- |
+| **Ascending**, **Descending**, **Clear sort** | sorts by this column only (<kbd>Shift</kbd>+click the header to sort by several) |
+| **Pin to start**, **Pin to end**, **Unpin** | see [Pin columns](#pin-columns) |
+| **Fit to content** | see [Fit to content](#fit-to-content) |
+| **Color** | see [Color columns](#color-columns) |
+| **Hide column** | see [Hide columns](#hide-columns) |
+
+Items a column doesn't allow are left out (sorting, hiding) or disabled (pinning, fitting). The same pin, fit and color items are in each row's **⋯** menu in the **Columns** menu, which also lists hidden columns.
+
+The header itself shows a grab cursor when it can be dragged, and a thin line on its end edge when you hover where it resizes.
+
+Your column definitions decide what's allowed, and what the layout starts from: see [Columns](/docs/table/columns#starting-layout). A column that can't be hidden, pinned or moved, like the selection column, isn't listed in the **Columns** menu.
+
+## Move columns
+
+**With the pointer.** Press anywhere on a header and drag it sideways. A click that doesn't move (less than 4px) still sorts, so sorting and moving share the header.
+
+While the column moves:
+
+- its header and every cell below it follow the pointer, on a muted background;
+- the other columns stay where they are;
+- a vertical line down the table marks where it will land: after the column under the pointer when moving right, before it when moving left;
+- near the edge of the table, the table scrolls sideways so you can reach columns out of view.
+
+Drop to move it there. Press <kbd>Esc</kbd> while dragging to cancel.
+
+**From the Columns menu.** Each row has a grip. Drag it up or down; the rows make room as it moves. Hidden columns are listed too, so you can place a column before showing it.
+
+**With the keyboard.** <kbd>Tab</kbd> to a header's grip (it appears on focus) or a grip in the **Columns** menu, press <kbd>Space</kbd> to pick the column up, use the arrow keys to move it, and <kbd>Space</kbd> again to drop (<kbd>Esc</kbd> cancels). Screen readers hear the column's name and its position as it moves.
+
+**Rules**
+
+- A pinned column moves only among the columns pinned on the same side; an unpinned one only among the unpinned ones. To move a column across, pin or unpin it.
+- `meta.enableOrdering: false` keeps a column in place: no grip in the header or the menu, and other columns can't take its place.
+- With [grouped headers](/docs/table/columns) (more than one header row), moving is off, since a column moved out of its group would break the group.
+
+**From code.** The order of unpinned columns is TanStack's column order; pinned columns keep theirs in the pinning state:
+
+```ts title="Column order from code"
+table.setColumnOrder(["id", "customer_name", "amount", "status"])
+```
+
+## Resize columns
+
+**With the pointer.** Hover the end edge of a header: a thin line shows where to grab. Drag it:
+
+- a line from the header down through the rows shows where the edge will be;
+- the width applies when you release, so the rows don't reflow on every pixel;
+- the width stops at the column's `minSize` and `maxSize`, and the line stops with it.
+
+**With the keyboard.** <kbd>Tab</kbd> to the edge (a focusable separator) and press <kbd>→</kbd> to widen or <kbd>←</kbd> to narrow, by 10px, or 50px with <kbd>Shift</kbd>. On a right-to-left page the arrow pointing away from the column still widens it.
+
+**In your column definitions:**
+
+<TypeTable
+  type={{
+    size: { description: "Starting width in pixels.", type: "number", default: "150" },
+    minSize: { description: "Resizing and fitting stop here.", type: "number", default: "20" },
+    maxSize: { description: "Resizing stops here. Fitting stops here too, and at 800px at most.", type: "number" },
+    enableResizing: { description: "false removes the resize handle, and fitting skips the column.", type: "boolean", default: "true" },
+  }}
+/>
+
+**From code:**
+
+```ts title="Widths from code"
+table.setColumnSizing((sizes) => ({ ...sizes, amount: 160 }))
+column.getSize() // the current width
+```
+
+## Fit to content
+
+A column can take exactly the width its content needs:
+
+- **Double-click** the edge of its header;
+- or pick **Fit to content** in its menu (the header's **⋯**, a right-click, or its row in the **Columns** menu);
+- or pick **Fit all columns** under the list, for every visible, resizable column.
+
+Fitting measures the header and the cells on screen: the current page, or the rendered rows when the table is [virtualized](/docs/table/virtualization). The width stays within `minSize` and `maxSize`, and never goes over 800px, so one long value can't take the whole screen. Cells should keep their text on one line (`whitespace-nowrap`) to be measured right.
+
+Hidden columns can't be fitted: there's nothing on screen to measure.
+
+**From code**, with the helper the block copies into `components/data-table/`:
+
+```ts title="Fit from code"
+import { fitColumns } from "@/components/data-table/column-layout-actions"
+
+fitColumns(table) // every visible, resizable column
+fitColumns(table, [table.getColumn("customer_name")!])
+```
+
+## Pin columns
+
+Open the column's menu (the header's **⋯**, a right-click, or its row in the **Columns** menu) and pick **Pin to start** or **Pin to end**; **Unpin** puts it back among the scrolling columns. A pin icon marks pinned columns in the **Columns** list.
+
+Pinned columns stay in view while the rest scroll sideways. Once a column scrolls under them, the innermost pinned column shows a shadow on that side.
+
+- A newly pinned column goes next to the scrolling columns, so a column pinned for good (like the selection column) keeps the outer edge.
+- "Start" and "end" follow the reading direction: on a right-to-left page, start is the right side.
+- Pinned columns can be moved among themselves: see [Move columns](#move-columns).
+
+**In your column definitions**, `meta.defaultPinned: "start" | "end"` pins a column from the first visit, and `enablePinning: false` makes the choice final: users can't pin or unpin it.
+
+**From code:**
+
+```ts title="Pinning from code"
+import { pinColumn } from "@/components/data-table/column-layout-actions"
+
+pinColumn(table, column, "start") // or "end", or false to unpin
+column.getIsPinned() // "start", "end" or false
+```
+
+## Hide columns
+
+Pick **Hide column** in the column's menu, or untick it in the **Columns** menu. To show it again, tick it in the **Columns** menu: a hidden column has no header to open a menu from. Hidden columns stay in the list, in their place, so you can still move, pin or color them.
+
+**In your column definitions**, `meta.defaultHidden: true` hides a column until the user shows it, and `enableHiding: false` keeps it shown (its checkbox is disabled).
+
+**From code:**
+
+```ts title="Visibility from code"
+column.toggleVisibility(false)
+column.getIsVisible()
+```
+
+## Color columns
+
+Open the column's menu (the header's **⋯**, a right-click, or its row in the **Columns** menu) and pick **Color**:
+
+- **No color** removes it;
+- eight presets: red, orange, amber, green, teal, blue, violet, pink;
+- **Custom color…** opens the browser's color picker. A custom color is then listed with its value, next to the presets.
+
+A swatch next to the column's name in the list shows its color.
+
+The column's body cells get a light tint of the color, layered over their own background, so hover, selection and pinned cells still look right. Presets are mid-tones tuned to read in light and dark themes; change them in `column-color-palette.ts`.
+
+**From code:**
+
+```ts title="Column colors"
+column.getColor() // "blue", "#ff8800", or undefined
+column.setColor("blue")
+column.setColor(undefined) // removes it
+table.setColumnColors({ amount: "green" })
+table.resetColumnColors(true) // removes every color
+```
+
+A color is a preset name or any CSS color. Colors come back from storage, so only plain color values (hex, names, `rgb()`, `hsl()`, `oklch()`…) are used; anything else is ignored.
+
+## When your columns change
+
+You can ship new columns without breaking anyone's saved layout. A saved layout is always matched against your current columns:
+
+- **New columns** start from their defaults, at the end of the order.
 - **Removed columns** are dropped from the saved layout.
-- **Columns users can't change** (`enableHiding: false`, `enablePinning: false`) keep what the definitions say.
-- **Anything unreadable** (hand-edited JSON, a wrong shape, a layout from another `layoutVersion`) gives the defaults.
+- **Locked options** (`enableHiding: false`, `enablePinning: false`) follow your definitions, whatever was saved.
+- **Anything unreadable** (hand-edited, a wrong shape) falls back to the defaults.
 
-Bump `layoutVersion` when a saved layout would be wrong rather than outdated, for example after renaming column ids.
+If old layouts would be *wrong* rather than just outdated, for example after renaming column ids, bump `layoutVersion`. Layouts saved under another version are ignored.
 
-If the browser refuses to store (quota, privacy mode), changes still apply for the page's lifetime.
+## Reset from code
 
-### Server rendering
-
-The server has no `localStorage`, so the server render and the first client render both use the column definitions. The saved layout applies right after hydration, with no hydration mismatch. If the flash of the default layout matters, render the table on the client only.
-
-## Resetting
-
-**Reset layout** calls `table.options.meta.resetLayout()`. It goes back to the column definitions and removes the saved layout, so later changes to your definitions apply again:
+**Reset layout** calls `table.options.meta.resetLayout()`. It goes back to your column definitions and deletes the saved layout. Call it from your own button the same way:
 
 ```tsx title="Your own reset button"
 <Button variant="ghost" onClick={() => table.options.meta?.resetLayout()}>
@@ -86,49 +230,12 @@ The server has no `localStorage`, so the server render and the first client rend
 ```
 
 <Callout title="Use resetLayout, not TanStack's reset methods" type="warn">
-  TanStack Table reads `initialState` once, on the first render. `table.resetColumnOrder()`, `resetColumnVisibility()` and the like go back to the columns of that first render, and they don't clear the saved layout. `meta.resetLayout()` always uses the current definitions.
+  `table.resetColumnOrder()`, `resetColumnVisibility()` and the like go back to the columns of the *first* render, and they don't delete the saved layout. `meta.resetLayout()` always uses your current definitions.
 </Callout>
 
-## Column colors
+## Good to know
 
-Colors are TanStack Table state, added by `columnColorFeature` (part of `dataTableFeatures`):
-
-```ts title="Column colors"
-column.getColor() // "blue", "#ff8800", or undefined
-column.setColor("blue")
-column.setColor(undefined) // removes it
-table.setColumnColors({ amount: "green" })
-table.resetColumnColors(true) // no colors
-```
-
-A color is a preset name (`red`, `orange`, `amber`, `green`, `teal`, `blue`, `violet`, `pink`) or a CSS color. Presets are mid-tone `oklch()` values that read in light and dark themes; change them in `column-color-palette.ts` in your copy.
-
-Cells don't take the color as their background. They get a `--column-color` CSS variable, and the cell classes layer a light tint of it over the cell's own background, so hover, selection and pinned cells still look right. Saved colors come back from storage, so only plain color syntax (hex, names, `rgb()`, `hsl()`, `oklch()`…) reaches a style; anything else is ignored.
-
-## Right-to-left
-
-Pass `dir: "rtl"` to `useDataTable` in right-to-left layouts. Resizing then follows the pointer, and <kbd>←</kbd> / <kbd>→</kbd> on a resize handle still widen the column away from it. Pinning uses `start` and `end`, so pinned columns and their shadows flip with the page.
-
-## Without useDataTable
-
-`useTableLayout` is the hook `useDataTable` uses. It returns the layout as controlled TanStack state, for a table you set up yourself:
-
-```tsx title="useTableLayout"
-import { useTableLayout } from "@querycn/table-react"
-
-const layout = useTableLayout({ columns, storageKey: "orders-table", version: 1 })
-
-const table = useTable({
-  // …
-  state: { ...layout.state },
-  ...layout.handlers,
-})
-// layout.reset() goes back to the defaults
-```
-
-Add `columnColorFeature` to your table's features for `columnColors` to work.
-
-<Cards>
-  <Card title="Columns" href="/docs/table/columns" description="Column definitions and the meta keys the layout reads." />
-  <Card title="Components" href="/docs/table/components" description="The Columns menu, headers and the rest of the UI." />
-</Cards>
+- **Server rendering.** The server has no `localStorage`, so the first render uses your column definitions, and the saved layout applies right after. If that brief switch bothers you, render the table on the client only.
+- **Storage can fail.** If the browser refuses to store (full, private mode), changes still apply until the page is closed.
+- **Right-to-left pages.** Pass `dir: "rtl"` to `useDataTable`. Resizing follows the pointer, and pinned columns and their shadows flip with the page.
+- **Your own table setup.** `useTableLayout({ columns, storageKey, version })` is the hook `useDataTable` uses. It returns `state`, `handlers` and `reset()` to spread into your own TanStack table. Add `columnColorFeature` to its features for colors.

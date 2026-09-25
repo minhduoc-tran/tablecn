@@ -1,11 +1,11 @@
 ---
 title: Customization
-description: Translate the UI, add field types and operators.
+description: Translate the filter, and add your own field types and operators.
 ---
 
-## Messages and locales
+## Translate the UI
 
-Every string the UI shows comes from a messages object. English is the default. Pass overrides to the provider; they're merged group by group, so you only list what changes:
+Every text the filter shows comes from a `messages` object. English is the default. To change a few texts, pass only those to the provider:
 
 ```tsx title="Override messages"
 <FilterProvider
@@ -17,7 +17,7 @@ Every string the UI shows comes from a messages object. English is the default. 
 />
 ```
 
-Vietnamese ships with the core package:
+Vietnamese is included:
 
 ```tsx title="Vietnamese locale"
 import { viMessages } from "@querycn/filter-core/locales/vi"
@@ -25,9 +25,11 @@ import { viMessages } from "@querycn/filter-core/locales/vi"
 <FilterProvider fields={orderFields} messages={viMessages} />
 ```
 
-Keep the object at module scope or in `useMemo`; a new one on every render rebuilds the context.
+Define the object outside your components (or in `useMemo`). Field and option labels come from your `fields`, so translate them there.
 
-Field labels and option labels are part of your `fields`, so translate those where you define them.
+The table has its own texts: see [Table customization](/docs/table/customization).
+
+All the groups you can override:
 
 | Group | Contains |
 | --- | --- |
@@ -47,9 +49,9 @@ An operator's label is looked up in `operatorsByType[fieldType]`, then `operator
 
 Outside React, `mergeMessages(enMessages, overrides)` gives the same merged object, and `getOperatorLabel(messages, operator, fieldType)` a label.
 
-## Custom field types
+## Add a field type
 
-A field type decides which operators a field offers, how raw input becomes a value, and how rows compare on the client. Register new ones with `createRegistry`:
+The 7 built-in types cover most data. For something else, like a 1–5 star rating, register a new type. A type decides which operators are offered, which values are valid, and how rows compare in the browser:
 
 ```ts title="lib/filter-registry.ts"
 import { createRegistry, createValueParser } from "@querycn/filter-core"
@@ -72,7 +74,7 @@ export const filterRegistry = createRegistry({
 })
 ```
 
-Then use it everywhere the fields are used:
+Then pass the registry everywhere you pass the fields:
 
 ```tsx title="Usage"
 const fields: FieldDefinition[] = [{ name: "rating", label: "Rating", type: "rating" }]
@@ -104,7 +106,7 @@ Without the registry, a field of an unknown type offers no operators and its rul
 
 `createRegistry` throws at startup if a type references an operator that doesn't exist, or a default operator that isn't in its list. Those are configuration bugs.
 
-For the UI, add a value input for the new type: see [custom value inputs](/docs/filter/components#custom-value-inputs). Without one, it gets a text input.
+Finally, give the new type an input in the UI: see [custom value inputs](/docs/components/filter#custom-value-inputs). Without one, it gets a text input.
 
 ### Changing a built-in type
 
@@ -120,11 +122,11 @@ createRegistry({
 })
 ```
 
-To limit operators for a single field, you don't need a registry: use the field's [`operators`](/docs/filter/fields#operators-and-defaultoperator).
+To limit operators for a single field, you don't need a registry: use the field's [`operators`](/docs/filter/fields#limit-the-operators).
 
-## Custom operators
+## Add an operator
 
-An operator is an id, an arity, and optionally a `match` function for client-side filtering:
+An operator needs an id, a value shape (`arity`), and a `match` function if rows are filtered in the browser. This adds *is not between* to number fields:
 
 ```ts title="lib/filter-registry.ts"
 import { BUILTIN_FIELD_TYPES, createRegistry } from "@querycn/filter-core"
@@ -149,8 +151,8 @@ export const filterRegistry = createRegistry({
 
 Then:
 
-1. **Label it**: `messages={{ operators: { notBetween: "is not between" } }}`. Without a label, the UI shows the id.
-2. **Teach your serializer**:
+1. **Give it a label**: `messages={{ operators: { notBetween: "is not between" } }}`. Without a label, the UI shows the id.
+2. **Tell your serializer how to send it**:
    - `jsonApiSerializer` sends the id as is: `filter[amount][notBetween]=10&filter[amount][notBetween]=50`. Rename it with `operators: { notBetween: "not_between" }`.
    - `djangoSerializer` needs a lookup: `lookups: { notBetween: "not_range" }`, backed by a filter on your side.
    - `postgrestSerializer` needs an entry: `operators: { notBetween: (rule, quote) => … }`.

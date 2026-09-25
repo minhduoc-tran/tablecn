@@ -1,0 +1,260 @@
+---
+title: Installation
+description: Add a table with search, a filter, sorting and pages to your app in five steps.
+---
+
+<Callout title="Not published yet" type="warn">
+  The `@querycn` packages are not on npm yet, and the registry isn't deployed. The steps below are how installation will work for `0.1.0`. Until then, run this repo locally (see [Development](/docs/development)) and install from your local copy of this site.
+</Callout>
+
+**You need:** React 18 or 19, and a project set up with [shadcn/ui](https://ui.shadcn.com/docs/installation) and Tailwind CSS v4. For Next.js, the App Router (14.1+). For react-router, version 6.4+ or 7.
+
+<Steps>
+<Step>
+
+### Add the registry
+
+Tell the shadcn CLI where to find tablecn. Add this to your `components.json` once:
+
+```json title="components.json"
+{
+  "registries": {
+    "@tablecn": "%SITE_URL%/r/{style}/{name}.json"
+  }
+}
+```
+
+Or let the CLI do it:
+
+```npm
+npx shadcn@latest registry add @tablecn=%SITE_URL%/r/{style}/{name}.json
+```
+
+The CLI reads the `style` in your `components.json` and gives you the matching version: Radix UI for `radix-*` (and older styles like `new-york`), Base UI for `base-*`, React Aria for `aria-*`.
+
+</Step>
+<Step>
+
+### Add the table and the filter
+
+```npm
+npx shadcn@latest add @tablecn/data-table @tablecn/filter-builder
+```
+
+This copies the table into `components/data-table/` and the filter into `components/filter/`. They're yours to edit. The CLI also installs the packages they need (`@querycn/*`, TanStack Table…) and any shadcn components you don't have yet.
+
+</Step>
+<Step>
+
+### Define columns and fields
+
+The table needs two lists:
+
+- **Columns** decide what the table shows.
+- **Fields** decide what users can filter by.
+
+They often match, but don't have to: you can filter by something you don't show, and show something you can't filter by.
+
+Columns are [TanStack Table column definitions](https://tanstack.com/table/latest/docs/guide/column-defs). The helper types the extra options tablecn reads:
+
+```tsx title="components/orders/order-columns.tsx"
+"use client"
+
+import { createDataTableColumnHelper } from "@querycn/table-react"
+
+import { createSelectionColumn } from "@/components/data-table/data-table-selection-column"
+
+export interface Order {
+  id: string
+  customer: string
+  status: "paid" | "pending"
+  amount: number
+}
+
+const column = createDataTableColumnHelper<Order>()
+
+export const orderColumns = [
+  createSelectionColumn<Order>(),
+  column.accessor("customer", { header: "Customer", size: 200 }),
+  column.accessor("status", { header: "Status" }),
+  column.accessor("amount", { header: "Amount", sortDescFirst: true }),
+]
+```
+
+Fields have a name (matching a key of your rows), a label and a type. Put them in a file without `"use client"`, so server code can import them too:
+
+```ts title="lib/order-fields.ts"
+import type { FieldDefinition } from "@querycn/filter-core"
+
+export const orderFields: FieldDefinition[] = [
+  { name: "customer", label: "Customer", type: "text" },
+  {
+    name: "status",
+    label: "Status",
+    type: "select",
+    options: [
+      { label: "Paid", value: "paid" },
+      { label: "Pending", value: "pending" },
+    ],
+  },
+  { name: "amount", label: "Amount", type: "number" },
+]
+```
+
+Define both outside your components, so they don't change on every render. More in [Columns](/docs/table/columns) and [Fields](/docs/filter/fields).
+
+</Step>
+<Step>
+
+### Build the table
+
+`useDataTable` creates the table. The components render it:
+
+```tsx title="components/orders/orders-table.tsx"
+"use client"
+
+import { useDataTable } from "@querycn/table-react"
+
+import { DataTable } from "@/components/data-table/data-table"
+import { DataTablePagination } from "@/components/data-table/data-table-pagination"
+import { DataTableSearch } from "@/components/data-table/data-table-search"
+import { DataTableToolbar } from "@/components/data-table/data-table-toolbar"
+import { FilterBuilder } from "@/components/filter/filter-builder"
+import { FilterChips } from "@/components/filter/filter-chips"
+import { orderColumns, type Order } from "./order-columns"
+
+export function OrdersTable({ orders }: { orders: Order[] }) {
+  const table = useDataTable({
+    data: orders,
+    columns: orderColumns,
+    getRowId: (order) => order.id,
+    storageKey: "orders-table", // saves the column layout in the browser
+  })
+
+  return (
+    <div className="flex flex-col gap-3">
+      <DataTableToolbar table={table}>
+        <DataTableSearch table={table} />
+        <FilterBuilder />
+        <FilterChips />
+      </DataTableToolbar>
+      <DataTable table={table} className="max-h-[600px]" />
+      <DataTablePagination table={table} />
+    </div>
+  )
+}
+```
+
+</Step>
+<Step>
+
+### Wrap it in the filter provider
+
+The provider holds the filter and connects everything to the URL. The table finds it on its own, so the filter, search, sort and page all share one URL. Pick your router:
+
+<Tabs items={["Next.js", "Vite / plain React", "react-router"]}>
+<Tab value="Next.js">
+
+```tsx title="app/orders/orders-view.tsx"
+"use client"
+
+import { NextFilterProvider } from "@querycn/filter-next"
+import { resetPagePatch } from "@querycn/table-react"
+
+import { OrdersTable } from "@/components/orders/orders-table"
+import type { Order } from "@/components/orders/order-columns"
+import { orderFields } from "@/lib/order-fields"
+
+export function OrdersView({ orders }: { orders: Order[] }) {
+  return (
+    <NextFilterProvider fields={orderFields} shallow onApply={() => resetPagePatch()}>
+      <OrdersTable orders={orders} />
+    </NextFilterProvider>
+  )
+}
+```
+
+`shallow` updates the URL without asking the server for a new page, which is right when every row is already in the browser. If your page fetches one page at a time on the server, leave it off: see [Server data](/docs/table/server-data#rendering-on-the-server).
+
+Render `OrdersView` from your page. On a statically prerendered route, wrap it in `<Suspense>`: the provider reads the URL with `useSearchParams`, and `next build` fails without a boundary.
+
+</Tab>
+<Tab value="Vite / plain React">
+
+```tsx title="src/orders-page.tsx"
+import { FilterProvider, useBrowserUrlAdapter } from "@querycn/filter-react"
+import { resetPagePatch } from "@querycn/table-react"
+
+import { OrdersTable } from "@/components/orders/orders-table"
+import type { Order } from "@/components/orders/order-columns"
+import { orderFields } from "@/lib/order-fields"
+
+export function OrdersPage({ orders }: { orders: Order[] }) {
+  const adapter = useBrowserUrlAdapter()
+
+  return (
+    <FilterProvider fields={orderFields} adapter={adapter} onApply={() => resetPagePatch()}>
+      <OrdersTable orders={orders} />
+    </FilterProvider>
+  )
+}
+```
+
+The adapter uses the browser's History API. If you use a client-side router, use its adapter instead.
+
+</Tab>
+<Tab value="react-router">
+
+```tsx title="src/routes/orders.tsx"
+import { FilterProvider } from "@querycn/filter-react"
+import { useReactRouterAdapter } from "@querycn/filter-react/react-router"
+import { resetPagePatch } from "@querycn/table-react"
+
+import { OrdersTable } from "@/components/orders/orders-table"
+import { orderFields } from "@/lib/order-fields"
+
+export function OrdersRoute() {
+  const adapter = useReactRouterAdapter()
+  const orders = useOrders() // your data
+
+  return (
+    <FilterProvider fields={orderFields} adapter={adapter} onApply={() => resetPagePatch()}>
+      <OrdersTable orders={orders} />
+    </FilterProvider>
+  )
+}
+```
+
+On react-router v6, also install `react-router` at the exact version your `react-router-dom` uses: two copies mean two router contexts, and `useLocation` fails.
+
+</Tab>
+</Tabs>
+
+`onApply={() => resetPagePatch()}` sends users back to page 1 when the filter changes. Page 4 of the old results means nothing for the new ones.
+
+</Step>
+</Steps>
+
+That's it. Search, filter, sort and page, and watch the URL change. The rows are filtered, sorted and paged in the browser. For large data, let your backend do it: see [Server data](/docs/table/server-data).
+
+## Without the filter
+
+The table doesn't need the filter. Skip `@tablecn/filter-builder`, drop `FilterBuilder` and `FilterChips` from the toolbar, and pass an adapter straight to `useDataTable`:
+
+```tsx title="Without a filter"
+import { useNextAdapter } from "@querycn/filter-next"
+
+const adapter = useNextAdapter({ shallow: true })
+const table = useDataTable({ data, columns, getRowId, adapter })
+```
+
+Without an adapter or a provider, the search, sort and page stay in memory and the URL is left alone.
+
+## Next steps
+
+<Cards>
+  <Card title="How it works" href="/docs/concepts" description="Columns, fields, the URL and the API request, explained with one example." />
+  <Card title="Server data" href="/docs/table/server-data" description="Fetch one page at a time, with the filter, sort and page from the URL." />
+  <Card title="Filtering" href="/docs/table/filtering" description="How the filter narrows the rows, and how to tune it." />
+  <Card title="Components" href="/docs/components/table" description="Every part of the table UI and its props." />
+</Cards>

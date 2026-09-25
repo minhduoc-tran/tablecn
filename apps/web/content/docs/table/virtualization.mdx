@@ -1,13 +1,13 @@
 ---
 title: Virtualization
-description: Render only the rows in view, for pages with thousands of rows.
+description: Keep the table fast with thousands of rows on a page.
 ---
 
-A page of 20 or 50 rows renders fast as it is. When a page holds thousands of rows, usually in client mode with every row loaded, turn on `virtualize`: the table renders the rows in view plus a few either side, and swaps them as the user scrolls.
+A page of 20 or 50 rows is fast as it is. When one page holds thousands of rows (usually in client mode, with every row loaded), turn on `virtualize`. The table then only renders the rows in view, and swaps them as users scroll.
 
 ```tsx title="components/orders-table.tsx"
 const table = useDataTable({
-  data: orders, // 10,000 rows, already in the browser
+  data: orders, // 10,000 rows
   columns,
   getRowId: (order) => order.id,
   url: { pageSizes: [1000, 5000, 10000], defaultPageSize: 1000 },
@@ -16,10 +16,10 @@ const table = useDataTable({
 return <DataTable table={table} virtualize className="h-[600px]" />
 ```
 
-Paging still works: virtualization only changes how a page is rendered. Offer large `pageSizes` (see [URL state](/docs/table/url-state)) so a page can hold that many rows.
+Pages still work: virtualization only changes how one page is drawn. Offer large `pageSizes` so a page can hold that many rows.
 
 <Callout title="Give the table a height">
-  Rows are virtualized inside the table's own scroll container. Without a height (`h-[600px]`, `max-h-[70vh]`, or a flex layout that constrains it), the container grows to fit every row, and every row renders.
+  Rows are virtualized inside the table's own scroll area. Without a height (`h-[600px]`, `max-h-[70vh]`, or a flex layout that limits it), the table grows to fit every row, and every row renders.
 </Callout>
 
 ## Props
@@ -27,48 +27,38 @@ Paging still works: virtualization only changes how a page is rendered. Offer la
 <TypeTable
   type={{
     virtualize: {
-      description: "Renders only the rows in view (plus 10 either side).",
+      description: "Renders only the rows in view, plus 10 either side.",
       type: "boolean",
       default: "false",
     },
     estimateRowHeight: {
-      description: "A row's height in pixels before it's measured. Close to the real height means a steadier scrollbar.",
+      description: "A row's height in pixels before it's measured. The closer to the real height, the steadier the scrollbar.",
       type: "number",
       default: "37",
     },
   }}
 />
 
-`virtualize` has no effect while the table shows its error state. On the first load, the skeleton rows render as usual.
+## When to use it
 
-## How it works
-
-- **[TanStack Virtual](https://tanstack.com/virtual)** computes which rows are in view. `@tanstack/react-virtual` is a dependency of the `data-table` registry block, installed with it.
-- **Rows are measured** once rendered, so rows of different heights (a cell that wraps, a taller `rowClassName`) scroll correctly. A measured height stays with its row when sorting moves it.
-- **Two spacer rows** stand in for the rows above and below. They are real table rows (`<tr aria-hidden>`), so the table stays a `<table>`: the sticky header, pinned columns, column widths and borders work as without virtualization.
-- **Screen readers** get the full picture: the table has `aria-rowcount` with every row of the page, and each rendered row its `aria-rowindex`.
-
-## Scrolling back to the top
-
-Every `DataTable`, virtualized or not, scrolls its container back to the first row when the sort, the page or the applied filter changes. Otherwise a user who scrolled down on page 1 would land halfway down page 2.
-
-The table is paginated by default, so this is what users expect. If you build a "load more" pattern (growing the page size as the user reaches the end), the table would jump to the top on every load: edit `use-scroll-to-top-on-change.ts` in your copy of the block, or drop the page size from the key `DataTable` passes to it.
+| Use it | Skip it |
+| --- | --- |
+| Client mode with pages of 1,000+ rows | Server mode with normal page sizes (20 to 100 rows) |
+| A table with a fixed height | A table that should grow with the page |
+| | Tables printed or exported from the page: only rendered rows exist |
 
 ## Limitations
 
-Rows that aren't rendered aren't in the DOM. That has a few consequences:
+Rows that aren't rendered aren't on the page, so:
 
-- **Fit to content** (double-clicking a header edge, **Fit all columns**) measures the rendered rows only. A wider value further down the page stays truncated until you fit again from there.
-- **Rows scrolled out of view unmount.** Focus inside such a row, an open menu in it, or a text selection is lost. Keep row actions short-lived, or open details in a dialog.
-- **The browser's find** (<kbd>Ctrl</kbd>+<kbd>F</kbd>) only finds rendered rows. Use the [filter](/docs/filter) for search.
-- **Striping with `nth-child`** (`even:bg-muted`) shifts while scrolling, because the rendered rows and the spacer change. Stripe by the row's position in the page instead:
+- **Fit to content** only measures the rendered rows. A wider value further down stays cut off until you fit again from there.
+- **Rows scrolled out of view are removed.** Focus, an open menu or a text selection inside them is lost. Open row details in a dialog rather than inline.
+- **The browser's find** (<kbd>Ctrl</kbd>+<kbd>F</kbd>) only finds rendered rows. Use the [search box or the filter](/docs/table/filtering) instead.
+- **Striping with `nth-child`** (`even:bg-muted`) shifts while scrolling. Stripe by the row's position instead:
 
 ```tsx title="Striped rows"
 const rows = table.getRowModel().rows
-const position = useMemo(
-  () => new Map(rows.map((row, index) => [row.id, index])),
-  [rows]
-)
+const position = useMemo(() => new Map(rows.map((row, index) => [row.id, index])), [rows])
 
 <DataTable
   table={table}
@@ -78,13 +68,10 @@ const position = useMemo(
 />
 ```
 
-## When not to virtualize
+## Good to know
 
-- **Server mode with normal page sizes.** The backend already sends one page; 20 to 100 rows don't need it.
-- **Tables printed or exported from the DOM.** Only rendered rows exist.
-- **Pages that should grow with the page** (no fixed height). Virtualization needs its own scroll container.
-
-<Cards>
-  <Card title="Components" href="/docs/table/components" description="Every DataTable prop." />
-  <Card title="Layout & persistence" href="/docs/table/layout" description="Resizing, pinning and fitting columns." />
-</Cards>
+- It's built on [TanStack Virtual](https://tanstack.com/virtual), installed with the table UI.
+- Rows are measured once rendered, so rows of different heights scroll correctly.
+- The table stays a real `<table>`: the sticky header, pinned columns and widths work as usual. Screen readers still hear the full row count.
+- It has no effect while the table shows its error state. The first load's skeleton rows render as usual.
+- **Every** table, virtualized or not, scrolls back to the top when the sort, page or filter changes. If you build a "load more" pattern, where the page size grows as users reach the end, edit `use-scroll-to-top-on-change.ts` in your copy so it doesn't jump on every load.

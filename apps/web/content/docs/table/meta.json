@@ -1,14 +1,4 @@
 {
   "title": "Table",
-  "pages": [
-    "index",
-    "installation",
-    "columns",
-    "url-state",
-    "server-data",
-    "layout",
-    "virtualization",
-    "components",
-    "customization"
-  ]
+  "pages": ["columns", "filtering", "server-data", "url-state", "layout", "virtualization", "customization"]
 }

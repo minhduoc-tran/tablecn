@@ -1,3 +1,4 @@
+import { Step, Steps } from "fumadocs-ui/components/steps"
 import { Tab, Tabs } from "fumadocs-ui/components/tabs"
 import { TypeTable } from "fumadocs-ui/components/type-table"
 import defaultMdxComponents from "fumadocs-ui/mdx"
@@ -26,6 +27,8 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     CodeBlockTabsList,
     CodeBlockTabsTrigger,
     Mermaid,
+    Step,
+    Steps,
     Tab,
     Tabs,
     TypeTable,

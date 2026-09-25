@@ -9,8 +9,8 @@ export const siteConfig = {
   repository: "https://github.com/minhduoc-tran/tablecn",
   navItems: [
     { href: "/docs", label: "Docs" },
-    { href: "/docs/filter", label: "Filter" },
-    { href: "/docs/table", label: "Table" },
-    { href: "/docs/components/button", label: "Components" },
+    { href: "/docs/table/columns", label: "Table" },
+    { href: "/docs/filter/fields", label: "Filter" },
+    { href: "/docs/components/table", label: "Components" },
   ],
 } as const

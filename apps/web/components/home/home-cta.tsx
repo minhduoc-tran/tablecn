@@ -23,7 +23,7 @@ export function HomeCta() {
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Button size="lg" variant="secondary" className="h-10 px-5" asChild>
-            <Link href="/docs/table/installation">
+            <Link href="/docs/installation">
               Install the table
               <ArrowRightIcon />
             </Link>
@@ -34,7 +34,7 @@ export function HomeCta() {
             className="h-10 px-5 text-background hover:bg-background/10 hover:text-background"
             asChild
           >
-            <Link href="/docs/filter">Explore the filter</Link>
+            <Link href="/docs/concepts">See how it works</Link>
           </Button>
         </div>
       </div>
@@ -65,11 +65,11 @@ export function HomeFooter() {
           <Link href="/docs" className="hover:text-foreground">
             Docs
           </Link>
-          <Link href="/docs/filter" className="hover:text-foreground">
-            Filter
-          </Link>
-          <Link href="/docs/table" className="hover:text-foreground">
+          <Link href="/docs/table/columns" className="hover:text-foreground">
             Table
+          </Link>
+          <Link href="/docs/filter/fields" className="hover:text-foreground">
+            Filter
           </Link>
           <a
             href={siteConfig.repository}

@@ -1,51 +1,72 @@
 ---
-title: Serializers
-description: Turn the applied filter into what your backend understands — JSON:API params, django-filter, PostgREST or your own format.
+title: Connect your API
+description: Turn the filter into the request your backend expects, with a serializer.
 ---
 
-A serializer is a function from the applied filter to a request:
+The URL stores the filter as `status__eq=paid`, but your backend probably expects something else. A **serializer** translates the filter into your backend's format.
 
-```ts title="Types"
-type QuerySerializer<T = QueryParams> = (state: FilterState, context: FilterContext) => T
-```
+## Pick a serializer
 
-Pass one to the provider and read its output from `useAppliedFilter().query`:
+| Your backend | Serializer | `Status is Paid and Amount ≥ 10` becomes |
+| --- | --- | --- |
+| Most REST APIs (the default) | [`jsonApiSerializer`](#jsonapi-style-default) | `filter[status][eq]=paid&filter[amount][gte]=10` |
+| Django with django-filter | [`djangoSerializer`](#django-filter) | `status=paid&amount__gte=10` |
+| PostgREST, Supabase | [`postgrestSerializer`](#postgrest-and-supabase) | `status=eq.paid&amount=gte.10` |
+| Another param format (Strapi…) | [`createParamsSerializer`](#another-param-format) | whatever you write per rule |
+| Prisma, GraphQL, SQL, a JSON body | [a function](#anything-else-prisma-graphql) | anything |
 
-```tsx title="Usage"
+## Use it
+
+Create the serializer once, outside your components, and pass it to the provider:
+
+```tsx title="app/orders/orders-filter.tsx"
 import { djangoSerializer } from "@querycn/filter-core"
 
-const serializer = djangoSerializer() // module scope: keep the identity stable
+const serializer = djangoSerializer()
 
 <FilterProvider fields={orderFields} adapter={adapter} serializer={serializer}>
 ```
 
-Serializers only see complete, normalized rules, so they never have to handle half-typed input. They are plain functions from `@querycn/filter-core` and run anywhere, including on the server:
+With the table in server mode, that's all: [`useTableQuery`](/docs/table/server-data#server-mode) puts the filter in the request, next to the search, sort and page.
 
-```ts title="Server"
-const query = serializer(parseFilters(searchParams, { fields }), { fields })
+Without the table, read the result with `useAppliedFilter`. `toSearchParams` turns it into `URLSearchParams` for `fetch`, axios or ky:
+
+```tsx title="components/orders-table.tsx"
+import { toSearchParams } from "@querycn/filter-core"
+import { useAppliedFilter } from "@querycn/filter-react"
+
+function OrdersTable() {
+  const { query } = useAppliedFilter()
+  // query: { status: "paid", amount__gte: "10" }
+  const url = `/api/orders?${toSearchParams(query)}`
+  // …
+}
 ```
 
-`QueryParams` is `Record<string, string | string[]>`, where an array means the key is repeated. `toSearchParams(query)` turns it into `URLSearchParams` for `fetch`, axios or ky.
+Giving the serializer to the provider also tells the UI what your backend can handle. For example, django-filter has no "does not contain", so that operator isn't offered.
 
-## The example filter
+### On the server
 
-The outputs below all come from this filter, as it appears in the URL:
+A serializer is a plain function, so it works on the server too:
+
+```ts title="app/orders/page.tsx"
+const filter = parseFilters(await props.searchParams, { fields: orderFields })
+const query = serializer(filter, { fields: orderFields })
+```
+
+## The built-in serializers
+
+All the examples below come from the same filter:
 
 ```txt title="URL"
 ?status__eq=active&amount__between=10,50&tags__in=urgent,vip&name__notContains=test&createdAt__isEmpty&paid__eq=true
 ```
 
-## jsonApiSerializer
+### JSON:API style (default)
 
-The default. JSON:API-style bracket params, one key per field and operator:
+Used when you don't pass a serializer. One key per field and operator:
 
-```ts title="Usage"
-import { jsonApiSerializer } from "@querycn/filter-core"
-
-jsonApiSerializer()
-```
-
-```txt title="AND"
+```txt title="Request"
 filter[status][eq]=active
 &filter[amount][between]=10&filter[amount][between]=50
 &filter[tags][in]=urgent&filter[tags][in]=vip
@@ -54,25 +75,11 @@ filter[status][eq]=active
 &filter[paid][eq]=true
 ```
 
-- Operators without a value send `true`.
-- An OR filter adds `filter[join]=or` (only when two or more rules are sent).
-- Every built-in operator is supported.
+- Every operator is supported.
+- Operators without a value, like `isEmpty`, send `true`.
+- OR filters add `filter[join]=or`.
 
-<TypeTable
-  type={{
-    prefix: { description: "The outer key.", type: "string", default: '"filter"' },
-    operators: {
-      description: "Renames operators in keys, e.g. { notContains: \"not_contains\" }. An explicit undefined turns an operator off.",
-      type: "Partial<Record<OperatorId, string>>",
-    },
-    arrayFormat: {
-      description: "\"repeat\" sends ?k=a&k=b; \"comma\" sends ?k=a,b and skips rules with a comma inside a list item.",
-      type: '"repeat" | "comma"',
-      default: '"repeat"',
-    },
-    mapRule: { description: "Adjusts or skips rules before encoding. See mapRule below.", type: "MapRule" },
-  }}
-/>
+Change the format with options:
 
 ```ts title="Custom options"
 jsonApiSerializer({
@@ -81,12 +88,28 @@ jsonApiSerializer({
   operators: { notContains: "not_contains", isEmpty: undefined },
 })
 // q[amount][between]=10,50  q[tags][in]=urgent,vip  q[name][not_contains]=test
-// isEmpty is no longer offered in the UI
+// isEmpty is turned off, so the UI no longer offers it
 ```
 
-## djangoSerializer
+<TypeTable
+  type={{
+    prefix: { description: "The outer key.", type: "string", default: '"filter"' },
+    operators: {
+      description: "Renames operators, e.g. { notContains: \"not_contains\" }. Set one to undefined to turn it off.",
+      type: "Partial<Record<OperatorId, string>>",
+    },
+    arrayFormat: {
+      description: "\"repeat\" sends ?k=a&k=b. \"comma\" sends ?k=a,b, and skips rules with a comma inside a list item.",
+      type: '"repeat" | "comma"',
+      default: '"repeat"',
+    },
+    mapRule: { description: "Changes or skips rules before they're sent. See below.", type: "MapRule" },
+  }}
+/>
 
-[django-filter](https://django-filter.readthedocs.io) lookups:
+### django-filter
+
+For [django-filter](https://django-filter.readthedocs.io) lookups:
 
 ```ts title="Usage"
 import { djangoSerializer } from "@querycn/filter-core"
@@ -94,45 +117,50 @@ import { djangoSerializer } from "@querycn/filter-core"
 djangoSerializer()
 ```
 
-```txt title="AND"
+```txt title="Request"
 status=active&amount__range=10,50&tags__in=urgent,vip&createdAt__isnull=true&paid=true
 ```
 
-`name notContains test` is missing: django-filter has no lookup for it, so the rule is skipped and flagged as **unsupported** in the UI.
+The *name does not contain test* rule is missing: django-filter has no lookup for it. The rule is skipped, and the UI shows a warning on it.
 
 | Operator | Lookup | Example |
 | --- | --- | --- |
-| `eq` | (none) | `status=active` |
+| `eq` | none | `status=active` |
 | `contains` | `icontains` | `name__icontains=an` |
 | `startsWith` / `endsWith` | `istartswith` / `iendswith` | `name__istartswith=an` |
 | `gt` `gte` `lt` `lte` | same name | `amount__gte=10` |
 | `between` | `range` | `amount__range=10,50` |
 | `in` | `in` | `tags__in=urgent,vip` |
 | `isEmpty` / `isNotEmpty` | `isnull` | `createdAt__isnull=true` / `false` |
-| `ne`, `notContains`, `notIn` | not supported by default | skipped |
+| `ne`, `notContains`, `notIn` | not supported | skipped |
 
-<TypeTable
-  type={{
-    lookups: {
-      description: "Merged over the defaults. Add lookups your backend defines (e.g. ne via exclude=True filters), rename, or set undefined to turn one off.",
-      type: "Partial<Record<OperatorId, string>>",
-    },
-    joinParam: { description: "Sent as <joinParam>=or for OR filters.", type: "string", default: '"conjunction"' },
-    mapRule: { description: "Adjusts or skips rules before encoding.", type: "MapRule" },
-  }}
-/>
+If your `FilterSet` defines more lookups, add them:
 
 ```ts title="Custom lookups"
 djangoSerializer({ lookups: { ne: "ne", contains: "contains" } })
 // status__ne=paid  customer__contains=an
 ```
 
-- Lists are comma-joined, as django-filter's CSV filters expect. A rule with a comma inside a list item is skipped.
-- Plain django-filter doesn't know `conjunction=or`: it always ANDs. Handle the param in your `FilterSet`, or set `allowJoinToggle={false}` on the builder so users can't pick OR.
+<TypeTable
+  type={{
+    lookups: {
+      description: "Merged over the defaults. Add lookups your backend defines, rename them, or set one to undefined to turn it off.",
+      type: "Partial<Record<OperatorId, string>>",
+    },
+    joinParam: { description: "Sent as <joinParam>=or for OR filters.", type: "string", default: '"conjunction"' },
+    mapRule: { description: "Changes or skips rules before they're sent.", type: "MapRule" },
+  }}
+/>
 
-## postgrestSerializer
+<Callout title="OR needs work on your side">
+  Plain django-filter always combines filters with AND and ignores `conjunction=or`. Either handle it in your `FilterSet`, or set `allowJoinToggle={false}` on the builder so users can't pick OR.
+</Callout>
 
-[PostgREST](https://docs.postgrest.org/en/stable/references/api/tables_views.html) (and Supabase's REST API) operators:
+Lists are sent comma-separated, as django-filter expects. A rule with a comma inside a list item is skipped.
+
+### PostgREST and Supabase
+
+For [PostgREST](https://docs.postgrest.org/en/stable/references/api/tables_views.html) and Supabase's REST API:
 
 ```ts title="Usage"
 import { postgrestSerializer } from "@querycn/filter-core"
@@ -140,12 +168,12 @@ import { postgrestSerializer } from "@querycn/filter-core"
 postgrestSerializer()
 ```
 
-```txt title="AND"
+```txt title="Request (AND)"
 status=eq.active&amount=gte.10&amount=lte.50&tags=in.(urgent,vip)
 &name=not.ilike.*test*&createdAt=is.null&paid=eq.true
 ```
 
-```txt title="OR"
+```txt title="Request (OR)"
 or=(status.eq.active,and(amount.gte.10,amount.lte.50),tags.in.(urgent,vip),name.not.ilike.*test*,createdAt.is.null,paid.eq.true)
 ```
 
@@ -158,39 +186,38 @@ or=(status.eq.active,and(amount.gte.10,amount.lte.50),tags.in.(urgent,vip),name.
 | `in` / `notIn` | `in.(a,b)` / `not.in.(a,b)` |
 | `isEmpty` / `isNotEmpty` | `is.null` / `not.is.null` |
 
-- Values containing reserved characters are quoted inside `in.(…)` and `or=(…)`: `in.("a,b",c)`.
-- `%` and `_` in text are escaped, so `50%_off` is matched literally. `*` can't be escaped in PostgREST and stays a wildcard.
-- Repeated keys are valid (PostgREST ANDs them), so this serializer never reports conflicts.
-- Field names (after `mapRule`) must not contain `,` `.` `(` `)`, nor be a reserved param: `or`, `and`, `select`, `order`, `limit`, `offset`. For columns of embedded resources, write your own `table.or=(…)` serializer.
+To change how an operator is sent, pass `operators`. Each entry returns the filters for one rule, or `[]` to skip it. Always pass user input through `quote`:
 
-Override or add operators with `operators`. Each entry returns the filters for one rule, or `[]` to skip it. Pass user input through `quote`:
-
-```ts title="Custom operator"
+```ts title="Full-text search instead of ilike"
 postgrestSerializer({
   operators: {
-    // full-text search instead of ilike
     contains: (rule, quote) => (rule.arity === "single" ? [`fts.${quote(String(rule.value))}`] : []),
   },
 })
 // OR: or=(customer.fts."nguyen van",status.eq.paid)
 ```
 
-## mapRule
+Good to know:
 
-All built-in serializers (and `createParamsSerializer`) accept `mapRule`. It sees each rule before encoding, and returns the rule to send, a changed copy, or `undefined` to skip it. The URL stays the same: only the request changes.
+- Special characters are escaped for you: values are quoted inside `in.(…)` and `or=(…)`, and `%` and `_` in text match literally. `*` can't be escaped in PostgREST, so it stays a wildcard.
+- Field names can't contain `,` `.` `(` `)`, and can't be `or`, `and`, `select`, `order`, `limit` or `offset`. To filter columns of embedded resources, write your own serializer.
+
+## Adjust rules with `mapRule`
+
+Every built-in serializer takes a `mapRule` option. It sees each rule before it's sent, and returns the rule, a changed copy, or `undefined` to skip it. The URL doesn't change, only the request:
 
 ```ts title="mapRule"
 jsonApiSerializer({
   mapRule: (rule) => {
-    // alias: the UI and URL say "customer", the API wants "customer.name"
+    // The URL says "customer", the API wants "customer.name"
     if (rule.field === "customer") return { ...rule, field: "customer.name" }
 
-    // make "on or before a day" include the whole day for a timestamp column
+    // "On or before Sep 30" should include the whole day
     if (rule.field === "createdAt" && rule.operator === "lte" && rule.arity === "single") {
       return { ...rule, value: `${rule.value}T23:59:59` }
     }
 
-    // internal fields never reach this API
+    // Never send fields marked in meta
     if (rule.definition.meta?.clientOnly) return undefined
 
     return rule
@@ -199,37 +226,15 @@ jsonApiSerializer({
 // filter[customer.name][contains]=an&filter[createdAt][lte]=2026-09-30T23:59:59
 ```
 
-Rules:
+- **Don't change the operator.** To rename operators, use the serializer's `operators` or `lookups` option.
+- **Keep it pure.** It can run more than once per apply, so don't read `Date.now()` or other changing state.
+- Skipped rules get a warning in the UI.
 
-- **Don't change `operator` or `arity`.** The UI asks the serializer which operators it supports before any rule exists. Rename operators with the serializer's `operators` / `lookups` option instead.
-- **Keep it pure.** It can run several times per apply (to build the query and to inspect it). Don't read `Date.now()` or other changing state inside.
-- Skipped rules are reported as unsupported, under their original id.
+## Write your own
 
-## inspect and supports
+### Another param format
 
-The built-in serializers are **inspectable**: besides being callable, they have two methods the UI uses.
-
-```ts title="Inspect"
-const serializer = djangoSerializer()
-
-serializer.supports("ne") // false: not offered in the operator picker
-serializer.inspect(state, { fields })
-// { skipped: ["r3"], conflicts: [] }
-```
-
-- `supports(operator)`: whether the backend can express the operator at all. The UI hides unsupported operators, and fields left without any.
-- `inspect(state, context)`: which applied rules were **skipped** (operator off, arity mismatch, dropped by `mapRule`, a comma in a list) and which **conflict**, meaning they repeat a key an earlier rule already sent. Most backends read only one value per key:
-
-```ts title="Conflict"
-jsonApiSerializer()({ join: "and", rules: [statusIsPaid, statusIsPending] }, context)
-// { "filter[status][eq]": ["paid", "pending"] }  → conflicts: [id of the second rule]
-```
-
-The provider runs `inspect` on apply and exposes the result as `ruleIssues`. The builder and the chips show a warning icon on those rules. Hand-written serializers don't need these methods; without them, every operator is offered and nothing is flagged.
-
-## createParamsSerializer
-
-For another query-param format, write only the per-rule part and get `inspect`, `supports`, OR handling and `mapRule` for free. This one produces [Strapi](https://docs.strapi.io/cms/api/rest/filters) filters:
+If your backend reads query params in another format, use `createParamsSerializer`. You only write how one rule becomes params. OR handling, `mapRule` and the UI warnings come for free. This one sends [Strapi](https://docs.strapi.io/cms/api/rest/filters) filters:
 
 ```ts title="lib/strapi-serializer.ts"
 import { createParamsSerializer, type OperatorId } from "@querycn/filter-core"
@@ -242,7 +247,7 @@ const STRAPI: Partial<Record<OperatorId, string>> = {
 export const strapiSerializer = createParamsSerializer({
   encodeRule: ({ field, operator, value }, { index, join }) => {
     const op = STRAPI[operator]
-    if (!op) return undefined // skipped, reported as unsupported
+    if (!op) return undefined // skipped, with a warning in the UI
     const key = join === "or" ? `filters[$or][${index}][${field}][${op}]` : `filters[${field}][${op}]`
     if (value === null) return [[key, "true"]]
     if (Array.isArray(value)) return value.map((item, i) => [`${key}[${i}]`, String(item)])
@@ -256,22 +261,22 @@ export const strapiSerializer = createParamsSerializer({
 <TypeTable
   type={{
     encodeRule: {
-      description: "Params for one rule, as [key, value] pairs. Return undefined or [] to skip the rule. index is the rule's position among all applied rules, so it can skip numbers when a rule before it was skipped.",
+      description: "Params for one rule, as [key, value] pairs. Return undefined or [] to skip the rule. index is the rule's position among all applied rules, so numbers can have gaps when a rule is skipped.",
       type: "(rule: AppliedRule, meta: { index: number; join: \"and\" | \"or\" }) => [string, string | string[]][] | undefined",
       required: true,
     },
+    supports: { description: "Which operators your backend can handle. Others aren't offered in the UI.", type: "(operator: OperatorId) => boolean", default: "every operator" },
     orParams: {
-      description: "Added when an OR filter sends two or more rules, e.g. { conjunction: \"or\" }.",
+      description: "Added for OR filters with two or more rules, e.g. { conjunction: \"or\" }.",
       type: "QueryParams",
     },
     mapRule: { description: "As in the built-in serializers.", type: "MapRule" },
-    supports: { description: "Which operators the backend can express.", type: "(operator: OperatorId) => boolean", default: "every operator" },
   }}
 />
 
-## Custom serializers
+### Anything else: Prisma, GraphQL…
 
-A serializer can return anything: a JSON body, a GraphQL `where`, arguments for an ORM. Use `getAppliedRules` to get the complete rules with their arity and field definition:
+A serializer is just a function `(filter, context) => anything`. Use `getAppliedRules` to get the rules with their field definition, then build what you need. This one returns a Prisma `where`:
 
 ```ts title="lib/prisma-where.ts"
 import { getAppliedRules, type AppliedRule, type QuerySerializer } from "@querycn/filter-core"
@@ -306,8 +311,32 @@ const filter = parseFilters(await props.searchParams, { fields: orderFields })
 const orders = await prisma.order.findMany({ where: prismaWhere(filter, { fields: orderFields }) })
 ```
 
-`AppliedRule` is a union on `arity`, so checking `rule.arity` narrows `rule.value` to `null`, one value, a pair or a list. `rule.definition` is the field, including its `meta`.
+Checking `rule.arity` tells TypeScript the value's shape: `null`, one value, a `[from, to]` pair or a list. `rule.definition` is the field, including its `meta`.
+
+To use it on the client, pass the output type to the hook: `useAppliedFilter<Prisma.OrderWhereInput>()`.
 
 <Callout title="Values are user input" type="warn">
-  Rules come from the URL. Field names and operators are checked against your fields, but values are only checked for shape. A `number` field can carry text like `"12,5"`, and `select` values aren't checked against the options. Validate or parameterize them like any other request input, and never interpolate them into SQL.
+  Rules come from the URL. Field names and operators are checked against your fields, but values are only checked for shape: a `number` field can carry text like `"12,5"`, and `select` values aren't checked against the options. Validate them like any other request input, and never put them into SQL by hand.
 </Callout>
+
+## Warnings in the UI
+
+The built-in serializers (and those from `createParamsSerializer`) can tell the UI about problems. You don't need to call these yourself, but it helps to know what the warning icons mean:
+
+```ts title="What the UI asks"
+const serializer = djangoSerializer()
+
+serializer.supports("ne") // false: "is not" isn't offered in the operator picker
+serializer.inspect(filter, { fields })
+// { skipped: ["r3"], conflicts: [] }
+```
+
+- **Unsupported** (`skipped`): the rule can't be sent, so your backend never sees it. For example, an operator that's turned off, a rule dropped by `mapRule`, or a comma in a list item.
+- **Conflict** (`conflicts`): the rule sends the same key as an earlier rule, like two *Status is …* rules with the JSON:API serializer. Most backends only read one of them:
+
+```ts title="Conflict"
+jsonApiSerializer()({ join: "and", rules: [statusIsPaid, statusIsPending] }, context)
+// { "filter[status][eq]": ["paid", "pending"] }  → the second rule conflicts
+```
+
+Serializers you write as a plain function don't have these methods. Then every operator is offered, and nothing is flagged.

@@ -1,11 +1,13 @@
 ---
 title: Columns
-description: Column definitions for useDataTable, the meta keys the table reads, and the selection column.
+description: Define what the table shows, and what users can do with each column.
 ---
 
-Columns are plain [TanStack Table](https://tanstack.com/table/latest/docs/guide/column-defs) column definitions. `createDataTableColumnHelper` gives you a helper typed for the features `useDataTable` turns on, so `meta` and the sorting, pinning and sizing options are checked.
+Columns are [TanStack Table column definitions](https://tanstack.com/table/latest/docs/guide/column-defs), with a few extra options tablecn reads. Build them with `createDataTableColumnHelper`, which types those options for you:
 
-```tsx title="lib/order-columns.tsx"
+```tsx title="components/orders/order-columns.tsx"
+"use client"
+
 import { createDataTableColumnHelper } from "@querycn/table-react"
 
 import { createSelectionColumn } from "@/components/data-table/data-table-selection-column"
@@ -25,7 +27,7 @@ export const orderColumns = [
   column.accessor("customer.name", {
     header: "Customer",
     size: 200,
-    meta: { required: true, defaultPinned: "start" },
+    meta: { defaultPinned: "start" },
   }),
   column.accessor("status", { header: "Status" }),
   column.accessor("amount", {
@@ -44,128 +46,137 @@ export const orderColumns = [
 ]
 ```
 
-Keep the array stable: define it at module level, or in a `useMemo`. A new array on every render rebuilds the table's columns.
+<Callout title="Define columns outside your components">
+  Put the array at module scope, or wrap it in `useMemo`. A new array on every render rebuilds the table's columns.
+</Callout>
 
-The type of a single column is `DataTableColumnDef<TData>`, if you'd rather write the objects by hand.
+Prefer writing the objects by hand? Type each one as `DataTableColumnDef<Order>`.
 
 ## Column ids
 
-Every column needs an id. TanStack Table derives it the same way the table's layout and URL do:
+Every column has an id. It's what appears in the URL (`?sort=-customer_name`), in the saved layout, and in `data-column-id` on every cell. It comes from, in order:
 
-- an explicit `id` wins;
-- otherwise `accessorKey`, with dots replaced by `_`: `customer.name` becomes `customer_name`;
-- otherwise a string `header`.
+1. an explicit `id`;
+2. the accessor key, with dots replaced by `_`: `customer.name` becomes `customer_name`;
+3. a string `header`.
 
-The id is what appears in the URL (`?sort=-customer_name`), in the saved layout and in `data-column-id` on every cell. Renaming a column's id breaks links and saved layouts that use the old one; see [Layout](/docs/table/layout) for the second.
+Renaming a column's id breaks links and saved layouts that use the old one. See [Layout](/docs/table/layout#when-your-columns-change) for how to handle that.
 
-## Meta
+## Starting layout
 
-`meta` holds the options the table itself reads, typed as `DataTableColumnMeta`:
+`meta` sets how a column looks the first time a user sees the table, and after they press **Reset layout**:
+
+```tsx title="Starting layout"
+column.accessor("customer.name", { header: "Customer", meta: { defaultPinned: "start" } })
+column.accessor("createdAt", { header: "Created", meta: { defaultHidden: true } })
+```
 
 <TypeTable
   type={{
-    label: {
-      description: "The column's name in the column menu and for screen readers, when `header` isn't a string (an icon, a component).",
-      type: "string",
-      default: "a string header, else the id",
-    },
-    required: {
-      description: "Marks the header with a red `*`, e.g. for columns an import must fill.",
-      type: "boolean",
-      default: "false",
-    },
     defaultHidden: {
-      description: "Hidden until the user shows it from the column menu.",
+      description: "Hidden until the user shows it from the Columns menu.",
       type: "boolean",
       default: "false",
     },
     defaultPinned: {
-      description: "Pinned to the start or end edge by default. Users can unpin it unless `enablePinning` is false.",
+      description: "Pinned to the start or end edge. Users can unpin it, unless enablePinning is false.",
       type: '"start" | "end"',
     },
+    label: {
+      description: "The column's name in the Columns menu and for screen readers. Needed when header isn't a string, like an icon.",
+      type: "string",
+      default: "a string header, else the id",
+    },
+    required: {
+      description: "Adds a red * to the header, e.g. for columns an import must fill.",
+      type: "boolean",
+      default: "false",
+    },
     enableOrdering: {
-      description: "`false` keeps the column in place: no drag handle in the header or the column menu.",
+      description: "false keeps the column in place: no drag handle in the header or the Columns menu.",
       type: "boolean",
       default: "true",
     },
   }}
 />
 
-"Default" means the layout a user starts with, and goes back to with **Reset layout**. Once they change it, their saved layout wins. See [Layout](/docs/table/layout).
+Once users change the layout, their saved layout wins. See [Layout](/docs/table/layout).
 
-## TanStack options that matter
+## What users can do
 
-Any TanStack column option works. These are the ones the table's UI responds to:
+By default, users can sort, hide, pin and resize every column. Turn things off per column with TanStack's options:
+
+```tsx title="A locked column"
+column.accessor("id", {
+  header: "Order #",
+  enableSorting: false,
+  enableHiding: false,
+  enableResizing: false,
+})
+```
 
 <TypeTable
   type={{
     enableSorting: {
-      description: "`false` removes the sort button from the header, and the column can't be sorted from the URL either. Display columns (no accessor) never sort.",
+      description: "false removes the sort button, and the column can't be sorted from the URL either. Display columns (no accessor) never sort.",
       type: "boolean",
       default: "true",
     },
     sortDescFirst: {
-      description: "The first click sorts descending. The table's default is ascending first for every type, numbers included.",
+      description: "The first click sorts descending, e.g. for amounts or dates. Otherwise every column sorts ascending first.",
       type: "boolean",
       default: "false",
     },
     sortingFn: {
-      description: "How values compare. TanStack's default is a natural sort, so `Item 2` comes before `Item 10`.",
+      description: "How values compare. The default is a natural sort, so Item 2 comes before Item 10.",
       type: "SortingFnOption",
       default: '"auto"',
     },
     enableHiding: {
-      description: "`false` keeps the column visible: its checkbox in the column menu is disabled.",
+      description: "false keeps the column visible: its checkbox in the Columns menu is disabled.",
       type: "boolean",
       default: "true",
     },
     enablePinning: {
-      description: "`false` disables pinning from the column menu. A column with `defaultPinned` and `enablePinning: false` stays pinned for good.",
+      description: "false disables pinning from the Columns menu. With defaultPinned, the column stays pinned for good.",
       type: "boolean",
       default: "true",
     },
     enableResizing: {
-      description: "`false` removes the resize handle, and **Fit to content** skips the column.",
+      description: "false removes the resize handle, and Fit to content skips the column.",
       type: "boolean",
       default: "true",
     },
     size: { description: "Starting width in pixels.", type: "number", default: "150" },
     minSize: { description: "Resizing and fitting stop here.", type: "number", default: "20" },
-    maxSize: { description: "Resizing stops here. Fitting to content also caps at 800px.", type: "number" },
+    maxSize: { description: "Resizing stops here. Fitting to content also stops at 800px.", type: "number" },
   }}
 />
 
-Headers sort on click. <kbd>Shift</kbd>+click adds the column to the sort instead of replacing it, up to three columns (`maxSortColumns` in [URL state](/docs/table/url-state#options)).
+Any other TanStack column option works too.
 
-## Sorting from the URL
+## Sorting
 
-Only sortable columns are read from `?sort=`. A link like `?sort=secret_field` is dropped, so it never reaches your backend. `useDataTable` and `useTableQuery` work this out from the columns with `tableUrlOptions(columns, url)`.
+Users click a header to sort: ascending, descending, then off. <kbd>Shift</kbd>+click adds a column to the sort instead of replacing it, up to three columns (change it with `maxSortColumns` in [URL state](/docs/table/url-state#table-options)).
 
-To allow a narrower or wider list, set `url.sortableColumns` yourself. The server needs that list too, when it decodes the URL with `parseTableParams`: see [Rendering on the server](/docs/table/server-data#rendering-on-the-server).
+Only sortable columns are read from `?sort=`, so a link like `?sort=secret_field` is ignored and never reaches your backend. The table works out the list from your columns. To set it yourself, pass `url.sortableColumns`. The server needs the same list when it reads the URL: see [Rendering on the server](/docs/table/server-data#rendering-on-the-server).
 
 ## The selection column
 
-`createSelectionColumn` comes with the registry block. It adds a checkbox per row and a header checkbox that selects the page:
+`createSelectionColumn` comes with the table UI. It adds a checkbox to each row, and one in the header that selects the whole page:
 
 ```tsx title="Selection"
-import { viTableMessages } from "@querycn/table-react/locales/vi"
-
 import { createSelectionColumn } from "@/components/data-table/data-table-selection-column"
 
-const columns = [createSelectionColumn<Order>(viTableMessages), ...otherColumns]
+const columns = [createSelectionColumn<Order>(), ...otherColumns]
 ```
 
-- It's pinned to the start and can't be hidden, sorted, resized, moved or unpinned, and it doesn't appear in the column menu.
-- The optional argument is the table messages, for the checkboxes' labels ("Select all", "Select row").
-- Which rows can be selected is up to `useDataTable({ enableRowSelection })`: `true`, or a function of the row. Disabled rows show a disabled checkbox.
+- It's pinned to the start. It can't be hidden, sorted, resized, moved or unpinned, and it isn't listed in the **Columns** menu.
+- Pass table messages to translate its labels: `createSelectionColumn<Order>(viTableMessages)`.
+- Choose which rows can be selected with `useDataTable({ enableRowSelection })`: `true`, or a function of the row. Other rows show a disabled checkbox.
 
-The selection lives in the table state: read it with `table.getSelectedRowModel().rows`, or use the toolbar's [selection bar](/docs/table/components). It holds within one page and clears when the page, sort or filter changes.
+Read the selected rows with `table.getSelectedRowModel().rows`, or act on them from the toolbar's [selection bar](/docs/components/table#datatableselectionbar). The selection only covers the current page, and clears when the page, sort or filter changes.
 
 ## Grouped headers
 
-Group columns (`column.group({ header, columns })`) render a header row above their leaves. Sorting, resizing, pinning and hiding work on the leaf columns. Moving columns by drag is turned off while there is more than one header row, because a leaf moved out of its group would break the group.
-
-<Cards>
-  <Card title="URL state" href="/docs/table/url-state" description="How sort and page are written to the URL, and the options." />
-  <Card title="Layout" href="/docs/table/layout" description="Visibility, order, pinning, widths and colors, saved per user." />
-</Cards>
+Group columns under a shared header with `column.group({ header, columns })`. Sorting, resizing, pinning and hiding work on the inner columns. Dragging columns is turned off while there's more than one header row, since moving a column out of its group would break the group.

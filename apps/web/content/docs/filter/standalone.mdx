@@ -1,0 +1,237 @@
+---
+title: Use without the table
+description: Use the filter on its own, above a list of cards, a report, or only on the server.
+---
+
+import { FilterPreview } from "@/components/docs/filter-preview"
+
+The filter is built for the tablecn table, but doesn't depend on it. Use it on its own when you already have a list, a grid of cards or a report, or when you only need to read `?status__eq=paid` in an API route.
+
+<FilterPreview />
+
+Here the filter sits above a plain HTML table, not the tablecn table. Apply a filter: the rows are filtered in the browser, the filter is written to the URL, and under the rows you can see the request a JSON:API-style backend would receive.
+
+## Install
+
+Add only the filter UI (see [Installation](/docs/installation) for the registry setup):
+
+```npm
+npx shadcn@latest add @tablecn/filter-builder
+```
+
+Then declare your [fields](/docs/filter/fields), and render the builder in a provider for your router:
+
+<Tabs items={["Next.js", "Vite / plain React", "react-router"]}>
+<Tab value="Next.js">
+
+```npm
+npm install @querycn/filter-next
+```
+
+```tsx title="app/orders/orders-filter.tsx"
+"use client"
+
+import { NextFilterProvider } from "@querycn/filter-next"
+
+import { FilterBuilder } from "@/components/filter/filter-builder"
+import { FilterChips } from "@/components/filter/filter-chips"
+import { orderFields } from "@/lib/order-fields"
+
+export function OrdersFilter({ children }: { children?: React.ReactNode }) {
+  return (
+    <NextFilterProvider fields={orderFields}>
+      <div className="flex flex-wrap items-center gap-2">
+        <FilterBuilder />
+        <FilterChips />
+      </div>
+      {children}
+    </NextFilterProvider>
+  )
+}
+```
+
+</Tab>
+<Tab value="Vite / plain React">
+
+```tsx title="src/orders-page.tsx"
+import { FilterProvider, useBrowserUrlAdapter } from "@querycn/filter-react"
+
+import { FilterBuilder } from "@/components/filter/filter-builder"
+import { FilterChips } from "@/components/filter/filter-chips"
+import { orderFields } from "@/lib/order-fields"
+
+export function OrdersPage() {
+  const adapter = useBrowserUrlAdapter()
+
+  return (
+    <FilterProvider fields={orderFields} adapter={adapter}>
+      <div className="flex flex-wrap items-center gap-2">
+        <FilterBuilder />
+        <FilterChips />
+      </div>
+      <OrderList />
+    </FilterProvider>
+  )
+}
+```
+
+</Tab>
+<Tab value="react-router">
+
+```tsx title="src/routes/orders.tsx"
+import { FilterProvider } from "@querycn/filter-react"
+import { useReactRouterAdapter } from "@querycn/filter-react/react-router"
+
+import { FilterBuilder } from "@/components/filter/filter-builder"
+import { FilterChips } from "@/components/filter/filter-chips"
+import { orderFields } from "@/lib/order-fields"
+
+export function OrdersRoute() {
+  const adapter = useReactRouterAdapter()
+
+  return (
+    <FilterProvider fields={orderFields} adapter={adapter}>
+      <div className="flex flex-wrap items-center gap-2">
+        <FilterBuilder />
+        <FilterChips />
+      </div>
+      <OrderList />
+    </FilterProvider>
+  )
+}
+```
+
+</Tab>
+</Tabs>
+
+Without an `adapter`, the filter lives in memory and the URL is left alone.
+
+## Load the filtered data
+
+Pick the case that fits:
+
+### From your API, in the browser
+
+Anywhere inside the provider, `useAppliedFilter()` gives you the request params for the applied filter:
+
+```tsx title="components/order-list.tsx"
+import { toSearchParams } from "@querycn/filter-core"
+import { useAppliedFilter } from "@querycn/filter-react"
+
+function OrderList() {
+  const { query, queryKey } = useAppliedFilter()
+  // query: { "filter[status][eq]": "paid" }
+
+  const { data } = useQuery({
+    queryKey: ["orders", queryKey],
+    queryFn: () => fetch(`/api/orders?${toSearchParams(query)}`).then((r) => r.json()),
+  })
+  // …
+}
+```
+
+`queryKey` is a short string that changes when the filter changes, handy for cache keys. For another format, pass a [serializer](/docs/filter/serializers) to the provider.
+
+### On the server, with Next.js
+
+By default, applying a filter updates the URL and Next.js renders the page again on the server. Read the filter from `searchParams`:
+
+```tsx title="app/orders/page.tsx"
+import { jsonApiSerializer, toSearchParams } from "@querycn/filter-core"
+import { parseFilters } from "@querycn/filter-next/server"
+
+import { orderFields } from "@/lib/order-fields"
+import { OrdersFilter } from "./orders-filter"
+
+const serializer = jsonApiSerializer()
+
+export default async function Page(props: PageProps<"/orders">) {
+  const filter = parseFilters(await props.searchParams, { fields: orderFields })
+  const query = serializer(filter, { fields: orderFields })
+  const orders = await fetch(`${process.env.API_URL}/orders?${toSearchParams(query)}`).then((r) => r.json())
+
+  return (
+    <OrdersFilter>
+      <OrderList orders={orders} />
+    </OrdersFilter>
+  )
+}
+```
+
+In a route handler, pass the request's params:
+
+```ts title="app/api/orders/route.ts"
+import type { NextRequest } from "next/server"
+import { parseFilters } from "@querycn/filter-next/server"
+
+export async function GET(request: NextRequest) {
+  const filter = parseFilters(request.nextUrl.searchParams, { fields: orderFields })
+  // …
+}
+```
+
+`parseFilters` checks the URL like the client does: a broken or outdated link gives fewer rules, never an error.
+
+<TypeTable
+  type={{
+    fields: { description: "The same fields as the client.", type: "readonly FieldDefinition[]", required: true },
+    registry: { description: "Needed if you use custom field types or operators.", type: "FilterRegistry" },
+    urlFormat: { description: "Needed if the client uses a custom URL format.", type: "UrlFormat" },
+  }}
+/>
+
+### In the browser, without an API
+
+When every row is already loaded, filter them with `applyFilter`. It applies the same rules, the same way the table does in [client mode](/docs/table/filtering#client-mode-rows-in-the-browser):
+
+```tsx title="components/order-list.tsx"
+"use client"
+
+import { applyFilter } from "@querycn/filter-core"
+import { useAppliedFilter } from "@querycn/filter-react"
+
+function OrderList({ orders }: { orders: Order[] }) {
+  const { state, context } = useAppliedFilter()
+  const rows = React.useMemo(() => applyFilter(orders, state, context), [orders, state, context])
+  // render rows…
+}
+```
+
+With Next.js, add `shallow` to the provider (`<NextFilterProvider fields={orderFields} shallow>`): the URL is updated without asking the server for a new page.
+
+<Callout title="Not for paginated data" type="warn">
+  Filtering one page of a paginated API in the browser gives wrong results: matching rows on other pages are never seen. Send the filter to your backend instead.
+</Callout>
+
+`applyFilter(rows, state, context)` takes these options in `context`. `useAppliedFilter().context` already has `fields` and `registry`:
+
+<TypeTable
+  type={{
+    fields: { description: "The field definitions.", type: "readonly FieldDefinition[]", required: true },
+    registry: { description: "Needed with custom field types or operators.", type: "FilterRegistry" },
+    getValue: {
+      description: "Reads a field's value from a row, e.g. for nested data. May return a list, like a row's tags.",
+      type: "(row: Row, field: FieldDefinition) => unknown",
+      default: "row[field.name]",
+    },
+    accentInsensitive: {
+      description: "Text matching ignores accents (\"da nang\" matches \"Đà Nẵng\"). Case is always ignored.",
+      type: "boolean",
+      default: "true",
+    },
+  }}
+/>
+
+`createRowMatcher(state, context)` returns a `(row) => boolean` instead of a filtered array, for when you need a predicate.
+
+### Anywhere else
+
+`@querycn/filter-core` has no dependencies, so it runs in any backend, script or test. See [URL state](/docs/table/url-state#reading-the-filter-outside-react) to read and write the filter's URL params by hand.
+
+## Next.js notes
+
+- **Keep fields in a shared module**, without `"use client"`, and import it on both sides. You can't pass `fields` as a prop from a server component to a client component if a field has `loadOptions` or `resolveLabels`: functions can't cross that boundary. The same goes for serializers.
+- **`shallow` or not?** Leave it off when a server component reads `searchParams`, so each filter change fetches the page again. Turn it on when rows are filtered in the browser.
+- **Static routes need `<Suspense>`.** The provider reads the URL with `useSearchParams`, so on a prerendered route `next build` fails unless the provider is inside a `<Suspense>` boundary. Pages that await `searchParams` are dynamic already.
+- **Next.js 14**: `searchParams` is a plain object, not a Promise: `parseFilters(props.searchParams, { fields })`. The examples use Next.js 15.5+ types like `PageProps<"/orders">`.
+- `NextFilterProvider` takes every [`FilterProvider` prop](/docs/filter/react#filterprovider) except `adapter`, plus `shallow`. To use the adapter with your own provider, call `useNextAdapter({ shallow })`. Both keep the path, hash and other params, don't scroll, and handle `basePath`.

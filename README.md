@@ -20,9 +20,9 @@
 
 <p align="center">
   <a href="apps/web/content/docs/index.mdx">Get Started</a> ·
-  <a href="apps/web/content/docs/table/installation.mdx">Installation</a> ·
-  <a href="apps/web/content/docs/table/index.mdx">Table</a> ·
-  <a href="apps/web/content/docs/filter/index.mdx">Filter</a>
+  <a href="apps/web/content/docs/installation.mdx">Installation</a> ·
+  <a href="apps/web/content/docs/concepts.mdx">How it works</a> ·
+  <a href="apps/web/content/docs/filter/standalone.mdx">Filter without the table</a>
 </p>
 
 ## Features

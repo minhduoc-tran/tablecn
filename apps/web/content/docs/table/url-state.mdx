@@ -1,75 +1,56 @@
 ---
 title: URL state
-description: How sorting, pagination and the search are written to the URL, next to the filter, and the options that shape them.
+description: How the search, filter, sort and page are written to the URL, and how to connect it to your router.
 ---
 
-## Format
-
-Sort, page and search live in the query string, next to the [filter's params](/docs/filter/url-state):
+Everything that decides which rows users see lives in the URL:
 
 ```txt title="URL"
-/orders?status__eq=paid&q=nguyen&sort=-amount,customer_name&page=2&per_page=50
+/orders?q=nguyen&status__eq=paid&amount__between=10,50&sort=-amount,customer&page=2&per_page=50
 ```
 
-- `q` is the search box's text, trimmed and at most 200 characters. See [Searching](#searching).
-- `sort` lists column ids, most important first. A leading `-` means descending. Up to three columns by default.
-- `page` is 1-based, as people count. The table's `pageIndex` is 0-based, as TanStack Table counts.
-- `per_page` is the page size. It must be one of the offered page sizes (`[10, 20, 50, 100]` by default).
-- Defaults aren't written: page 1, the default page size and the default sort leave no param, so a fresh table has a clean URL.
+| Param | Written by | Meaning |
+| --- | --- | --- |
+| `q=nguyen` | the search box | the search text |
+| `status__eq=paid` | the filter | one param per rule: `field__operator=value` |
+| `sort=-amount,customer` | header clicks | column ids, most important first; `-` means descending |
+| `page=2` | the pagination | the page, counted from 1 |
+| `per_page=50` | the rows-per-page picker | the page size |
 
-Links are shareable, reloads keep the view, and back/forward work, because the URL is the only place this state lives.
+Defaults aren't written: page 1, the default page size and the default sort leave no param, so a fresh table has a clean URL. Links can be shared, reloads keep the view, and Back / Forward work.
 
-## One URL, one navigation
+## Connect to your router
 
-The filter and the table read and write the same query string. `useDataTable` uses the nearest `FilterProvider`'s adapter by default, so there's nothing to wire:
+An **adapter** reads and writes the URL through your router. You pass it to the `FilterProvider`, and the table uses the same one:
 
-```tsx title="Shared adapter"
-<NextFilterProvider fields={orderFields} onApply={() => resetPagePatch()}>
-  <OrdersTable /> {/* useDataTable here finds the provider's adapter */}
-</NextFilterProvider>
-```
+| Adapter | Import | Use it for |
+| --- | --- | --- |
+| `<NextFilterProvider>` or `useNextAdapter()` | `@querycn/filter-next` | Next.js App Router |
+| `useReactRouterAdapter()` | `@querycn/filter-react/react-router` | react-router 6.4+ and 7 |
+| `useBrowserUrlAdapter()` | `@querycn/filter-react` | Vite and other apps without a client router |
+| none | | State stays in memory, the URL is left alone. Good for dialogs and tests. |
+| `createMemoryAdapter("status__eq=paid")` | `@querycn/filter-react` | In memory, with a starting query string |
 
-Without a provider, pass an `adapter` to `useDataTable` (see [Installation](/docs/table/installation)). Without either, the state lives in memory and nothing touches the URL.
+Without a `FilterProvider`, pass the adapter to `useDataTable({ adapter })` instead.
 
-```mermaid
-flowchart LR
-  filter["FilterBuilder<br/>Apply"] -- "status__eq=paid<br/>page=null" --> url["URL"]
-  search["Search box"] -- "q=nguyen<br/>page=null" --> url
-  header["Header click"] -- "sort=-amount<br/>page=null" --> url
-  pager["Pagination"] -- "page=2" --> url
-  url --> table["useDataTable"]
-  url --> query["useTableQuery<br/>(server mode)"]
-```
+All URL adapters **replace** the current history entry instead of adding one, so ten sorts don't add ten Back steps. They keep the path, the hash and your other query params.
 
-### Back to page 1
+## Back to page 1
 
 Page 4 of the old results means nothing for new ones, so every change that reshapes the results starts again at page 1:
 
-- **Sort, page size or search.** The table does it itself, in the same write.
-- **Filter.** The filter doesn't know about pages, so tell it: `onApply={() => resetPagePatch()}` on the provider. `onApply` returns params to write *along with* the filter, so the filter and `page` change in one navigation. Two separate writes would make two history entries, and with a router that rerenders on each, a render with the new filter on the old page.
+- **Sort, page size or search**: the table does it itself.
+- **Filter**: the filter doesn't know about pages, so tell it with `onApply`:
 
-`resetPagePatch(url)` returns `{ page: null }`, using your page param name if you renamed it. It also covers **Clear filters** in the toolbar and the chips' ×, since both apply through the provider.
+```tsx title="Reset the page on apply"
+<FilterProvider fields={orderFields} adapter={adapter} onApply={() => resetPagePatch()}>
+```
 
-### Searching
+`onApply` returns params to write together with the filter, so the filter and `page` change in one URL update. `resetPagePatch()` returns `{ page: null }` (`null` removes a param), using your page param name if you renamed it. It also covers **Clear filters** and the chips' ×.
 
-`q` holds free text from the [search box](/docs/table/components#datatablesearch). It's separate from the filter's rules: it isn't a chip, and it looks in several columns at once.
+## Table options
 
-- **Client mode** keeps the rows where every word of the search appears in the searched columns, ignoring case and accents: `nguyen ha noi` finds "Nguyễn Văn An" in "Hà Nội". It looks in every column with an accessor, or only in [`searchColumns`](/docs/table/server-data#client-mode).
-- **Server mode** sends it to the backend with the sort and page. The params presets put it where each backend expects it; see [Server data](/docs/table/server-data#searching).
-
-The box writes the search once typing pauses (300 ms), or right away on <kbd>Enter</kbd>. From code, call `table.options.meta.setSearch("…")`, and read it from `table.options.meta.search`.
-
-<Callout title="Already using ?q=?">
-  If your app puts something else in `q` (a site-wide search box, say), the table would read it as its search. Rename the table's param: `url: { params: { search: "search" } }`. The same goes for `sort`, `page` and `per_page`.
-</Callout>
-
-### Pages that don't exist
-
-`?page=40` with 3 pages of results shows page 3. In client mode the URL is left as it is. In server mode the table rewrites the URL to the last page once the backend's total is known, so the next fetch asks for a page that exists.
-
-## Options
-
-Pass them as `url` to `useDataTable`, the same object to `useTableQuery`, and to `parseTableParams` on the server (with `sortableColumns`, see [Rendering on the server](/docs/table/server-data#rendering-on-the-server)), so all three read the URL alike:
+Pass these as `url` to `useDataTable`:
 
 ```ts title="URL options"
 import type { TableUrlOptions } from "@querycn/table-react"
@@ -84,7 +65,7 @@ const url = {
 useDataTable({ data, columns, getRowId, url })
 ```
 
-Keep it stable (module constant or `useMemo`), like `columns`.
+Define it outside your component, like `columns`. In server mode, pass the same object to `useTableQuery` and `parseTableParams`, so they all read the URL alike.
 
 <TypeTable
   type={{
@@ -94,24 +75,24 @@ Keep it stable (module constant or `useMemo`), like `columns`.
       default: '{ sort: "sort", page: "page", perPage: "per_page", search: "q" }',
     },
     pageSizes: {
-      description: "The sizes users can pick. A `per_page` outside them reads as the default.",
+      description: "The sizes users can pick. A per_page outside them reads as the default.",
       type: "readonly number[]",
       default: "[10, 20, 50, 100]",
     },
     defaultPageSize: {
-      description: "The size without a `per_page` param. Accepted even when it isn't in `pageSizes`.",
+      description: "The size without a per_page param. Accepted even when it isn't in pageSizes.",
       type: "number",
       default: "20",
     },
     defaultSorting: {
-      description: "The sort without a `sort` param. Clearing it writes an empty `sort=`, so it isn't read back as the default.",
+      description: "The sort without a sort param. Clearing it writes an empty sort=, so it isn't read back as the default.",
       type: "SortingState",
       default: "[]",
     },
     sortableColumns: {
-      description: "Column ids `sort` may name. Defaults to the columns that can sort; see Columns.",
+      description: "Column ids sort may name.",
       type: "readonly string[]",
-      default: "sortable columns",
+      default: "the columns that can sort",
     },
     maxSortColumns: {
       description: "How many columns sort at once. Extra ones in the URL are dropped.",
@@ -121,58 +102,177 @@ Keep it stable (module constant or `useMemo`), like `columns`.
   }}
 />
 
-## Bad URLs
+<Callout title="Already using ?q=?">
+  If your app puts something else in `q` (a site-wide search box, say), the table would read it as its search. Rename the table's param: `url: { params: { search: "search" } }`.
+</Callout>
 
-A URL is user input, so reading it never throws:
+## Broken links
 
-- unknown, unsortable or repeated `sort` columns are dropped;
-- `page` that isn't a positive whole number reads as page 1;
-- `per_page` outside `pageSizes` reads as the default size;
-- `q` longer than 200 characters is cut.
+A URL is user input, so reading it never throws. Whatever doesn't make sense is dropped:
 
-```ts title="Decoding"
-import { decodeTableParams } from "@querycn/table-react"
+- `sort` columns that don't exist, can't sort or are repeated;
+- a `page` that isn't a positive whole number (reads as page 1);
+- a `per_page` outside `pageSizes` (reads as the default);
+- a `q` longer than 200 characters (cut);
+- filter rules with an unknown field, an operator the field doesn't offer, or a value of the wrong shape. Each rule is checked on its own, so one bad rule doesn't drop the others.
 
-decodeTableParams("sort=-amount,amount,nope&page=0&per_page=7", {
-  sortableColumns: ["amount", "customer_name"],
-})
-// → { sorting: [{ id: "amount", desc: true }], pagination: { pageIndex: 0, pageSize: 20 }, search: "" }
+A page past the last one shows the last one. In server mode, the URL is also rewritten to that page once the backend's total is known.
+
+## The filter's params in detail
+
+Each applied rule is one param, `field__operator=value`:
+
+```txt title="Filter params"
+?status__eq=paid&amount__between=10,50&tags__in=urgent,vip&deletedAt__isEmpty
 ```
 
-## Outside useDataTable
+- **Ranges and lists** are comma-separated: `amount__between=10,50`, `tags__in=urgent,vip`.
+- **Operators without a value** write only the key: `deletedAt__isEmpty`.
+- **OR** adds `join=or`. AND is the default and adds nothing.
+- **Two rules on the same field and operator** repeat the key: `status__ne=draft&status__ne=void`.
+- **Field names may contain `__`** too: the key is split at the last one.
+- **A comma inside a list item** is written `%252C`, so it isn't read as a separator.
+- **Only what a URL can't hold is escaped**: spaces, `&`, `=`, `#`, `+`, `%` and non-ASCII. Characters like `,` `:` `/` `@` stay readable.
 
-The codec functions work anywhere, including on the server (from `@querycn/table-react/server` too):
+When a filter is applied, every param that belongs to the filter is replaced: `join`, and any `field__…` key of a declared field. Other params are left alone.
 
-```ts title="Codec"
+## Reading the filter outside React
+
+The provider and the table do this for you. In a backend, a script or a test, use the functions directly:
+
+```ts title="Filter params"
+import { decodeFilters, encodeFilters } from "@querycn/filter-core"
+
+const context = { fields: orderFields }
+
+decodeFilters("status__eq=paid&nope__eq=1&amount__between=1&page=2", context)
+// → { join: "and", rules: [{ id: "u0", field: "status", operator: "eq", value: "paid" }] }
+
+encodeFilters(
+  { join: "and", rules: [{ id: "a", field: "amount", operator: "between", value: ["10", "50"] }] },
+  context
+)
+// → "amount__between=10,50"
+```
+
+`decodeFilters` takes a query string (with or without `?`) or a `URLSearchParams`. Decoded rules get ids by position (`u0`, `u1`…), so the server and the client decode a URL to the same state. In Next.js, `parseFilters` from `@querycn/filter-next/server` does the same with a page's `searchParams`.
+
+The table's params have the same pair of functions (also exported from `@querycn/table-react/server`):
+
+```ts title="Table params"
 import { decodeTableParams, encodeTableParams } from "@querycn/table-react"
 
-encodeTableParams({
-  sorting: [{ id: "amount", desc: true }],
-  pagination: { pageIndex: 1, pageSize: 20 },
-  search: "",
+decodeTableParams("sort=-amount,amount,nope&page=0&per_page=7", {
+  sortableColumns: ["amount", "customer"],
 })
-// → { sort: "-amount", page: "2", per_page: null, q: null }  (a ParamPatch: null removes the param)
+// → { sorting: [{ id: "amount", desc: true }], pagination: { pageIndex: 0, pageSize: 20 }, search: "" }
+
+encodeTableParams({ sorting: [{ id: "amount", desc: true }], pagination: { pageIndex: 1, pageSize: 20 }, search: "" })
+// → { sort: "-amount", page: "2", per_page: null, q: null }  (null removes the param)
 ```
 
-With your own table setup, `useTableUrlState` gives the same state as controlled TanStack Table props:
+With your own TanStack table instead of `useDataTable`, `useTableUrlState({ adapter, …options })` gives the URL state as controlled props: `sorting`, `pagination`, `search` and their `on…Change` handlers.
 
-```tsx title="useTableUrlState"
-import { useTableUrlState } from "@querycn/table-react"
+## Advanced
 
-const url = useTableUrlState({ adapter, pageSizes: [10, 20, 50] })
+### A custom filter URL format
 
-const table = useTable({
-  // …
-  state: { sorting: url.sorting, pagination: url.pagination },
-  onSortingChange: url.onSortingChange,
-  onPaginationChange: url.onPaginationChange,
-})
-// url.search and url.onSearchChange for a search box
+To match a URL scheme you already have, pass a `urlFormat` to the provider, and the same one to `parseFilters` or `decodeFilters` on the server. A format maps one rule to one param and back. This one writes `_customer=["like","%acme%"]`:
+
+```ts title="lib/legacy-url-format.ts"
+import type { UrlFormat } from "@querycn/filter-core"
+
+const toUrlOperator: Record<string, string> = { contains: "like", eq: "eq", in: "in" }
+const fromUrlOperator = Object.fromEntries(
+  Object.entries(toUrlOperator).map(([ours, theirs]) => [theirs, ours])
+)
+
+export const legacyUrlFormat: UrlFormat = {
+  encodeRule: ({ field, operator, value }) => [
+    `_${field}`,
+    JSON.stringify(
+      operator === "contains" ? ["like", `%${value}%`] : [toUrlOperator[operator] ?? operator, value]
+    ),
+  ],
+  decodeRule: (key, value) => {
+    if (!key.startsWith("_")) return null // not a filter param
+    const [operator, raw] = JSON.parse(value) // a throw drops the param
+    return {
+      field: key.slice(1),
+      operator: fromUrlOperator[operator] ?? operator,
+      value: operator === "like" ? String(raw).replace(/^%|%$/g, "") : raw,
+    }
+  },
+  joinParam: "_join",
+}
 ```
 
-It takes the `TableUrlOptions` above plus `adapter`, and `pageCount` or `rowCount` to clamp pages past the last one; `isPageClamped` tells you when that happened.
+- `encodeRule` only gets complete rules. `value` is `null` for operators without one, and an array for ranges and lists.
+- `decodeRule` returns `null` for params that aren't rules, like `page`. What it returns is checked like any other rule, so raw text is fine: `"5"` becomes `5` on a number field.
+- OR is written as `joinParam=or` (default `join`).
 
-<Cards>
-  <Card title="Server data" href="/docs/table/server-data" description="Send the filter, sort and page to your backend." />
-  <Card title="Filter URL state" href="/docs/filter/url-state" description="The filter's side of the same URL." />
-</Cards>
+### A custom adapter
+
+An adapter is a small object that holds a query string. This one keeps the filter and table state in `localStorage` instead of the URL:
+
+```ts title="lib/storage-adapter.ts"
+import { applyParamChanges, type UrlStateAdapter } from "@querycn/filter-react"
+
+export function createStorageAdapter(key: string): UrlStateAdapter {
+  const listeners = new Set<() => void>()
+  const read = () => localStorage.getItem(key) ?? ""
+  return {
+    read,
+    write: (changes) => {
+      const next = applyParamChanges(read(), changes)
+      if (next === null) return // nothing changed
+      localStorage.setItem(key, next)
+      listeners.forEach((listener) => listener())
+    },
+    subscribe: (onChange) => {
+      // `storage` fires for changes made in other tabs
+      const onStorage = (event: StorageEvent) => event.key === key && onChange()
+      listeners.add(onChange)
+      window.addEventListener("storage", onStorage)
+      return () => {
+        listeners.delete(onChange)
+        window.removeEventListener("storage", onStorage)
+      }
+    },
+    readServer: () => "",
+  }
+}
+```
+
+Create it once (module scope or `useState(() => …)`), not on every render. Its methods are called without `this`.
+
+<TypeTable
+  type={{
+    read: {
+      description: "Returns the query string, or an empty string. Must return the same string until it changes.",
+      type: "() => string",
+      required: true,
+    },
+    write: {
+      description: "Applies a patch: a string sets a param, an array repeats it, null removes it.",
+      type: "(changes: Record<string, string | string[] | null>) => void",
+      required: true,
+    },
+    subscribe: {
+      description: "Needed when the value can change outside React, e.g. Back / Forward or another tab.",
+      type: "(onChange: () => void) => () => void",
+    },
+    readServer: {
+      description: "The value during server rendering and hydration. Return an empty string if it's only known in the browser, so hydration matches.",
+      type: "() => string",
+      default: "read",
+    },
+  }}
+/>
+
+## Router notes
+
+- **Plain browser adapter**: it only sees the URL in the browser, so server rendering and hydration see an empty state, then the real one right after. The Next.js and react-router adapters read the URL through the router, so their server render already has it. Don't use it next to a client-side router: the router's navigations aren't observed.
+- **react-router + `<ScrollRestoration>`**: if the URL has a hash, every apply scrolls to its target. Use `getKey` based on the pathname, or avoid hashes on these pages.
+- **react-router + `useBlocker`**: when a blocker stops the navigation, the value just written waits until the URL changes again.
+- **Two filters on one page** share the query string, so give their fields different names.

@@ -1,1 +1,13 @@
-{ "pages": ["index", "development", "filter", "table", "components"] }
+{
+  "pages": [
+    "---Get started---",
+    "index",
+    "installation",
+    "concepts",
+    "table",
+    "filter",
+    "components",
+    "---Contributing---",
+    "development"
+  ]
+}
