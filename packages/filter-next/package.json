@@ -1,6 +1,6 @@
 {
   "name": "@querycn/filter-next",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Next.js App Router bindings for @querycn/filter-react: URL adapter, provider and a server-side filter parser.",
   "license": "MIT",
   "author": "minhduoc-tran",

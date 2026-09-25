@@ -1,5 +1,13 @@
 # @querycn/filter-next
 
+## 0.2.0
+
+### Patch Changes
+
+- Updated dependencies [ecfd3c6]
+  - @querycn/filter-core@0.2.0
+  - @querycn/filter-react@0.2.0
+
 ## 0.1.0
 
 ### Minor Changes
