@@ -1,6 +1,6 @@
 {
   "name": "@querycn/filter-core",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Framework-agnostic conditional filter engine: rules AST, URL codec, backend query serializers and client-side filtering.",
   "license": "MIT",
   "author": "minhduoc-tran",
