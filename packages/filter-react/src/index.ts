@@ -12,3 +12,9 @@ export { useFilter } from "./use-filter"
 export { useAppliedFilter } from "./use-applied-filter"
 export type { AppliedFilterValue, FilterDraftValue } from "./filter-contexts"
 export type { RuleIssues } from "./serializer-capabilities"
+export { useFieldOptions } from "./use-field-options"
+export type {
+  FieldOptionsConfig,
+  FieldOptionsResult,
+} from "./use-field-options"
+export { clearFieldOptionsCache } from "./field-options-cache"

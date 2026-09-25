@@ -47,6 +47,8 @@ export { createId } from "./create-id"
 
 export { decodeFilters, encodeFilters } from "./url-codec"
 
+export { filterOptions } from "./select-options"
+
 export { getOperatorLabel, mergeMessages } from "./messages"
 export type { FilterMessages, FilterMessagesOverrides } from "./messages"
 export { enMessages } from "./locales/en"

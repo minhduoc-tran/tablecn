@@ -76,5 +76,13 @@ export interface FieldDefinition {
   defaultOperator?: OperatorId
   options?: SelectOption[]
   loadOptions?: (search: string, signal: AbortSignal) => Promise<SelectOption[]>
+  /**
+   * Labels for values not in any loaded list yet, e.g. a filter opened from a
+   * URL. Values it leaves out are shown as-is.
+   */
+  resolveLabels?: (
+    values: string[],
+    signal: AbortSignal
+  ) => Promise<SelectOption[]>
   meta?: Record<string, unknown>
 }
