@@ -4,13 +4,15 @@ import * as React from "react"
 import type { DataTableInstance } from "@querycn/table-react"
 
 import { cn } from "@/lib/utils"
-import { measureColumnWidth } from "@/registry/shared/table/measure-column-width"
+import {
+  getColumnWidthBounds,
+  measureColumnWidths,
+} from "@/registry/shared/table/column-layout-actions"
 
 type Header<TData extends object> = ReturnType<
   DataTableInstance<TData>["getFlatHeaders"]
 >[number]
 
-const FIT_MAX = 800
 const STEP = 10
 const LARGE_STEP = 50
 
@@ -27,8 +29,7 @@ export function ColumnResizeHandle<TData extends object>({
 }) {
   const { column } = header
   const table = header.getContext().table
-  const min = column.columnDef.minSize ?? 20
-  const max = column.columnDef.maxSize ?? Number.MAX_SAFE_INTEGER
+  const { min, max } = getColumnWidthBounds(column)
   const isResizing = column.getIsResizing()
   // TanStack flips the offset in right-to-left tables; the line follows the pointer.
   const direction = table.options.columnResizeDirection === "rtl" ? -1 : 1
@@ -65,12 +66,7 @@ export function ColumnResizeHandle<TData extends object>({
           "[data-slot=data-table]"
         )
         if (container) {
-          setWidth(
-            measureColumnWidth(container, column.id, {
-              min,
-              max: Math.min(max, FIT_MAX),
-            })
-          )
+          setWidth(measureColumnWidths(container, [column])[column.id]!)
         }
       }}
       onKeyDown={(event) => {

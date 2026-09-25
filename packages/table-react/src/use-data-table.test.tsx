@@ -329,6 +329,15 @@ describe("useDataTable selection and layout", () => {
     expect(result.current.getRow("2").getCanSelect()).toBe(false)
   })
 
+  it("forgets the saved layout on meta.resetLayout", () => {
+    const { result } = setup("", { storageKey: "orders" })
+    act(() => result.current.getColumn("amount")!.toggleVisibility(false))
+    expect(localStorage.getItem("orders")).not.toBeNull()
+    act(() => result.current.options.meta!.resetLayout())
+    expect(localStorage.getItem("orders")).toBeNull()
+    expect(result.current.getColumn("amount")!.getIsVisible()).toBe(true)
+  })
+
   it("saves the column layout and resets to the columns' defaults", () => {
     const { result } = setup("", { storageKey: "orders" })
     const column = (id: string) => result.current.getColumn(id)!

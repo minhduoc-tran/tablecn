@@ -12,7 +12,11 @@ import {
   type Announcements,
   type CollisionDetection,
   type DragEndEvent,
+  type KeyboardSensorOptions,
+  type KeyboardSensorProps,
   type Modifier,
+  type PointerSensorOptions,
+  type PointerSensorProps,
   type UniqueIdentifier,
 } from "@dnd-kit/core"
 import {
@@ -21,10 +25,12 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
+  verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import type { DataTableInstance, TableMessages } from "@querycn/table-react"
 
 import { getColumnLabel } from "@/registry/shared/table/column-label"
+import { getListedColumns } from "@/registry/shared/table/column-layout-actions"
 
 type Group = "start" | "center" | "end"
 type Column<TData extends object> = ReturnType<
@@ -64,35 +70,84 @@ const sameGroup: CollisionDetection = (args) =>
     ),
   })
 
-const alongRow: Modifier = ({ transform }) => ({ ...transform, y: 0 })
+type Axis = "x" | "y"
+
+const alongAxis: Record<Axis, Modifier> = {
+  x: ({ transform }) => ({ ...transform, y: 0 }),
+  y: ({ transform }) => ({ ...transform, x: 0 }),
+}
+
+const AxisContext = React.createContext<Axis>("x")
+
+// A sensor keeps listening on the document until the drag ends, even once its
+// DndContext unmounts (a popover closing mid-drag); the next Enter would drop.
+// These report themselves so `ColumnReorder` can stop them when it unmounts.
+interface Detachable {
+  detach: () => void
+}
+interface Tracked {
+  onAttach?: (sensor: Detachable) => void
+}
+
+class TrackedKeyboardSensor extends KeyboardSensor {
+  constructor(props: KeyboardSensorProps) {
+    super(props)
+    ;(props.options as Tracked).onAttach?.(this as unknown as Detachable)
+  }
+}
+
+class TrackedPointerSensor extends PointerSensor {
+  constructor(props: PointerSensorProps) {
+    super(props)
+    ;(props.options as Tracked).onAttach?.(this as unknown as Detachable)
+  }
+}
 
 /**
  * Lets header cells be dragged (by `useColumnDrag`'s handle) to reorder
  * columns: the column order for unpinned columns, the pinned order for pinned
- * ones. Wrap the table in it.
+ * ones. Wrap the table in it, or with `axis="y"` a list of every column,
+ * hidden ones included.
  */
 export function ColumnReorder<TData extends object>({
   table,
   messages,
+  axis = "x",
+  onDraggingChange,
   children,
 }: {
   table: DataTableInstance<TData>
   messages: TableMessages
+  axis?: Axis
+  /** E.g. to keep a popover around the list open while a column moves. */
+  onDraggingChange?: (dragging: boolean) => void
   children: React.ReactNode
 }) {
   // Stable ids for the screen reader descriptions, so server and client HTML match.
   const id = React.useId()
+  const sensor = React.useRef<Detachable | null>(null)
+  const onAttach = React.useCallback((attached: Detachable) => {
+    sensor.current = attached
+  }, [])
+  React.useEffect(() => () => sensor.current?.detach(), [])
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
-    useSensor(KeyboardSensor, {
+    useSensor(TrackedPointerSensor, {
+      activationConstraint: { distance: 4 },
+      onAttach,
+    } as PointerSensorOptions & Tracked),
+    useSensor(TrackedKeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+      onAttach,
+    } as KeyboardSensorOptions & Tracked)
   )
-  const columns = [
-    ...table.getStartVisibleLeafColumns(),
-    ...table.getCenterVisibleLeafColumns(),
-    ...table.getEndVisibleLeafColumns(),
-  ]
+  const columns =
+    axis === "y"
+      ? getListedColumns(table)
+      : [
+          ...table.getStartVisibleLeafColumns(),
+          ...table.getCenterVisibleLeafColumns(),
+          ...table.getEndVisibleLeafColumns(),
+        ]
   // While dragging, only the columns that can trade places with it make room.
   const [activeGroup, setActiveGroup] = React.useState<Group | null>(null)
   const items = columns
@@ -131,6 +186,7 @@ export function ColumnReorder<TData extends object>({
 
   const onDragEnd = ({ active, over }: DragEndEvent) => {
     setActiveGroup(null)
+    onDraggingChange?.(false)
     const from = table.getColumn(String(active.id))
     const to = over && table.getColumn(String(over.id))
     if (!from || !to || from.id === to.id) return
@@ -155,29 +211,41 @@ export function ColumnReorder<TData extends object>({
       id={id}
       sensors={sensors}
       collisionDetection={sameGroup}
-      modifiers={[alongRow]}
+      modifiers={[alongAxis[axis]]}
       accessibility={{
         announcements,
         screenReaderInstructions: { draggable: messages.header.instructions },
       }}
-      onDragStart={({ active }) =>
+      onDragStart={({ active }) => {
         setActiveGroup(active.data.current?.group ?? null)
-      }
-      onDragCancel={() => setActiveGroup(null)}
+        onDraggingChange?.(true)
+      }}
+      onDragCancel={() => {
+        setActiveGroup(null)
+        onDraggingChange?.(false)
+      }}
       onDragEnd={onDragEnd}
     >
-      <SortableContext items={items} strategy={horizontalListSortingStrategy}>
-        {children}
+      <SortableContext
+        items={items}
+        strategy={
+          axis === "y"
+            ? verticalListSortingStrategy
+            : horizontalListSortingStrategy
+        }
+      >
+        <AxisContext value={axis}>{children}</AxisContext>
       </SortableContext>
     </DndContext>
   )
 }
 
-/** A header cell's part in `ColumnReorder`: its node, drag handles and offset while moving. */
+/** A header cell's or list item's part in `ColumnReorder`: its node, drag handles and offset while moving. */
 export function useColumnDrag<TData extends object>(
   column: Column<TData>,
   canReorder: boolean
 ) {
+  const axis = React.use(AxisContext)
   const group = groupOf(column)
   const enabled = canReorder && isMovable(column)
   const { active } = useDndContext()
@@ -213,7 +281,9 @@ export function useColumnDrag<TData extends object>(
     isDragging,
     style: {
       transform: transform
-        ? `translate3d(${Math.round(transform.x)}px, 0, 0)`
+        ? axis === "y"
+          ? `translate3d(0, ${Math.round(transform.y)}px, 0)`
+          : `translate3d(${Math.round(transform.x)}px, 0, 0)`
         : undefined,
       transition,
     } satisfies React.CSSProperties,

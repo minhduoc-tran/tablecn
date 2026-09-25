@@ -1,11 +1,14 @@
 import type { CSSProperties } from "react"
 
+import { columnColorStyle } from "@/registry/shared/table/column-color-palette"
+
 interface PinnableColumn {
   id: string
   getIsPinned: () => false | "start" | "end"
   getStart: (position?: "start" | "end" | "center") => number
   getAfter: (position?: "start" | "end" | "center") => number
   getSize: () => number
+  getColor: () => string | undefined
 }
 
 interface PinnableTable {
@@ -27,12 +30,15 @@ export function getPinnedEdges(table: PinnableTable): PinnedEdges {
 }
 
 /**
- * Width, plus `position: sticky` at TanStack's offsets for pinned columns.
- * Logical insets, so pinning follows the reading direction.
+ * Width and color, plus `position: sticky` at TanStack's offsets for pinned
+ * columns. Logical insets, so pinning follows the reading direction.
  */
 export function getColumnCellProps(column: PinnableColumn, edges: PinnedEdges) {
   const pinned = column.getIsPinned()
-  const style: CSSProperties = { width: column.getSize() }
+  const style: CSSProperties = {
+    width: column.getSize(),
+    ...columnColorStyle(column.getColor()),
+  }
   if (pinned === "start") {
     style.position = "sticky"
     style.insetInlineStart = column.getStart("start")

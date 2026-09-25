@@ -28,6 +28,7 @@ import {
   getPinnedEdges,
 } from "@/registry/shared/table/data-table-pinning"
 import { ColumnReorder } from "@/registry/shared/table/column-reorder"
+import { useTableContainer } from "@/registry/shared/table/column-layout-actions"
 import { useScrollEdges } from "@/registry/shared/table/use-scroll-edges"
 import { DataTableColumnHeader } from "@/registry/radix/table/data-table-column-header"
 
@@ -88,6 +89,7 @@ export function DataTable<TData extends object>({
   ...props
 }: DataTableProps<TData>) {
   const [scrollRef, scrolled] = useScrollEdges<HTMLDivElement>()
+  useTableContainer(table, scrollRef)
   const rows = table.getRowModel().rows
   const columns = [
     ...table.getStartVisibleLeafColumns(),

@@ -202,7 +202,7 @@ export function useDataTable<TData extends RowData>(
     // Saves the layout once per drag instead of on every pointer move.
     columnResizeMode: "onEnd",
     columnResizeDirection: options.dir ?? "ltr",
-    meta: { pageSizes },
+    meta: { pageSizes, resetLayout: layout.reset },
   })
 }
 

@@ -10,9 +10,17 @@ export interface TableMessages {
     | "unpin"
     | "color"
     | "noColor"
+    | "customColor"
     | "fitContent"
     | "fitAll"
     | "resetLayout"
+  > & {
+    /** The label of a column's own menu in the column list. */
+    options: (column: string) => string
+  }
+  /** Names of the preset column colors. */
+  colors: Labels<
+    "red" | "orange" | "amber" | "green" | "teal" | "blue" | "violet" | "pink"
   >
   sorting: Labels<"asc" | "desc" | "clear">
   pagination: Labels<

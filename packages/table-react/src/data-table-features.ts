@@ -23,6 +23,8 @@ import type { DataTableColumnMeta } from "./table-layout-state"
 export interface DataTableMeta {
   /** The page sizes the URL accepts, default included, for the rows-per-page picker. */
   pageSizes: readonly number[]
+  /** Back to the columns' default layout, forgetting the saved one. */
+  resetLayout: () => void
 }
 
 /**

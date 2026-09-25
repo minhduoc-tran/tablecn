@@ -131,6 +131,7 @@
         "button",
         "checkbox",
         "dropdown-menu",
+        "popover",
         "select",
         "separator",
         "skeleton",
@@ -157,6 +158,16 @@
           "path": "registry/{base}/table/data-table-pagination.tsx",
           "type": "registry:component",
           "target": "@components/data-table/data-table-pagination.tsx"
+        },
+        {
+          "path": "registry/{base}/table/data-table-view-options.tsx",
+          "type": "registry:component",
+          "target": "@components/data-table/data-table-view-options.tsx"
+        },
+        {
+          "path": "registry/{base}/table/data-table-column-color-menu.tsx",
+          "type": "registry:component",
+          "target": "@components/data-table/data-table-column-color-menu.tsx"
         },
         {
           "path": "registry/shared/table/column-reorder.tsx",
@@ -197,6 +208,21 @@
           "path": "registry/shared/table/use-keep-focus-in-pagination.ts",
           "type": "registry:hook",
           "target": "@components/data-table/use-keep-focus-in-pagination.ts"
+        },
+        {
+          "path": "registry/shared/table/column-layout-actions.ts",
+          "type": "registry:lib",
+          "target": "@components/data-table/column-layout-actions.ts"
+        },
+        {
+          "path": "registry/shared/table/column-color-palette.ts",
+          "type": "registry:lib",
+          "target": "@components/data-table/column-color-palette.ts"
+        },
+        {
+          "path": "registry/shared/table/use-column-color-picker.ts",
+          "type": "registry:hook",
+          "target": "@components/data-table/use-column-color-picker.ts"
         },
         {
           "path": "registry/shared/table/page-range.ts",
