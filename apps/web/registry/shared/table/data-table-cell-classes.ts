@@ -2,6 +2,8 @@
 // colors are mixed in. Edge columns fade a shadow over the cells scrolled under them.
 // Any cell tints with its column's `--column-color` (none when it isn't set).
 export const pinnedCellClassName = [
+  // A column being moved stands out from the ones it passes.
+  "data-dragging:bg-muted!",
   "bg-[linear-gradient(color-mix(in_oklab,var(--column-color)_14%,transparent),color-mix(in_oklab,var(--column-color)_14%,transparent))]",
   "data-pinned:z-10 data-pinned:bg-background group-hover/row:data-pinned:bg-[color-mix(in_oklab,var(--color-muted)_50%,var(--color-background))] group-data-[state=selected]/row:data-pinned:bg-muted",
   "before:pointer-events-none before:absolute before:inset-y-0 before:w-3 before:from-foreground/10 before:to-transparent before:opacity-0 before:transition-opacity",

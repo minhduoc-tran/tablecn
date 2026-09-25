@@ -272,7 +272,9 @@ describe.each(BASES)(
       render(<Orders vi />)
       await user.click(screen.getByRole("button", { name: "Cột" }))
       expect(
-        screen.getByRole("button", { name: "Tuỳ chọn cột Amount" })
+        within(screen.getByRole("list", { name: "Cột" })).getByRole("button", {
+          name: "Tuỳ chọn cột Amount",
+        })
       ).toBeDefined()
     })
   }

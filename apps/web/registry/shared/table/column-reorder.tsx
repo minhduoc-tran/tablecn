@@ -79,6 +79,37 @@ const alongAxis: Record<Axis, Modifier> = {
 
 const AxisContext = React.createContext<Axis>("x")
 
+// In a table the other columns stay put: the moved one's cells follow the
+// pointer (by this variable, set on the table's container) and a line marks
+// where it will land. Only a list makes room as an item moves.
+const DRAG_X = "--data-table-drag-x"
+
+interface TableDrag {
+  activeId: string
+  /** The column it will land next to, on that column's start or end side. */
+  target: { id: string; side: "start" | "end" } | null
+}
+
+function getTableDrag(
+  ids: string[],
+  drag: { active: string; over: string | null } | null
+): TableDrag | null {
+  if (!drag) return null
+  const { active, over } = drag
+  const from = ids.indexOf(active)
+  const to = over === null ? -1 : ids.indexOf(over)
+  return {
+    activeId: active,
+    // Moved right it lands after the column it's over, moved left before it.
+    target:
+      over === null || to === -1 || over === active
+        ? null
+        : { id: over, side: from < to ? "end" : "start" },
+  }
+}
+
+const TableDragContext = React.createContext<TableDrag | null>(null)
+
 // A sensor keeps listening on the document until the drag ends, even once its
 // DndContext unmounts (a popover closing mid-drag); the next Enter would drop.
 // These report themselves so `ColumnReorder` can stop them when it unmounts.
@@ -150,12 +181,17 @@ export function ColumnReorder<TData extends object>({
         ]
   // While dragging, only the columns that can trade places with it make room.
   const [activeGroup, setActiveGroup] = React.useState<Group | null>(null)
+  const [dragIds, setDragIds] = React.useState<{
+    active: string
+    over: string | null
+  } | null>(null)
   const items = columns
     .filter(
       (column) =>
         isMovable(column) && (!activeGroup || groupOf(column) === activeGroup)
     )
     .map((column) => column.id)
+  const tableDrag = axis === "x" ? getTableDrag(items, dragIds) : null
 
   const describe = (id: UniqueIdentifier) => {
     const column = table.getColumn(String(id))
@@ -186,6 +222,7 @@ export function ColumnReorder<TData extends object>({
 
   const onDragEnd = ({ active, over }: DragEndEvent) => {
     setActiveGroup(null)
+    setDragIds(null)
     onDraggingChange?.(false)
     const from = table.getColumn(String(active.id))
     const to = over && table.getColumn(String(over.id))
@@ -218,10 +255,18 @@ export function ColumnReorder<TData extends object>({
       }}
       onDragStart={({ active }) => {
         setActiveGroup(active.data.current?.group ?? null)
+        setDragIds({ active: String(active.id), over: null })
         onDraggingChange?.(true)
       }}
+      onDragOver={({ active, over }) =>
+        setDragIds({
+          active: String(active.id),
+          over: over ? String(over.id) : null,
+        })
+      }
       onDragCancel={() => {
         setActiveGroup(null)
+        setDragIds(null)
         onDraggingChange?.(false)
       }}
       onDragEnd={onDragEnd}
@@ -234,7 +279,9 @@ export function ColumnReorder<TData extends object>({
             : horizontalListSortingStrategy
         }
       >
-        <AxisContext value={axis}>{children}</AxisContext>
+        <AxisContext value={axis}>
+          <TableDragContext value={tableDrag}>{children}</TableDragContext>
+        </AxisContext>
       </SortableContext>
     </DndContext>
   )
@@ -252,6 +299,7 @@ export function useColumnDrag<TData extends object>(
   // Keyboard moves pick the next droppable column, so other groups step aside too.
   const otherGroup = active !== null && active.data.current?.group !== group
   const {
+    node,
     setNodeRef,
     setActivatorNodeRef,
     attributes,
@@ -264,6 +312,19 @@ export function useColumnDrag<TData extends object>(
     disabled: { draggable: !enabled, droppable: !enabled || otherGroup },
     data: { group, movable: enabled },
   })
+  const tableDrag = React.use(TableDragContext)
+  const inTable = axis === "x"
+  const x = inTable && isDragging && transform ? Math.round(transform.x) : 0
+  React.useLayoutEffect(() => {
+    if (!x) return
+    const container = node.current?.closest<HTMLElement>(
+      "[data-slot=data-table]"
+    )
+    container?.style.setProperty(DRAG_X, `${x}px`)
+    return () => {
+      container?.style.removeProperty(DRAG_X)
+    }
+  }, [node, x])
   return {
     disabled: !enabled,
     setNodeRef,
@@ -279,13 +340,35 @@ export function useColumnDrag<TData extends object>(
       onKeyDown: listeners?.onKeyDown as React.KeyboardEventHandler | undefined,
     },
     isDragging,
-    style: {
-      transform: transform
-        ? axis === "y"
-          ? `translate3d(0, ${Math.round(transform.y)}px, 0)`
-          : `translate3d(${Math.round(transform.x)}px, 0, 0)`
-        : undefined,
-      transition,
-    } satisfies React.CSSProperties,
+    /** In a table, the side of this column the moved one will land on. */
+    dropSide:
+      tableDrag?.target?.id === column.id ? tableDrag.target.side : undefined,
+    style: (inTable
+      ? { transform: x ? `translate3d(${x}px, 0, 0)` : undefined }
+      : {
+          transform: transform
+            ? `translate3d(0, ${Math.round(transform.y)}px, 0)`
+            : undefined,
+          transition,
+        }) satisfies React.CSSProperties,
   }
+}
+
+/** A body cell's part in `ColumnReorder`: adds to its props so it follows its column's header while that moves. */
+export function useColumnDragCell() {
+  const tableDrag = React.use(TableDragContext)
+  return <TProps extends { style?: React.CSSProperties }>(
+    columnId: string,
+    props: TProps
+  ) =>
+    tableDrag?.activeId === columnId
+      ? {
+          ...props,
+          "data-dragging": true,
+          style: {
+            ...props.style,
+            transform: `translate3d(var(${DRAG_X}, 0px), 0, 0)`,
+          },
+        }
+      : props
 }

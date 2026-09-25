@@ -4,8 +4,8 @@
   "title": "Filter Builder",
   "description": "A filter builder for data tables: field, operator and value rows applied to the URL, built on @querycn/filter-react.",
   "dependencies": [
-    "@querycn/filter-core@^0.1.0",
-    "@querycn/filter-react@^0.1.0",
+    "@querycn/filter-core@^0.2.0",
+    "@querycn/filter-react@^0.2.0",
     "lucide-react",
     "react-aria-components",
     "@internationalized/date"

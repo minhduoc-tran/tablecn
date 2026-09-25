@@ -12,6 +12,7 @@ import { Button } from "@/registry/aria/ui/button"
 import { Skeleton } from "@/registry/aria/ui/skeleton"
 import { TableBody, TableCell, TableRow } from "@/registry/aria/ui/table"
 import { pinnedCellClassName } from "@/registry/shared/table/data-table-cell-classes"
+import { useColumnDragCell } from "@/registry/shared/table/column-reorder"
 import {
   getColumnCellProps,
   type getPinnedEdges,
@@ -66,6 +67,7 @@ export function DataTableBody<TData extends object>({
   headerRowCount: number
 }) {
   const rows = table.getRowModel().rows
+  const dragCell = useColumnDragCell()
 
   let body: React.ReactNode
   if (isError) {
@@ -142,7 +144,10 @@ export function DataTableBody<TData extends object>({
         ].map((cell) => (
           <TableCell
             key={cell.id}
-            {...getColumnCellProps(cell.column, edges)}
+            {...dragCell(
+              cell.column.id,
+              getColumnCellProps(cell.column, edges)
+            )}
             className={pinnedCellClassName}
           >
             <div className="truncate">

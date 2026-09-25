@@ -94,7 +94,7 @@ describe.each(BASES)(
       render(<Orders />)
       const sortBy = (name: string) =>
         within(header(name)).getByRole("button", {
-          name: new RegExp(`^${name}`),
+          name: new RegExp(`^${name}(?! options)`),
         })
 
       await user.click(sortBy("Amount"))
@@ -112,7 +112,9 @@ describe.each(BASES)(
       expect(sortBy("Amount").textContent).toMatch(/1$/)
       expect(sortBy("Customer").textContent).toMatch(/2$/)
       expect(
-        within(header("Status")).queryByRole("button", { name: /^Status/ })
+        within(header("Status")).queryByRole("button", {
+          name: /^Status(?! options)/,
+        })
       ).toBeNull()
     })
 
@@ -120,6 +122,31 @@ describe.each(BASES)(
       render(<Orders />)
       expect(header("Customer").textContent).toContain("*")
       expect(header("Amount").textContent).not.toContain("*")
+    })
+
+    it("opens the column menu from its button or a right-click", async () => {
+      const user = userEvent.setup()
+      render(<Orders />)
+      await user.click(
+        within(header("Amount")).getByRole("button", { name: "Amount options" })
+      )
+      await user.click(
+        await screen.findByRole("menuitem", { name: "Descending" })
+      )
+      expect(header("Amount").getAttribute("aria-sort")).toBe("descending")
+
+      fireEvent.contextMenu(header("Customer"))
+      await user.click(
+        await screen.findByRole("menuitem", { name: "Pin to end" })
+      )
+      expect(header("Customer").getAttribute("data-pinned")).toBe("end")
+
+      // Status can't sort, so its menu starts at pinning.
+      fireEvent.contextMenu(header("Status"))
+      await screen.findByRole("menuitem", { name: "Hide column" })
+      expect(screen.queryByRole("menuitem", { name: "Ascending" })).toBeNull()
+      await user.click(screen.getByRole("menuitem", { name: "Hide column" }))
+      expect(header("Status")).toBeUndefined()
     })
 
     it("resizes from the keyboard and fits the content on double-click", async () => {

@@ -9,8 +9,8 @@
       "title": "Filter Builder",
       "description": "A filter builder for data tables: field, operator and value rows applied to the URL, built on @querycn/filter-react.",
       "dependencies": [
-        "@querycn/filter-core@^0.1.0",
-        "@querycn/filter-react@^0.1.0",
+        "@querycn/filter-core@^0.2.0",
+        "@querycn/filter-react@^0.2.0",
         "lucide-react",
         "react-aria-components",
         "@internationalized/date"
@@ -114,7 +114,7 @@
       "dependencies": [
         "@dnd-kit/core@^6.3.1",
         "@dnd-kit/sortable@^10.0.0",
-        "@querycn/filter-react@^0.1.0",
+        "@querycn/filter-react@^0.2.0",
         "@querycn/table-react@^0.1.0",
         "@tanstack/react-table@^9.2.0",
         "@tanstack/react-virtual@^3.14.13",
@@ -170,6 +170,11 @@
           "target": "@components/data-table/data-table-column-color-menu.tsx"
         },
         {
+          "path": "registry/aria/table/data-table-column-menu.tsx",
+          "type": "registry:component",
+          "target": "@components/data-table/data-table-column-menu.tsx"
+        },
+        {
           "path": "registry/aria/table/data-table-toolbar.tsx",
           "type": "registry:component",
           "target": "@components/data-table/data-table-toolbar.tsx"
@@ -198,6 +203,11 @@
           "path": "registry/shared/table/column-resize-handle.tsx",
           "type": "registry:component",
           "target": "@components/data-table/column-resize-handle.tsx"
+        },
+        {
+          "path": "registry/shared/table/column-guide-line.tsx",
+          "type": "registry:component",
+          "target": "@components/data-table/column-guide-line.tsx"
         },
         {
           "path": "registry/shared/table/column-label.ts",

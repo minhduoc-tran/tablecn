@@ -11,7 +11,6 @@ import {
   MoreHorizontalIcon,
   MoveHorizontalIcon,
   PinIcon,
-  PinOffIcon,
   RotateCcwIcon,
   Settings2Icon,
 } from "lucide-react"
@@ -21,8 +20,6 @@ import { Checkbox } from "@/registry/radix/ui/checkbox"
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/registry/radix/ui/dropdown-menu"
 import {
@@ -31,15 +28,12 @@ import {
   PopoverTrigger,
 } from "@/registry/radix/ui/popover"
 import { Separator } from "@/registry/radix/ui/separator"
-import {
-  ColorSwatch,
-  DataTableColumnColorMenu,
-} from "@/registry/radix/table/data-table-column-color-menu"
+import { ColorSwatch } from "@/registry/radix/table/data-table-column-color-menu"
+import { DataTableColumnLayoutItems } from "@/registry/radix/table/data-table-column-menu"
 import { getColumnLabel } from "@/registry/shared/table/column-label"
 import {
   fitColumns,
   getListedColumns,
-  pinColumn,
   resetLayout,
 } from "@/registry/shared/table/column-layout-actions"
 import {
@@ -165,7 +159,6 @@ function ColumnItem<TData extends object>({
   } = useColumnDrag(column, canReorder)
   const color = column.getColor()
   const pinned = column.getIsPinned()
-  const canPin = column.getCanPin()
 
   return (
     <li
@@ -214,36 +207,8 @@ function ColumnItem<TData extends object>({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="min-w-44">
-          <DropdownMenuItem
-            disabled={!canPin || pinned === "start"}
-            onSelect={() => pinColumn(table, column, "start")}
-          >
-            <PinIcon />
-            {messages.columns.pinStart}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            disabled={!canPin || pinned === "end"}
-            onSelect={() => pinColumn(table, column, "end")}
-          >
-            <PinIcon />
-            {messages.columns.pinEnd}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            disabled={!canPin || !pinned}
-            onSelect={() => pinColumn(table, column, false)}
-          >
-            <PinOffIcon />
-            {messages.columns.unpin}
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            disabled={!column.getIsVisible() || !column.getCanResize()}
-            onSelect={() => fitColumns(table, [column])}
-          >
-            <MoveHorizontalIcon />
-            {messages.columns.fitContent}
-          </DropdownMenuItem>
-          <DataTableColumnColorMenu
+          <DataTableColumnLayoutItems
+            table={table}
             column={column}
             messages={messages}
             onCustomColor={onCustomColor}

@@ -20,8 +20,11 @@ import {
   type PinnedEdges,
 } from "@/registry/shared/table/data-table-pinning"
 import { getColumnLabel } from "@/registry/shared/table/column-label"
+import { DataTableColumnMenu } from "@/registry/base/table/data-table-column-menu"
+import { ColumnGuideLine } from "@/registry/shared/table/column-guide-line"
 import { useColumnDrag } from "@/registry/shared/table/column-reorder"
 import { ColumnResizeHandle } from "@/registry/shared/table/column-resize-handle"
+import { useColumnColorPicker } from "@/registry/shared/table/use-column-color-picker"
 
 type Header<TData extends object> = ReturnType<
   DataTableInstance<TData>["getFlatHeaders"]
@@ -31,7 +34,8 @@ const ARIA_SORT = { asc: "ascending", desc: "descending" } as const
 
 /**
  * A leaf column's header cell: click to sort (Shift+click adds the column to
- * the sort), drag the grip to reorder, drag the end edge to resize.
+ * the sort), drag it to reorder, drag the end edge to resize. Its ⋯ button, or
+ * a right-click, opens a menu to sort, pin, fit, color or hide the column.
  */
 export function DataTableColumnHeader<TData extends object>({
   table,
@@ -56,6 +60,7 @@ export function DataTableColumnHeader<TData extends object>({
   const {
     disabled: isFixed,
     isDragging,
+    dropSide,
     setNodeRef,
     pointerProps,
     setHandleRef,
@@ -63,6 +68,8 @@ export function DataTableColumnHeader<TData extends object>({
     style: dragStyle,
   } = useColumnDrag(column, canReorder)
   const cellProps = getHeaderCellProps(header, edges)
+  const [menuOpen, setMenuOpen] = React.useState(false)
+  const colorPicker = useColumnColorPicker()
   const SortIcon =
     sorted === "asc"
       ? ArrowUpIcon
@@ -91,19 +98,23 @@ export function DataTableColumnHeader<TData extends object>({
         column.getCanSort() ? (sorted ? ARIA_SORT[sorted] : "none") : undefined
       }
       data-dragging={isDragging || undefined}
+      onContextMenu={(event) => {
+        event.preventDefault()
+        setMenuOpen(true)
+      }}
       {...cellProps}
       style={{ ...cellProps.style, ...dragStyle }}
       className={cn(
         pinnedCellClassName,
         headerCellClassName,
-        "group/header data-dragging:z-30 data-dragging:opacity-80"
+        "group/header data-dragging:z-30"
       )}
     >
       <div
         {...pointerProps}
         className={cn(
           "flex min-w-0 items-center",
-          !isFixed && "active:cursor-grabbing"
+          !isFixed && "cursor-grab active:cursor-grabbing"
         )}
       >
         {column.getCanSort() ? (
@@ -142,6 +153,21 @@ export function DataTableColumnHeader<TData extends object>({
         >
           <GripVerticalIcon className="size-3.5" />
         </button>
+      )}
+      <DataTableColumnMenu
+        table={table}
+        column={column}
+        messages={messages}
+        open={menuOpen}
+        onOpenChange={setMenuOpen}
+        onCustomColor={() => colorPicker.open(column)}
+        className="absolute end-1.5 top-1/2 z-10 -translate-y-1/2"
+      />
+      <input {...colorPicker.inputProps} />
+      {dropSide && (
+        <ColumnGuideLine
+          className={dropSide === "start" ? "-start-px" : "-end-px"}
+        />
       )}
       {column.getCanResize() && (
         <ColumnResizeHandle

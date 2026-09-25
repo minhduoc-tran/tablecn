@@ -62,12 +62,12 @@ export function DataTablePagination<TData extends object>({
       )}
       {...props}
     >
-      <p className="text-muted-foreground tabular-nums">
-        {state.selectedCount > 0
-          ? counts.selected(state.selectedCount, state.pageRowCount)
-          : state.rowCount !== undefined && counts.rows(state.rowCount)}
-      </p>
       <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+        <p className="text-muted-foreground tabular-nums">
+          {state.selectedCount > 0
+            ? counts.selected(state.selectedCount, state.pageRowCount)
+            : state.rowCount !== undefined && counts.rows(state.rowCount)}
+        </p>
         {state.showPageSizes && (
           <div className="flex items-center gap-2">
             <span
@@ -101,92 +101,98 @@ export function DataTablePagination<TData extends object>({
             </Select>
           </div>
         )}
-        {state.showPages && (
-          <nav
-            {...navProps}
-            aria-label={labels.label}
-            className="flex items-center gap-3 outline-none"
-          >
-            <span className="font-medium tabular-nums">
-              {counts.page(state.page, state.pageCount)}
-            </span>
-            <ul className="flex items-center gap-1">
-              {state.pageCount !== undefined && (
-                <li className="hidden sm:block">
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label={labels.first}
-                    disabled={!state.hasPrevious}
-                    onClick={() => table.firstPage()}
-                  >
-                    <ChevronsLeftIcon className="rtl:rotate-180" />
-                  </Button>
-                </li>
-              )}
-              <li>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label={labels.previous}
-                  disabled={!state.hasPrevious}
-                  onClick={() => table.previousPage()}
-                >
-                  <ChevronLeftIcon className="rtl:rotate-180" />
-                </Button>
-              </li>
-              {state.pageCount !== undefined &&
-                pageRange(state.page, state.pageCount, slots).map((item) =>
-                  typeof item === "number" ? (
-                    <li key={item} className="hidden sm:block">
-                      <Button
-                        variant={item === state.page ? "outline" : "ghost"}
-                        size="icon-sm"
-                        aria-label={counts.page(item, undefined)}
-                        aria-current={item === state.page ? "page" : undefined}
-                        onClick={() => table.setPageIndex(item - 1)}
-                        className="w-auto min-w-7 px-1.5 tabular-nums"
-                      >
-                        {counts.number(item)}
-                      </Button>
-                    </li>
-                  ) : (
-                    <li key={item} className="hidden sm:block">
-                      <span className="flex size-7 items-center justify-center text-muted-foreground">
-                        <MoreHorizontalIcon aria-hidden className="size-4" />
-                        <span className="sr-only">{labels.morePages}</span>
-                      </span>
-                    </li>
-                  )
-                )}
-              <li>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label={labels.next}
-                  disabled={!state.hasNext}
-                  onClick={() => table.nextPage()}
-                >
-                  <ChevronRightIcon className="rtl:rotate-180" />
-                </Button>
-              </li>
-              {state.pageCount !== undefined && (
-                <li className="hidden sm:block">
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label={labels.last}
-                    disabled={!state.hasNext}
-                    onClick={() => table.lastPage()}
-                  >
-                    <ChevronsRightIcon className="rtl:rotate-180" />
-                  </Button>
-                </li>
-              )}
-            </ul>
-          </nav>
-        )}
       </div>
+      {state.showPages && (
+        <nav
+          {...navProps}
+          aria-label={labels.label}
+          className="flex items-center gap-3 outline-none"
+        >
+          {/* From sm up the page buttons show this, and include the first and last page. */}
+          <span
+            className={cn(
+              "font-medium tabular-nums",
+              state.pageCount !== undefined && "sm:hidden"
+            )}
+          >
+            {counts.page(state.page, state.pageCount)}
+          </span>
+          <ul className="flex items-center gap-1">
+            {state.pageCount !== undefined && (
+              <li className="sm:hidden">
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={labels.first}
+                  disabled={!state.hasPrevious}
+                  onClick={() => table.firstPage()}
+                >
+                  <ChevronsLeftIcon className="rtl:rotate-180" />
+                </Button>
+              </li>
+            )}
+            <li>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label={labels.previous}
+                disabled={!state.hasPrevious}
+                onClick={() => table.previousPage()}
+              >
+                <ChevronLeftIcon className="rtl:rotate-180" />
+              </Button>
+            </li>
+            {state.pageCount !== undefined &&
+              pageRange(state.page, state.pageCount, slots).map((item) =>
+                typeof item === "number" ? (
+                  <li key={item} className="hidden sm:block">
+                    <Button
+                      variant={item === state.page ? "outline" : "ghost"}
+                      size="icon-sm"
+                      aria-label={counts.page(item, undefined)}
+                      aria-current={item === state.page ? "page" : undefined}
+                      onClick={() => table.setPageIndex(item - 1)}
+                      className="w-auto min-w-7 px-1.5 tabular-nums"
+                    >
+                      {counts.number(item)}
+                    </Button>
+                  </li>
+                ) : (
+                  <li key={item} className="hidden sm:block">
+                    <span className="flex size-7 items-center justify-center text-muted-foreground">
+                      <MoreHorizontalIcon aria-hidden className="size-4" />
+                      <span className="sr-only">{labels.morePages}</span>
+                    </span>
+                  </li>
+                )
+              )}
+            <li>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label={labels.next}
+                disabled={!state.hasNext}
+                onClick={() => table.nextPage()}
+              >
+                <ChevronRightIcon className="rtl:rotate-180" />
+              </Button>
+            </li>
+            {state.pageCount !== undefined && (
+              <li className="sm:hidden">
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={labels.last}
+                  disabled={!state.hasNext}
+                  onClick={() => table.lastPage()}
+                >
+                  <ChevronsRightIcon className="rtl:rotate-180" />
+                </Button>
+              </li>
+            )}
+          </ul>
+        </nav>
+      )}
     </div>
   )
 }

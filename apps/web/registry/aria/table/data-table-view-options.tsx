@@ -11,7 +11,6 @@ import {
   MoreHorizontalIcon,
   MoveHorizontalIcon,
   PinIcon,
-  PinOffIcon,
   RotateCcwIcon,
   Settings2Icon,
 } from "lucide-react"
@@ -22,20 +21,15 @@ import { Checkbox } from "@/registry/aria/ui/checkbox"
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
 } from "@/registry/aria/ui/dropdown-menu"
 import { Popover, PopoverTrigger } from "@/registry/aria/ui/popover"
 import { Separator } from "@/registry/aria/ui/separator"
-import {
-  ColorSwatch,
-  DataTableColumnColorMenu,
-} from "@/registry/aria/table/data-table-column-color-menu"
+import { ColorSwatch } from "@/registry/aria/table/data-table-column-color-menu"
+import { DataTableColumnLayoutItems } from "@/registry/aria/table/data-table-column-menu"
 import { getColumnLabel } from "@/registry/shared/table/column-label"
 import {
   fitColumns,
   getListedColumns,
-  pinColumn,
   resetLayout,
 } from "@/registry/shared/table/column-layout-actions"
 import {
@@ -165,7 +159,6 @@ function ColumnItem<TData extends object>({
   } = useColumnDrag(column, canReorder)
   const color = column.getColor()
   const pinned = column.getIsPinned()
-  const canPin = column.getCanPin()
 
   return (
     <li
@@ -218,40 +211,8 @@ function ColumnItem<TData extends object>({
           <MoreHorizontalIcon />
         </Button>
         <DropdownMenuContent placement="bottom end" className="min-w-44">
-          <DropdownMenuItem
-            textValue={messages.columns.pinStart}
-            isDisabled={!canPin || pinned === "start"}
-            onAction={() => pinColumn(table, column, "start")}
-          >
-            <PinIcon />
-            {messages.columns.pinStart}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            textValue={messages.columns.pinEnd}
-            isDisabled={!canPin || pinned === "end"}
-            onAction={() => pinColumn(table, column, "end")}
-          >
-            <PinIcon />
-            {messages.columns.pinEnd}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            textValue={messages.columns.unpin}
-            isDisabled={!canPin || !pinned}
-            onAction={() => pinColumn(table, column, false)}
-          >
-            <PinOffIcon />
-            {messages.columns.unpin}
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            textValue={messages.columns.fitContent}
-            isDisabled={!column.getIsVisible() || !column.getCanResize()}
-            onAction={() => fitColumns(table, [column])}
-          >
-            <MoveHorizontalIcon />
-            {messages.columns.fitContent}
-          </DropdownMenuItem>
-          <DataTableColumnColorMenu
+          <DataTableColumnLayoutItems
+            table={table}
             column={column}
             messages={messages}
             onCustomColor={onCustomColor}
