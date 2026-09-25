@@ -1,23 +1,25 @@
-import Link from "next/link"
-
-import { Button } from "@workspace/ui/components/button"
+import { SiteHeader } from "@/components/docs/site-header"
+import { HomeBento } from "@/components/home/home-bento"
+import { HomeCode } from "@/components/home/home-code"
+import { HomeCta, HomeFooter } from "@/components/home/home-cta"
+import { HomeDemo } from "@/components/home/home-demo"
+import { HomeHero } from "@/components/home/home-hero"
+import { HomeStack } from "@/components/home/home-stack"
+import { source } from "@/lib/source"
 
 export default function Page() {
   return (
-    <div className="flex min-h-svh p-6">
-      <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
-        <div>
-          <h1 className="font-medium">Project ready!</h1>
-          <p>You may now add components and start building.</p>
-          <p>We&apos;ve already added the button component for you.</p>
-          <Button className="mt-2" asChild>
-            <Link href="/docs">Read the docs</Link>
-          </Button>
-        </div>
-        <div className="text-muted-foreground font-mono text-xs">
-          (Press <kbd>d</kbd> to toggle dark mode)
-        </div>
-      </div>
+    <div className="flex min-h-svh flex-col">
+      <SiteHeader tree={source.getPageTree()} />
+      <main className="flex-1">
+        <HomeHero />
+        <HomeDemo />
+        <HomeBento />
+        <HomeCode />
+        <HomeStack />
+        <HomeCta />
+      </main>
+      <HomeFooter />
     </div>
   )
 }
