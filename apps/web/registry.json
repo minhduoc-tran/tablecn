@@ -1,0 +1,31 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "querycn",
+  "homepage": "https://github.com/minhduoc-tran/tablecn",
+  "items": [
+    {
+      "name": "filter-builder",
+      "type": "registry:block",
+      "title": "Filter Builder",
+      "description": "A filter builder for data tables: field, operator and value rows applied to the URL, built on @querycn/filter-react.",
+      "dependencies": ["@querycn/filter-core", "@querycn/filter-react"],
+      "registryDependencies": [
+        "badge",
+        "button",
+        "calendar",
+        "checkbox",
+        "command",
+        "input",
+        "popover",
+        "select"
+      ],
+      "files": [
+        {
+          "path": "registry/{base}/filter/filter-builder.tsx",
+          "type": "registry:component",
+          "target": "@components/filter/filter-builder.tsx"
+        }
+      ]
+    }
+  ]
+}

@@ -3,6 +3,8 @@
   "compilerOptions": {
     "paths": {
       "@/*": ["./*"],
+      "@/lib/utils": ["../../packages/ui/src/lib/utils"],
+      "@/registry/radix/ui/*": ["../../packages/ui/src/components/*"],
       "collections/*": ["./.source/*"],
       "@workspace/ui/*": ["../../packages/ui/src/*"]
     },
