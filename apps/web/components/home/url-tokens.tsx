@@ -1,15 +1,20 @@
 import { cn } from "@workspace/ui/lib/utils"
 
-export type ParamKind = "filter" | "sort" | "page"
+export type ParamKind = "search" | "filter" | "sort" | "page"
 
-/** Who wrote a query param: the filter builder, a sort header or the pagination. */
+/** Who wrote a query param: the search box, the filter builder, a sort header or the pagination. */
 export function paramKind(key: string): ParamKind {
+  if (key === "q") return "search"
   if (key === "sort") return "sort"
   if (key === "page" || key === "per_page") return "page"
   return "filter"
 }
 
 export const PARAM_COLORS: Record<ParamKind, { text: string; dot: string }> = {
+  search: {
+    text: "text-emerald-600 dark:text-emerald-400",
+    dot: "bg-emerald-500",
+  },
   filter: { text: "text-sky-600 dark:text-sky-400", dot: "bg-sky-500" },
   sort: { text: "text-violet-600 dark:text-violet-400", dot: "bg-violet-500" },
   page: { text: "text-amber-600 dark:text-amber-400", dot: "bg-amber-500" },

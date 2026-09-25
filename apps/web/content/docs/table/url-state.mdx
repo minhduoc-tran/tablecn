@@ -1,16 +1,17 @@
 ---
 title: URL state
-description: How sorting and pagination are written to the URL, next to the filter, and the options that shape them.
+description: How sorting, pagination and the search are written to the URL, next to the filter, and the options that shape them.
 ---
 
 ## Format
 
-Sort and page live in the query string, next to the [filter's params](/docs/filter/url-state):
+Sort, page and search live in the query string, next to the [filter's params](/docs/filter/url-state):
 
 ```txt title="URL"
-/orders?status__eq=paid&sort=-amount,customer_name&page=2&per_page=50
+/orders?status__eq=paid&q=nguyen&sort=-amount,customer_name&page=2&per_page=50
 ```
 
+- `q` is the search box's text, trimmed and at most 200 characters. See [Searching](#searching).
 - `sort` lists column ids, most important first. A leading `-` means descending. Up to three columns by default.
 - `page` is 1-based, as people count. The table's `pageIndex` is 0-based, as TanStack Table counts.
 - `per_page` is the page size. It must be one of the offered page sizes (`[10, 20, 50, 100]` by default).
@@ -33,6 +34,7 @@ Without a provider, pass an `adapter` to `useDataTable` (see [Installation](/doc
 ```mermaid
 flowchart LR
   filter["FilterBuilder<br/>Apply"] -- "status__eq=paid<br/>page=null" --> url["URL"]
+  search["Search box"] -- "q=nguyen<br/>page=null" --> url
   header["Header click"] -- "sort=-amount<br/>page=null" --> url
   pager["Pagination"] -- "page=2" --> url
   url --> table["useDataTable"]
@@ -43,10 +45,23 @@ flowchart LR
 
 Page 4 of the old results means nothing for new ones, so every change that reshapes the results starts again at page 1:
 
-- **Sort or page size.** The table does it itself, in the same write.
+- **Sort, page size or search.** The table does it itself, in the same write.
 - **Filter.** The filter doesn't know about pages, so tell it: `onApply={() => resetPagePatch()}` on the provider. `onApply` returns params to write *along with* the filter, so the filter and `page` change in one navigation. Two separate writes would make two history entries, and with a router that rerenders on each, a render with the new filter on the old page.
 
 `resetPagePatch(url)` returns `{ page: null }`, using your page param name if you renamed it. It also covers **Clear filters** in the toolbar and the chips' ×, since both apply through the provider.
+
+### Searching
+
+`q` holds free text from the [search box](/docs/table/components#datatablesearch). It's separate from the filter's rules: it isn't a chip, and it looks in several columns at once.
+
+- **Client mode** keeps the rows where every word of the search appears in the searched columns, ignoring case and accents: `nguyen ha noi` finds "Nguyễn Văn An" in "Hà Nội". It looks in every column with an accessor, or only in [`searchColumns`](/docs/table/server-data#client-mode).
+- **Server mode** sends it to the backend with the sort and page. The params presets put it where each backend expects it; see [Server data](/docs/table/server-data#searching).
+
+The box writes the search once typing pauses (300 ms), or right away on <kbd>Enter</kbd>. From code, call `table.options.meta.setSearch("…")`, and read it from `table.options.meta.search`.
+
+<Callout title="Already using ?q=?">
+  If your app puts something else in `q` (a site-wide search box, say), the table would read it as its search. Rename the table's param: `url: { params: { search: "search" } }`. The same goes for `sort`, `page` and `per_page`.
+</Callout>
 
 ### Pages that don't exist
 
@@ -60,7 +75,7 @@ Pass them as `url` to `useDataTable`, the same object to `useTableQuery`, and to
 import type { TableUrlOptions } from "@querycn/table-react"
 
 const url = {
-  params: { sort: "order", page: "p", perPage: "size" },
+  params: { sort: "order", page: "p", perPage: "size", search: "search" },
   pageSizes: [25, 50, 100],
   defaultPageSize: 25,
   defaultSorting: [{ id: "createdAt", desc: true }],
@@ -75,8 +90,8 @@ Keep it stable (module constant or `useMemo`), like `columns`.
   type={{
     params: {
       description: "Param names, to fit a URL scheme you already have or to avoid a clash.",
-      type: "{ sort?: string; page?: string; perPage?: string }",
-      default: '{ sort: "sort", page: "page", perPage: "per_page" }',
+      type: "{ sort?: string; page?: string; perPage?: string; search?: string }",
+      default: '{ sort: "sort", page: "page", perPage: "per_page", search: "q" }',
     },
     pageSizes: {
       description: "The sizes users can pick. A `per_page` outside them reads as the default.",
@@ -112,7 +127,8 @@ A URL is user input, so reading it never throws:
 
 - unknown, unsortable or repeated `sort` columns are dropped;
 - `page` that isn't a positive whole number reads as page 1;
-- `per_page` outside `pageSizes` reads as the default size.
+- `per_page` outside `pageSizes` reads as the default size;
+- `q` longer than 200 characters is cut.
 
 ```ts title="Decoding"
 import { decodeTableParams } from "@querycn/table-react"
@@ -120,7 +136,7 @@ import { decodeTableParams } from "@querycn/table-react"
 decodeTableParams("sort=-amount,amount,nope&page=0&per_page=7", {
   sortableColumns: ["amount", "customer_name"],
 })
-// → { sorting: [{ id: "amount", desc: true }], pagination: { pageIndex: 0, pageSize: 20 } }
+// → { sorting: [{ id: "amount", desc: true }], pagination: { pageIndex: 0, pageSize: 20 }, search: "" }
 ```
 
 ## Outside useDataTable
@@ -133,8 +149,9 @@ import { decodeTableParams, encodeTableParams } from "@querycn/table-react"
 encodeTableParams({
   sorting: [{ id: "amount", desc: true }],
   pagination: { pageIndex: 1, pageSize: 20 },
+  search: "",
 })
-// → { sort: "-amount", page: "2", per_page: null }  (a ParamPatch: null removes the param)
+// → { sort: "-amount", page: "2", per_page: null, q: null }  (a ParamPatch: null removes the param)
 ```
 
 With your own table setup, `useTableUrlState` gives the same state as controlled TanStack Table props:
@@ -150,6 +167,7 @@ const table = useTable({
   onSortingChange: url.onSortingChange,
   onPaginationChange: url.onPaginationChange,
 })
+// url.search and url.onSearchChange for a search box
 ```
 
 It takes the `TableUrlOptions` above plus `adapter`, and `pageCount` or `rowCount` to clamp pages past the last one; `isPageClamped` tells you when that happened.

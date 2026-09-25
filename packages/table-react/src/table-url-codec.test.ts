@@ -17,8 +17,9 @@ import {
 const state = (
   sorting: TableUrlState["sorting"],
   pageIndex = 0,
-  pageSize = 20
-): TableUrlState => ({ sorting, pagination: { pageIndex, pageSize } })
+  pageSize = 20,
+  search = ""
+): TableUrlState => ({ sorting, pagination: { pageIndex, pageSize }, search })
 
 const DEFAULTS = state([])
 
@@ -35,7 +36,7 @@ describe("encodeTableParams", () => {
           50
         )
       )
-    ).toEqual({ sort: "-amount,name", page: "2", per_page: "50" })
+    ).toEqual({ sort: "-amount,name", page: "2", per_page: "50", q: null })
   })
 
   it("removes params that hold the default", () => {
@@ -43,6 +44,7 @@ describe("encodeTableParams", () => {
       sort: null,
       page: null,
       per_page: null,
+      q: null,
     })
     const options = { defaultSorting: [{ id: "date", desc: true }] }
     expect(
@@ -68,11 +70,21 @@ describe("encodeTableParams", () => {
 
   it("uses custom param names", () => {
     const options: TableUrlOptions = {
-      params: { sort: "ordering", page: "p", perPage: "size" },
+      params: { sort: "ordering", page: "p", perPage: "size", search: "s" },
     }
     expect(
-      encodeTableParams(state([{ id: "name", desc: false }], 2, 10), options)
-    ).toEqual({ ordering: "name", p: "3", size: "10" })
+      encodeTableParams(
+        state([{ id: "name", desc: false }], 2, 10, "ann"),
+        options
+      )
+    ).toEqual({ ordering: "name", p: "3", size: "10", s: "ann" })
+  })
+
+  it("writes the search trimmed, and nothing for blank text", () => {
+    expect(encodeTableParams(state([], 0, 20, "  nguyễn văn ")).q).toBe(
+      "nguyễn văn"
+    )
+    expect(encodeTableParams(state([], 0, 20, "   ")).q).toBeNull()
   })
 })
 
@@ -89,6 +101,12 @@ describe("decodeTableParams", () => {
     const search = applyParamChanges("", encodeTableParams(original))
     expect(search).toBe("?sort=-amount,createdAt&page=5&per_page=100")
     expect(decodeTableParams(search)).toEqual(original)
+  })
+
+  it("reads the search trimmed and cut to 200 characters", () => {
+    expect(decodeTableParams("?q=+an%20b+").search).toBe("an b")
+    expect(decodeTableParams(`?q=${"x".repeat(300)}`).search).toHaveLength(200)
+    expect(decodeTableParams("?q=").search).toBe("")
   })
 
   it("defaults when the params are missing", () => {

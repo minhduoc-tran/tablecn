@@ -64,6 +64,8 @@ export {
 } from "./table-params-serializers"
 export type {
   DjangoTableParamsOptions,
+  JsonApiTableParamsOptions,
+  PostgrestTableParamsOptions,
   TableParamsSerializer,
 } from "./table-params-serializers"
 export { tableUrlOptions } from "./table-url-options"

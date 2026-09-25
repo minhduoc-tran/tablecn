@@ -51,7 +51,11 @@ export { defaultUrlFormat } from "./url-format"
 export type { UrlFormat, UrlRule } from "./url-format"
 
 export { filterOptions } from "./select-options"
-export { parseDateOnly, toDateOnly } from "./client-filter/comparable-values"
+export {
+  parseDateOnly,
+  toDateOnly,
+  toSearchText,
+} from "./client-filter/comparable-values"
 
 export { getOperatorLabel, mergeMessages } from "./messages"
 export type { FilterMessages, FilterMessagesOverrides } from "./messages"

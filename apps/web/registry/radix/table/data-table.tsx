@@ -49,7 +49,7 @@ export interface DataTableProps<TData extends object>
  * Renders a `useDataTable` table: sticky header, pinned columns, loading,
  * empty and error states. The container scrolls, so give it a height (e.g.
  * `className="max-h-[600px]"`) for the header to stay in view. Scrolls back
- * to the top when the sort, page or filter changes.
+ * to the top when the sort, page, search or filter changes.
  */
 export function DataTable<TData extends object>({
   table,
@@ -83,7 +83,7 @@ export function DataTable<TData extends object>({
   const { queryKey } = useAppliedFilter()
   useScrollToTopOnChange(
     scrollRef,
-    JSON.stringify([sorting, pagination, queryKey])
+    JSON.stringify([sorting, pagination, queryKey, table.options.meta?.search])
   )
   const virtual = useVirtualRows({
     enabled: virtualize && !isError,

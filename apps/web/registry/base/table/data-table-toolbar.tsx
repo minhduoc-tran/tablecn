@@ -57,7 +57,7 @@ export function DataTableToolbar<TData extends object>({
           {children}
         </div>
         <div className="flex items-center gap-2">
-          <DataTableResetFiltersButton messages={messages} />
+          <DataTableResetFiltersButton table={table} messages={messages} />
           {onRefresh && (
             <Button
               variant="outline"

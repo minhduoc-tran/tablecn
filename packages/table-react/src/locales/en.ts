@@ -42,6 +42,7 @@ export const enTableMessages: TableMessages = {
     selectRow: "Select row",
     clear: "Clear selection",
   },
+  search: { label: "Search", placeholder: "Search…", clear: "Clear search" },
   actions: { reload: "Reload", clearFilters: "Clear filters", retry: "Retry" },
   states: {
     empty: "No results.",

@@ -51,7 +51,7 @@ export interface LayoutColumn {
 }
 
 // Same id TanStack Table gives the column.
-function columnId(def: LayoutColumnDef): string | undefined {
+export function columnId(def: LayoutColumnDef): string | undefined {
   if (def.id !== undefined) return def.id
   if (def.accessorKey !== undefined) {
     return String(def.accessorKey).split(".").join("_")

@@ -4,8 +4,8 @@ Headless data table for React on [TanStack Table](https://tanstack.com/table) v9
 
 > Work in progress — not published yet.
 
-- **URL state.** Sort, page and page size live next to the filter: `?status__eq=paid&sort=-amount,name&page=2&per_page=50`. Links are shareable, back/forward work, and a new filter sends the page back to 1.
-- **Client or server data.** Sort, filter and page rows in the browser, or turn the URL into your backend's params (JSON:API, Django REST framework, PostgREST, or your own).
+- **URL state.** Search, sort, page and page size live next to the filter: `?q=nguyen&status__eq=paid&sort=-amount,name&page=2&per_page=50`. Links are shareable, back/forward work, and a new filter sends the page back to 1.
+- **Client or server data.** Search, sort, filter and page rows in the browser (the search ignores case and accents), or turn the URL into your backend's params (JSON:API, Django REST framework, PostgREST, or your own).
 - **Column layout.** Visibility, order, pinning, widths and colors as TanStack state, saved to `localStorage` and merged with column changes you ship later.
 - **Headless.** It returns a TanStack table. The matching UI (Radix UI, Base UI or React Aria) comes from the tablecn shadcn registry as source code.
 
@@ -127,7 +127,7 @@ function OrdersTable() {
 }
 ```
 
-Presets: `djangoTableParams()` (`ordering`, `page`, `page_size`), `jsonApiTableParams()` (`sort`, `page[number]`, `page[size]`) and `postgrestTableParams()` (`order`, `limit`, `offset`). A serializer is any `(state) => params` function, so other backends need only a few lines.
+Presets: `djangoTableParams()` (`ordering`, `page`, `page_size`, `search`), `jsonApiTableParams()` (`sort`, `page[number]`, `page[size]`, `filter[search]`) and `postgrestTableParams({ searchColumns })` (`order`, `limit`, `offset`, and the search as an `ilike` over `searchColumns`). A serializer is any `(state) => params` function, so other backends need only a few lines.
 
 On the server, `parseTableParams(searchParams, url)` from `@querycn/table-react/server` reads the same state. Give it the same `url` options as `useDataTable`, with `sortableColumns` listed: column definitions usually live in a client module the server can't call.
 

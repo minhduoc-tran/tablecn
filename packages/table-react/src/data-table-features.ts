@@ -25,6 +25,10 @@ export interface DataTableMeta {
   pageSizes: readonly number[]
   /** Back to the columns' default layout, forgetting the saved one. */
   resetLayout: () => void
+  /** The search text in the URL (`?q=`); `""` when none. */
+  search: string
+  /** Writes the search to the URL and goes back to page 1. */
+  setSearch: (search: string) => void
 }
 
 /**

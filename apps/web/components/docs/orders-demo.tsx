@@ -15,6 +15,7 @@ import { FilterBuilder } from "@/registry/radix/filter/filter-builder"
 import { FilterChips } from "@/registry/radix/filter/filter-chips"
 import { DataTable } from "@/registry/radix/table/data-table"
 import { DataTablePagination } from "@/registry/radix/table/data-table-pagination"
+import { DataTableSearch } from "@/registry/radix/table/data-table-search"
 import { createSelectionColumn } from "@/registry/radix/table/data-table-selection-column"
 import { DataTableToolbar } from "@/registry/radix/table/data-table-toolbar"
 
@@ -143,6 +144,7 @@ export function OrdersDemo() {
           </Button>
         )}
       >
+        <DataTableSearch table={table} placeholder="Search orders…" />
         <FilterBuilder />
         <FilterChips />
       </DataTableToolbar>

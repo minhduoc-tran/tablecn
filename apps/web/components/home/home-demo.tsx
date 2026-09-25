@@ -8,9 +8,10 @@ import { OrdersDemo, OrdersDemoProvider } from "@/components/docs/orders-demo"
 import { PARAM_COLORS, UrlTokens } from "@/components/home/url-tokens"
 
 const LEGEND = [
-  { kind: "filter", label: "filter", hint: "the Filter button and its chips" },
-  { kind: "sort", label: "sort", hint: "click a header, Shift+click for more" },
-  { kind: "page", label: "page", hint: "the pagination under the table" },
+  { kind: "search", label: "q", hint: "search box" },
+  { kind: "filter", label: "filter", hint: "Filter button and chips" },
+  { kind: "sort", label: "sort", hint: "click a header" },
+  { kind: "page", label: "page", hint: "pagination" },
 ] as const
 
 function AddressBar() {

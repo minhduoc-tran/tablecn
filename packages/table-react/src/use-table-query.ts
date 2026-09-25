@@ -47,6 +47,19 @@ function asQueryParams(query: unknown): QueryParams {
   return query as QueryParams
 }
 
+const warned = new Set<string>()
+
+// A filter field named like a table param (`search` for DRF) would be dropped.
+function warnOnClash(filter: QueryParams, table: QueryParams) {
+  for (const key of Object.keys(table)) {
+    if (!(key in filter) || warned.has(key)) continue
+    warned.add(key)
+    console.warn(
+      `useTableQuery: the table's "${key}" param replaces the filter's. Rename one of them.`
+    )
+  }
+}
+
 /**
  * What to fetch for a server-mode table, read from the URL. Call it before
  * the fetch and `useDataTable` after, since the table needs the fetched rows.
@@ -70,10 +83,11 @@ export function useTableQuery({
   const tableParams = useStableValue(
     serializer(decodeTableParams(raw, tableUrlOptions(columns, url)))
   )
-  const params = useMemo(
-    () => ({ ...asQueryParams(applied.query), ...tableParams }),
-    [applied.query, tableParams]
-  )
+  const params = useMemo(() => {
+    const filter = asQueryParams(applied.query)
+    warnOnClash(filter, tableParams)
+    return { ...filter, ...tableParams }
+  }, [applied.query, tableParams])
   const tableKey = toSearchParams(tableParams).toString()
   return {
     params,

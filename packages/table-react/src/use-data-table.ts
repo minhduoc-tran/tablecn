@@ -1,5 +1,7 @@
 import { applyFilter, type FieldDefinition } from "@querycn/filter-core"
 import {
+  createMemoryAdapter,
+  useAdapterValue,
   useAppliedFilter,
   useFilterAdapter,
   type UrlStateAdapter,
@@ -16,15 +18,17 @@ import {
   type DataTableColumnDef,
 } from "./data-table-features"
 import {
+  decodeTableParams,
   DEFAULT_PAGE_SIZE,
   DEFAULT_PAGE_SIZES,
   type TableUrlOptions,
 } from "./table-url-codec"
+import { getSearchAccessors, searchRows } from "./table-search"
 import { getDefaultLayout, getLayoutColumns } from "./table-layout-state"
 import type { LayoutStorage } from "./layout-storage"
 import { useTableLayout } from "./use-table-layout"
 import { tableUrlOptions } from "./table-url-options"
-import { useTableUrlState } from "./use-table-url-state"
+import { useTableUrlStateFrom } from "./use-table-url-state"
 
 interface DataTableBaseOptions<TData extends RowData> {
   /** Keep the reference stable (state or memo), as for any TanStack table. */
@@ -63,15 +67,20 @@ export interface ClientDataTableOptions<
    * field names aren't row keys (`customer.name`). Keep it stable, like `data`.
    */
   getFilterValue?: (row: TData, field: FieldDefinition) => unknown
+  /**
+   * Column ids the search (`?q=`) looks in. Defaults to every column with an
+   * accessor. Keep it stable, like `columns`.
+   */
+  searchColumns?: readonly string[]
 }
 
 export type UseDataTableOptions<TData extends RowData> =
   ServerDataTableOptions<TData> | ClientDataTableOptions<TData>
 
 /**
- * A TanStack table with sort and pages in the URL, a saved column layout and
- * row selection. The selection holds within one page: it clears when the
- * page, sort or filter changes.
+ * A TanStack table with sort, pages and search in the URL, a saved column
+ * layout and row selection. The selection holds within one page: it clears
+ * when the page, sort, search or filter changes.
  */
 export function useDataTable<TData extends RowData>(
   options: UseDataTableOptions<TData>
@@ -81,8 +90,16 @@ export function useDataTable<TData extends RowData>(
   const applied = useAppliedFilter()
   const filterAdapter = useFilterAdapter()
 
+  const [memoryAdapter] = useState(() => createMemoryAdapter())
+  const adapter = options.adapter ?? filterAdapter ?? memoryAdapter
+  const urlOptions = tableUrlOptions(columns, url)
+  // Read once for the search and the URL state, so a pending write shows in both;
+  // the search comes first because the URL state counts the searched rows.
+  const adapterValue = useAdapterValue(adapter)
+  const search = decodeTableParams(adapterValue[0], urlOptions).search
+
   const getFilterValue = isServer ? undefined : options.getFilterValue
-  const rows = useMemo(
+  const filtered = useMemo(
     () =>
       isServer || applied.activeCount === 0
         ? data
@@ -99,22 +116,42 @@ export function useDataTable<TData extends RowData>(
       getFilterValue,
     ]
   )
+  const searchColumns = isServer ? undefined : options.searchColumns
+  const searchAccessors = useMemo(
+    () => getSearchAccessors<TData>(columns, searchColumns),
+    [columns, searchColumns]
+  )
+  const rows = useMemo(
+    () => (isServer ? filtered : searchRows(filtered, search, searchAccessors)),
+    [isServer, filtered, search, searchAccessors]
+  )
 
   // A refetch leaves rowCount undefined for a moment; clamping against the last
   // known total keeps the page from jumping back and forth meanwhile. The filter
-  // it came with tells whether it still describes the rows the URL asks for.
-  const [known, setKnown] = useState<{ rowCount: number; filterKey: string }>()
+  // and search it came with tell whether it still describes the rows the URL
+  // asks for: a new total, or new rows (the backend answered, even with the
+  // same total), belong to the current ones; the rows and total
+  // `keepPreviousData` hands over while fetching don't.
+  const [known, setKnown] = useState<{
+    rowCount: number
+    filterKey: string
+    data: readonly TData[]
+  }>()
   const latestRowCount = isServer ? options.rowCount : rows.length
-  if (latestRowCount !== undefined && latestRowCount !== known?.rowCount) {
-    setKnown({ rowCount: latestRowCount, filterKey: applied.queryKey })
+  const filterKey = JSON.stringify([applied.queryKey, search])
+  if (
+    latestRowCount !== undefined &&
+    (latestRowCount !== known?.rowCount ||
+      (filterKey !== known.filterKey && data !== known.data))
+  ) {
+    setKnown({ rowCount: latestRowCount, filterKey, data })
   }
   const rowCount = latestRowCount ?? known?.rowCount
 
   const layoutColumns = useMemo(() => getLayoutColumns(columns), [columns])
-  const urlState = useTableUrlState({
+  const urlState = useTableUrlStateFrom(adapterValue, {
     // Unsortable ids in `sort` are dropped, so the backend never gets them.
-    ...tableUrlOptions(columns, url),
-    adapter: options.adapter ?? filterAdapter ?? undefined,
+    ...urlOptions,
     rowCount,
   })
   // The backend's total says the URL's page doesn't exist: point the URL, and so
@@ -126,7 +163,7 @@ export function useDataTable<TData extends RowData>(
     isServer &&
     isPageClamped &&
     options.rowCount !== undefined &&
-    known?.filterKey === applied.queryKey
+    known?.filterKey === filterKey
   useEffect(() => {
     if (fixPage) onPaginationChange((pagination) => pagination)
   }, [fixPage, onPaginationChange])
@@ -166,7 +203,7 @@ export function useDataTable<TData extends RowData>(
   const selectionScope = JSON.stringify([
     urlState.sorting,
     urlState.pagination,
-    applied.queryKey,
+    filterKey,
   ])
   const [scope, setScope] = useState(selectionScope)
   if (scope !== selectionScope) {
@@ -202,7 +239,12 @@ export function useDataTable<TData extends RowData>(
     // Saves the layout once per drag instead of on every pointer move.
     columnResizeMode: "onEnd",
     columnResizeDirection: options.dir ?? "ltr",
-    meta: { pageSizes, resetLayout: layout.reset },
+    meta: {
+      pageSizes,
+      resetLayout: layout.reset,
+      search: urlState.search,
+      setSearch: urlState.onSearchChange,
+    },
   })
 }
 

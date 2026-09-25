@@ -44,6 +44,16 @@ useDataTable({ data: orders, columns, getRowId, getFilterValue })
 
 Keep `getFilterValue` stable too: define it at module level or wrap it in `useCallback`. A new function each render filters the rows again each render.
 
+The [search](/docs/table/url-state#searching) looks in every column with an accessor, through the column's own accessor (so `customer.name` works). To narrow it, list the column ids:
+
+```tsx title="Searched columns"
+const searchColumns = ["id", "customer", "city"] // module level, or useMemo
+
+useDataTable({ data: orders, columns, getRowId, searchColumns })
+```
+
+An id no column has is left out, with a warning in the console. If none of the ids match, every column is searched, so a typo doesn't empty the table.
+
 ## Server mode
 
 With `mode: "server"`, `data` is the current page and `rowCount` is the total across pages. `rowCount` is `undefined` while it's unknown, such as during the first fetch. The pagination then shows the page without a total, and a full page means another one may follow.
@@ -120,20 +130,29 @@ export function OrdersTable() {
 - Pass `useTableQuery` the same `columns` and `url` as `useDataTable`, so both read the URL the same way.
 - The provider's serializer must return query params (`djangoSerializer`, `jsonApiSerializer`, `postgrestSerializer` all do). `useTableQuery` throws if it gets something else, such as a request body.
 - Without a `FilterProvider`, pass the table's `adapter` to both hooks.
+- The filter's params and the table's are merged into one object. When both write the same key (a filter field named `search` with `djangoTableParams()`, say), the table's wins and `useTableQuery` warns in the console. Rename the field or the table param (`searchParam`, `orderingParam`…).
 
-`queryKey` is a string that changes only when the filter, sort or page does. Use it as the react-query or SWR key.
+`queryKey` is a string that changes only when the filter, search, sort or page does. Use it as the react-query or SWR key.
 
-## Sort and page params
+## Sort, page and search params
 
 The table's part of the request comes from a `TableParamsSerializer`. Three presets are included:
 
-| Preset | Output for sort `-amount,name`, page 2 of 20 |
+| Preset | Output for sort `-amount,name`, page 2 of 20, search `ann` |
 | --- | --- |
-| `jsonApiTableParams()` | `sort=-amount,name&page[number]=2&page[size]=20` |
-| `djangoTableParams()` | `ordering=-amount,name&page=2&page_size=20` |
-| `postgrestTableParams()` | `order=amount.desc,name.asc&limit=20&offset=20` |
+| `jsonApiTableParams()` | `sort=-amount,name&page[number]=2&page[size]=20&filter[search]=ann` |
+| `djangoTableParams()` | `ordering=-amount,name&page=2&page_size=20&search=ann` |
+| `postgrestTableParams({ searchColumns: ["name", "email"] })` | `order=amount.desc,name.asc&limit=20&offset=20&and=(or(name.ilike.*ann*,email.ilike.*ann*))` |
 
-`djangoTableParams` takes `orderingParam`, `pageParam` and `pageSizeParam`, to match your DRF `OrderingFilter` and pagination class. PostgREST returns the total in `Content-Range` when you send the `Prefer: count=exact` header.
+`djangoTableParams` takes `orderingParam`, `pageParam`, `pageSizeParam` and `searchParam`, to match your DRF `OrderingFilter`, pagination class and `SearchFilter`. PostgREST returns the total in `Content-Range` when you send the `Prefer: count=exact` header.
+
+### Searching
+
+The search is sent only when there is one.
+
+- **JSON:API** has no standard search param; `filter[search]` is a common choice. Change it with `searchParam`.
+- **Django REST framework**: `search` is what `SearchFilter` reads, over its `search_fields`.
+- **PostgREST** has no search param, so the preset builds an `ilike` over the backend columns in `searchColumns`: each word must appear in one of them, as in client mode. It goes in `and=(…)` so it doesn't clash with the `or=(…)` a filter joined by OR writes. Without `searchColumns`, the search isn't sent. `ilike` minds accents unless your database uses `unaccent`; for full-text search, write your own serializer with PostgREST's `fts` operator.
 
 All three take `sortField`, for when column ids aren't the backend's field names:
 
@@ -150,7 +169,8 @@ A serializer is a function from the table's URL state to query params:
 ```ts title="lib/table-params.ts"
 import type { TableParamsSerializer } from "@querycn/table-react"
 
-export const tableParams: TableParamsSerializer = ({ sorting, pagination }) => ({
+export const tableParams: TableParamsSerializer = ({ sorting, pagination, search }) => ({
+  ...(search && { query: search }),
   ...(sorting.length > 0 && {
     sortBy: sorting.map((s) => s.id).join(","),
     sortDir: sorting.map((s) => (s.desc ? "desc" : "asc")).join(","),

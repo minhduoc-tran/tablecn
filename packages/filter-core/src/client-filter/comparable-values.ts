@@ -7,6 +7,7 @@ const stripAccents = (text: string) =>
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/đ/g, "d")
 
+/** Lowercase text to match against, accents stripped if asked; `null` for blank or non-primitive values. */
 export function toSearchText(
   value: unknown,
   { accentInsensitive }: MatchOptions

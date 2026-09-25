@@ -10,7 +10,7 @@ import {
 } from "@querycn/filter-react"
 import { act, renderHook } from "@testing-library/react"
 import type { ReactNode } from "react"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import { createDataTableColumnHelper } from "./data-table-features"
 import { djangoTableParams } from "./table-params-serializers"
@@ -77,6 +77,42 @@ describe("useTableQuery", () => {
     expect(result.current.queryKey).toBe(queryKey)
     act(() => adapter.write({ page: "2" }))
     expect(result.current.queryKey).not.toBe(queryKey)
+  })
+
+  it("sends the search with the serializer's param", () => {
+    const adapter = createMemoryAdapter("?q=+nguyễn+&page=2")
+    const { result } = renderHook(
+      () => useTableQuery({ columns: COLUMNS, serializer }),
+      { wrapper: withFilter(adapter) }
+    )
+    expect(result.current.params).toEqual({
+      search: "nguyễn",
+      page: "2",
+      page_size: "20",
+    })
+    const { queryKey } = result.current
+    act(() => adapter.write({ q: "an" }))
+    expect(result.current.queryKey).not.toBe(queryKey)
+  })
+
+  it("warns when a table param replaces a filter param", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    const adapter = createMemoryAdapter("?q=an")
+    const { result } = renderHook(
+      () =>
+        useTableQuery({
+          columns: COLUMNS,
+          // Writes the search where the filter writes its `status` field.
+          serializer: djangoTableParams({ searchParam: "status__icontains" }),
+        }),
+      { wrapper: withFilter(adapter) }
+    )
+    act(() => adapter.write({ status__contains: "paid" }))
+    expect(result.current.params.status__icontains).toBe("an")
+    expect(warn).toHaveBeenCalledWith(
+      "useTableQuery: the table's \"status__icontains\" param replaces the filter's. Rename one of them."
+    )
+    warn.mockRestore()
   })
 
   it("reads sort the way useDataTable does", () => {

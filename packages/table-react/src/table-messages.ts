@@ -33,6 +33,7 @@ export interface TableMessages {
     | "morePages"
   >
   selection: Labels<"selectAll" | "selectRow" | "clear">
+  search: Labels<"label" | "placeholder" | "clear">
   actions: Labels<"reload" | "clearFilters" | "retry">
   states: Labels<"empty" | "error" | "loading">
   /** Column header controls and what screen readers hear while moving a column. */

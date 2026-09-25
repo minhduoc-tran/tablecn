@@ -1,5 +1,6 @@
 import type { FieldDefinition } from "@querycn/filter-core"
 import {
+  applyParamChanges,
   createMemoryAdapter,
   FilterProvider,
   useFilter,
@@ -196,6 +197,70 @@ describe("useDataTable in client mode", () => {
     expect(result.current.getRowCount()).toBe(12)
   })
 
+  it("searches the rows from the URL's q, ignoring case and accents", () => {
+    const people = [
+      { ...ORDERS[0]!, id: "a", customer: "Nguyễn Văn An" },
+      { ...ORDERS[1]!, id: "b", customer: "Lê Thị Bình" },
+      { ...ORDERS[2]!, id: "c", customer: "Đặng An" },
+    ]
+    const { result } = setup("?q=AN", { data: people })
+    expect(ids(result.current)).toEqual(["a", "c"])
+    // Every word must match, in any searched column.
+    act(() => result.current.options.meta!.setSearch("nguyen van"))
+    expect(ids(result.current)).toEqual(["a"])
+    act(() => result.current.options.meta!.setSearch("dang"))
+    expect(ids(result.current)).toEqual(["c"])
+  })
+
+  it("searches only searchColumns when given", () => {
+    const { result } = setup("?q=paid", { searchColumns: ["customer"] })
+    expect(ids(result.current)).toEqual([])
+    const all = setup("?q=paid&per_page=50")
+    expect(ids(all.result.current)).toHaveLength(13)
+  })
+
+  it("writes the search and goes back to page 1", () => {
+    const { adapter, result } = setup("?page=2&per_page=10&sort=amount")
+    act(() => result.current.options.meta!.setSearch("  Customer 1 "))
+    expect(adapter.read()).toBe("?per_page=10&sort=amount&q=Customer%201")
+    expect(result.current.options.meta!.search).toBe("Customer 1")
+    act(() => result.current.options.meta!.setSearch(""))
+    expect(adapter.read()).toBe("?per_page=10&sort=amount")
+  })
+
+  it("shows a search right away with a router that applies writes later", () => {
+    let value = "?page=2&per_page=10"
+    const queue: ParamPatch[] = []
+    const adapter: UrlStateAdapter = {
+      read: () => value,
+      write: (changes) => void queue.push(changes),
+    }
+    const { result } = renderHook(() =>
+      useDataTable({
+        data: ORDERS,
+        columns: COLUMNS,
+        getRowId: (row) => row.id,
+        adapter,
+      })
+    )
+    act(() => result.current.options.meta!.setSearch("Customer 03"))
+    // The router hasn't navigated yet; rows, page and box agree already.
+    expect(value).toBe("?page=2&per_page=10")
+    expect(ids(result.current)).toEqual(["3"])
+    expect(result.current.store.state.pagination.pageIndex).toBe(0)
+    for (const changes of queue) value = applyParamChanges(value, changes)!
+    expect(value).toBe("?per_page=10&q=Customer%2003")
+  })
+
+  it("counts the searched rows to clamp the page", () => {
+    const { result } = setup("?q=Customer+2&page=3&per_page=10", {
+      searchColumns: ["customer"],
+    })
+    // Customer 02, 12 and 20–25: one page.
+    expect(ids(result.current)).toHaveLength(8)
+    expect(result.current.store.state.pagination.pageIndex).toBe(0)
+  })
+
   it("drops sort ids of columns that can't sort", () => {
     const { result } = setup("?sort=select,ghost,-amount")
     expect(result.current.store.state.sorting).toEqual([
@@ -301,6 +366,34 @@ describe("useDataTable in server mode", () => {
     expect(writes.filter((w) => !("status__eq" in w))).toEqual([])
   })
 
+  it("points the URL at the last page when another search has the same total", () => {
+    const { adapter, writes, rerender } = server("?q=an&page=3&per_page=10", 25)
+    // Back/forward to another search on a page past its end, while
+    // `keepPreviousData` still hands over the old page and total.
+    act(() => adapter.write({ q: "bi", page: "5" }))
+    rerender({ mode: "server", data: PAGE, rowCount: 25 })
+    expect(writes.filter((w) => !("q" in w))).toEqual([])
+    // The backend answers for this search: the same total, new rows.
+    rerender({ mode: "server", data: PAGE.slice(), rowCount: 25 })
+    expect(adapter.read()).toBe("?per_page=10&q=bi&page=3")
+  })
+
+  it("settles when data is a new array every render", () => {
+    const adapter = createMemoryAdapter("?q=an&page=2&per_page=10")
+    const { result } = renderHook(() =>
+      useDataTable({
+        mode: "server",
+        data: [...PAGE],
+        rowCount: 25,
+        columns: COLUMNS,
+        getRowId: (row) => row.id,
+        adapter,
+      })
+    )
+    act(() => adapter.write({ q: "bi" }))
+    expect(result.current.store.state.pagination.pageIndex).toBe(1)
+  })
+
   it("clamps to the last page once rowCount is known", () => {
     const { result, rerender } = server("?page=40&per_page=10", undefined)
     expect(result.current.store.state.pagination.pageIndex).toBe(39)
@@ -318,6 +411,13 @@ describe("useDataTable selection and layout", () => {
       "3",
     ])
     act(() => result.current.nextPage())
+    expect(result.current.store.state.rowSelection).toEqual({})
+  })
+
+  it("clears the selection when the search changes", () => {
+    const { result } = setup()
+    act(() => result.current.getRow("1").toggleSelected(true))
+    act(() => result.current.options.meta!.setSearch("Customer"))
     expect(result.current.store.state.rowSelection).toEqual({})
   })
 

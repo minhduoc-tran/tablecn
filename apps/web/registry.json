@@ -133,6 +133,7 @@
         "button",
         "checkbox",
         "dropdown-menu",
+        "input-group",
         "popover",
         "select",
         "separator",
@@ -180,6 +181,11 @@
           "path": "registry/{base}/table/data-table-toolbar.tsx",
           "type": "registry:component",
           "target": "@components/data-table/data-table-toolbar.tsx"
+        },
+        {
+          "path": "registry/{base}/table/data-table-search.tsx",
+          "type": "registry:component",
+          "target": "@components/data-table/data-table-search.tsx"
         },
         {
           "path": "registry/{base}/table/data-table-reset-filters-button.tsx",
@@ -265,6 +271,11 @@
           "path": "registry/shared/table/use-scroll-to-top-on-change.ts",
           "type": "registry:hook",
           "target": "@components/data-table/use-scroll-to-top-on-change.ts"
+        },
+        {
+          "path": "registry/shared/table/use-data-table-search.ts",
+          "type": "registry:hook",
+          "target": "@components/data-table/use-data-table-search.ts"
         },
         {
           "path": "registry/shared/table/page-range.ts",

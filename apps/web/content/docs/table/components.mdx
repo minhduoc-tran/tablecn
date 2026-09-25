@@ -17,6 +17,7 @@ import { resetPagePatch, useDataTable } from "@querycn/table-react"
 
 import { DataTable } from "@/components/data-table/data-table"
 import { DataTablePagination } from "@/components/data-table/data-table-pagination"
+import { DataTableSearch } from "@/components/data-table/data-table-search"
 import { DataTableToolbar } from "@/components/data-table/data-table-toolbar"
 import { FilterBuilder } from "@/components/filter/filter-builder"
 import { FilterChips } from "@/components/filter/filter-chips"
@@ -45,6 +46,7 @@ function OrdersTable({ orders }: { orders: Order[] }) {
         table={table}
         selectionActions={(rows) => <DeleteOrders ids={rows.map((row) => row.id)} />}
       >
+        <DataTableSearch table={table} placeholder="Search orders…" />
         <FilterBuilder />
         <FilterChips />
       </DataTableToolbar>
@@ -55,7 +57,7 @@ function OrdersTable({ orders }: { orders: Order[] }) {
 }
 ```
 
-The table reads the filter, sort and page from the same adapter, so one URL holds all of them: `?status__eq=paid&sort=-amount&page=2`.
+The table reads the search, filter, sort and page from the same adapter, so one URL holds all of them: `?q=nguyen&status__eq=paid&sort=-amount&page=2`.
 
 ## DataTable
 
@@ -146,7 +148,7 @@ Above the table: your controls on the left; **Clear filters**, reload and **Colu
 <TypeTable
   type={{
     table: { description: "From useDataTable.", type: "DataTableInstance<TData>", required: true },
-    children: { description: "Your controls: a search box, FilterBuilder, FilterChips…", type: "React.ReactNode" },
+    children: { description: "Your controls: DataTableSearch, FilterBuilder, FilterChips…", type: "React.ReactNode" },
     onRefresh: { description: "Shows a reload button.", type: "() => void" },
     isRefreshing: {
       description: "Spins the reload icon and ignores presses; the button stays focusable.",
@@ -162,11 +164,30 @@ Above the table: your controls on the left; **Clear filters**, reload and **Colu
   }}
 />
 
+## DataTableSearch
+
+A search box for the rows, written to the URL as `?q=`. In client mode it looks in the searched columns, ignoring case and accents; in server mode it's sent to the backend. See [Searching](/docs/table/url-state#searching).
+
+<TypeTable
+  type={{
+    table: { description: "From useDataTable.", type: "DataTableInstance<TData>", required: true },
+    placeholder: { description: "The box's placeholder.", type: "string", default: "\"Search…\"" },
+    delay: { description: "How long typing pauses before the search is written, in ms.", type: "number", default: "300" },
+    messages: { description: "See Customization.", type: "TableMessages", default: "enTableMessages" },
+    className: { description: "Classes for the box. It's full width on small screens and 16rem from sm up.", type: "string" },
+  }}
+/>
+
+- <kbd>Enter</kbd> searches right away, without submitting a form around the box; <kbd>Esc</kbd> or the × clears, and focus stays in the box. An <kbd>Esc</kbd> that clears doesn't reach a Base UI or React Aria dialog around the box; Radix dialogs listen before the box does and close too.
+- The text is capped at 200 characters, like the URL.
+- A search changed elsewhere (back/forward, **Clear filters**) shows up in the box.
+- Changing the search goes back to page 1 and clears the selection.
+
 ## DataTableResetFiltersButton
 
-**Clear filters**: clears the applied filter in one step. It only shows while a filter applies, so it's hidden outside a `FilterProvider`. Props: `messages`, `className`.
+**Clear filters**: clears the applied filter and the search in one click. It only shows while one of them applies; without a `FilterProvider`, only the search counts. Props: `table`, `messages`, `className`.
 
-It doesn't touch the page itself. Pass `onApply={() => resetPagePatch()}` to the `FilterProvider`, as in [Usage](#usage): clearing is a filter change like any other, and the page param is removed in the same URL update.
+The search goes back to page 1 by itself. For the filter, pass `onApply={() => resetPagePatch()}` to the `FilterProvider`, as in [Usage](#usage): clearing it is a filter change like any other, and the page param is removed in the same URL update.
 
 ## DataTableSelectionBar
 
@@ -191,6 +212,7 @@ The selected rows' count, your actions, and **Clear selection**. It renders noth
 - **Headers** have `aria-sort`. To move a column from the keyboard, focus its grip (in the header or the **Columns** list), press <kbd>Space</kbd> or <kbd>Enter</kbd>, move with the arrow keys, and press <kbd>Space</kbd> again; <kbd>Esc</kbd> cancels. Each step is announced.
 - **Resize handles** are focusable separators: <kbd>←</kbd> / <kbd>→</kbd> resize, <kbd>Shift</kbd> for bigger steps.
 - **Pagination**: moving to the first or last page disables the button that did it; focus moves to the current page's button instead of falling to the page.
+- **Search** is an `<input type="search">` named by `messages.search.label`.
 - **Toolbar**: when a control that has focus goes away (**Clear filters**, **Clear selection**, an action that deletes the selected rows), focus moves to the toolbar.
 - **Reload** stays focusable while `isRefreshing`, marked as disabled.
 - **Selection checkboxes** are labelled "Select all" and "Select row".

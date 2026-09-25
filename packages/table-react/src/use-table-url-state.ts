@@ -15,6 +15,7 @@ import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react"
 import {
   decodeTableParams,
   encodeTableParams,
+  normalizeSearch,
   type TableUrlOptions,
   type TableUrlState,
 } from "./table-url-codec"
@@ -33,6 +34,8 @@ export interface TableUrlStateValue extends TableUrlState {
   isPageClamped: boolean
   onSortingChange: (updater: Updater<SortingState>) => void
   onPaginationChange: (updater: Updater<PaginationState>) => void
+  /** Also goes back to page 1. */
+  onSearchChange: (search: string) => void
 }
 
 const useIsomorphicLayoutEffect =
@@ -80,19 +83,26 @@ function clampPage(
 }
 
 /**
- * Sorting and pagination kept in the URL (`sort`, `page`, `per_page`), as
- * controlled TanStack Table state. Changing the sort or page size goes back
- * to page 1 in the same navigation.
+ * Sorting, pagination and search kept in the URL (`sort`, `page`, `per_page`,
+ * `q`), as controlled TanStack Table state. Changing the sort, page size or
+ * search goes back to page 1 in the same navigation.
  */
 export function useTableUrlState({
   adapter,
-  pageCount,
-  rowCount,
   ...options
 }: UseTableUrlStateOptions = {}): TableUrlStateValue {
   const [memoryAdapter] = useState(() => createMemoryAdapter())
-  const [raw, write] = useAdapterValue(adapter ?? memoryAdapter)
+  return useTableUrlStateFrom(
+    useAdapterValue(adapter ?? memoryAdapter),
+    options
+  )
+}
 
+/** `useTableUrlState` over a value the caller already reads, so both see the same pending writes. */
+export function useTableUrlStateFrom(
+  [raw, write]: readonly [string, (changes: ParamPatch) => void],
+  { pageCount, rowCount, ...options }: Omit<UseTableUrlStateOptions, "adapter">
+): TableUrlStateValue {
   // Keyed on content: callers pass fresh option arrays each render, TanStack wants stable state.
   const key = JSON.stringify(decodeTableParams(raw, options))
   const decoded = useMemo(() => JSON.parse(key) as TableUrlState, [key])
@@ -130,7 +140,11 @@ export function useTableUrlState({
         options
       )
       if (sameSorting(sorting, state.sorting)) return
-      commit({ sorting, pagination: { ...state.pagination, pageIndex: 0 } })
+      commit({
+        ...state,
+        sorting,
+        pagination: { ...state.pagination, pageIndex: 0 },
+      })
     },
     [commit]
   )
@@ -143,11 +157,25 @@ export function useTableUrlState({
         options
       )
       commit({
-        sorting: state.sorting,
+        ...state,
         pagination:
           pagination.pageSize === state.pagination.pageSize
             ? pagination
             : { ...pagination, pageIndex: 0 },
+      })
+    },
+    [commit]
+  )
+
+  const onSearchChange = useCallback(
+    (value: string) => {
+      const { state } = latest.current
+      const search = normalizeSearch(value)
+      if (search === state.search) return
+      commit({
+        ...state,
+        search,
+        pagination: { ...state.pagination, pageIndex: 0 },
       })
     },
     [commit]
@@ -158,5 +186,6 @@ export function useTableUrlState({
     isPageClamped: state !== decoded,
     onSortingChange,
     onPaginationChange,
+    onSearchChange,
   }
 }

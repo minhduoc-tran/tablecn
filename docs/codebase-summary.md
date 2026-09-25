@@ -46,20 +46,20 @@ packages/{eslint,typescript}-config   Shared tooling (private)
 
 | Area | Files |
 | --- | --- |
-| Hook | `use-data-table.ts` (`useDataTable`: client or server mode, applied filter, selection per page) |
+| Hook | `use-data-table.ts` (`useDataTable`: client or server mode, applied filter, search, selection per page), `table-search.ts` (client search) |
 | Features | `data-table-features.ts` (`dataTableFeatures`, column meta/table meta types), `column-color-feature.ts` |
-| URL | `table-url-codec.ts` (`sort`/`page`/`per_page`, `resetPagePatch`), `table-url-options.ts`, `use-table-url-state.ts` (shares the filter's adapter) |
+| URL | `table-url-codec.ts` (`sort`/`page`/`per_page`/`q`, `resetPagePatch`), `table-url-options.ts`, `use-table-url-state.ts` (shares the filter's adapter) |
 | Layout | `table-layout-state.ts` (defaults, `parseLayout` merge), `layout-storage.ts`, `use-table-layout.ts` (localStorage, cross-tab) |
 | Backend | `table-params-serializers.ts` (JSON:API, DRF, PostgREST), `use-table-query.ts`, `server.ts` (`parseTableParams`) |
 | i18n | `table-messages.ts`, `locales/en.ts`, `locales/vi.ts` |
 
-Registry `data-table` block: `DataTable` (+ `data-table-body`, virtualization via `@tanstack/react-virtual`), column header (sort, resize, dnd-kit reorder), pagination, view options (Columns menu), toolbar, selection bar, selection column.
+Registry `data-table` block: `DataTable` (+ `data-table-body`, virtualization via `@tanstack/react-virtual`), column header (sort, resize, dnd-kit reorder), pagination, view options (Columns menu), search box, toolbar, selection bar, selection column.
 
 ## Data flow
 
 fields → draft rules → Apply → URL (`status__eq=paid`) → applied filter → serializer (backend query) or `applyFilter` (rows in the browser).
 
-Table: URL (`sort`, `page`, `per_page`, same adapter as the filter) + saved layout (localStorage) → `useDataTable` → TanStack table → registry UI. Server mode: `useTableQuery` merges filter + table params for the fetch.
+Table: URL (`q`, `sort`, `page`, `per_page`, same adapter as the filter) + saved layout (localStorage) → `useDataTable` → TanStack table → registry UI. Server mode: `useTableQuery` merges filter + table params for the fetch.
 
 ## Tooling
 

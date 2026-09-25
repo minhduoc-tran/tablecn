@@ -42,6 +42,11 @@ export const viTableMessages: TableMessages = {
     selectRow: "Chọn dòng",
     clear: "Bỏ chọn",
   },
+  search: {
+    label: "Tìm kiếm",
+    placeholder: "Tìm kiếm…",
+    clear: "Xoá tìm kiếm",
+  },
   actions: { reload: "Tải lại", clearFilters: "Xoá bộ lọc", retry: "Thử lại" },
   states: {
     empty: "Không có dữ liệu.",

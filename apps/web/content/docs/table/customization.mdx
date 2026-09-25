@@ -21,7 +21,7 @@ The selection column's labels are part of its definition, so pass them where you
 const columns = [createSelectionColumn<Order>(viTableMessages), …]
 ```
 
-`DataTable` passes its `messages` on to the headers. `DataTableToolbar` passes them to **Clear filters**, **Columns** and the selection bar; render those on their own and give them `messages` too.
+`DataTable` passes its `messages` on to the headers. `DataTableToolbar` passes them to **Clear filters**, **Columns** and the selection bar; render those on their own and give them `messages` too. `DataTableSearch` sits in the toolbar's children, so pass it `messages` yourself.
 
 Column headers are part of your column definitions, so translate them where you define the columns. The filter has its own messages: see [filter customization](/docs/filter/customization).
 
@@ -48,6 +48,7 @@ Keep the result at module scope (or in `useMemo`) and pass it to every component
 | `sorting` | `asc`, `desc`, `clear`. The built-in headers don't use them; they're there for your own sort controls. |
 | `pagination` | `label` (the nav's name), `rowsPerPage`, `first`, `previous`, `next`, `last`, `morePages`. |
 | `selection` | `selectAll`, `selectRow`, `clear`. |
+| `search` | The search box: `label` (its accessible name), `placeholder`, `clear`. |
 | `actions` | `reload`, `clearFilters`, `retry`. |
 | `states` | `empty`, `error`, `loading`. |
 | `header` | Names of the header controls, `move(column)` and `resize(column)`, and what screen readers hear while a column moves: `instructions`, `pickedUp`, `movedTo`, `dropped`, `cancelled`. |
