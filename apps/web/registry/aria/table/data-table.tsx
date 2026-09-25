@@ -1,96 +1,75 @@
 "use client"
 
 import * as React from "react"
+import { useAppliedFilter } from "@querycn/filter-react"
 import {
   enTableMessages,
   type DataTableInstance,
-  type DataTableRow,
   type TableMessages,
 } from "@querycn/table-react"
 
 import { cn } from "@/lib/utils"
-import { Button } from "@/registry/aria/ui/button"
-import { Skeleton } from "@/registry/aria/ui/skeleton"
-import {
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/registry/aria/ui/table"
+import { TableHead, TableHeader, TableRow } from "@/registry/aria/ui/table"
 import {
   headerCellClassName,
   pinnedCellClassName,
 } from "@/registry/shared/table/data-table-cell-classes"
 import {
-  getColumnCellProps,
   getHeaderCellProps,
   getPinnedEdges,
 } from "@/registry/shared/table/data-table-pinning"
 import { ColumnReorder } from "@/registry/shared/table/column-reorder"
 import { useTableContainer } from "@/registry/shared/table/column-layout-actions"
 import { useScrollEdges } from "@/registry/shared/table/use-scroll-edges"
+import { useScrollToTopOnChange } from "@/registry/shared/table/use-scroll-to-top-on-change"
+import { useVirtualRows } from "@/registry/shared/table/use-virtual-rows"
+import {
+  DataTableBody,
+  type DataTableBodyOptions,
+} from "@/registry/aria/table/data-table-body"
 import { DataTableColumnHeader } from "@/registry/aria/table/data-table-column-header"
 
-export interface DataTableProps<TData extends object> extends Omit<
-  React.ComponentProps<"div">,
-  "children"
-> {
+export interface DataTableProps<TData extends object>
+  extends
+    Omit<React.ComponentProps<"div">, "children">,
+    DataTableBodyOptions<TData> {
   table: DataTableInstance<TData>
-  /** Skeleton rows on the first load; dims the rows while they reload. */
-  isLoading?: boolean
-  isError?: boolean
-  onRetry?: () => void
-  onRowClick?: (row: DataTableRow<TData>, event: React.MouseEvent) => void
-  onRowDoubleClick?: (row: DataTableRow<TData>, event: React.MouseEvent) => void
-  rowClassName?: (row: DataTableRow<TData>) => string | undefined
-  emptyState?: React.ReactNode
-  errorState?: React.ReactNode
   messages?: TableMessages
-  skeletonRows?: number
+  /**
+   * Renders only the rows in view, for long pages (thousands of rows). Needs
+   * a height on the table, e.g. `className="h-[600px]"`. Fitting a column to
+   * its content then measures the rendered rows only.
+   */
+  virtualize?: boolean
+  /** A row's height before it's measured, in pixels. */
+  estimateRowHeight?: number
 }
-
-// Controls inside a row (checkbox, link, menu) don't count as a click on it.
-const CONTROLS =
-  "a, button, input, label, select, textarea, [role=button], [role=checkbox], [role=menuitem]"
-
-function isFromControl(event: React.MouseEvent) {
-  const target = event.target as Element
-  // Portalled menus and popovers bubble through React but sit outside the row.
-  if (!event.currentTarget.contains(target)) return true
-  const control = target.closest(CONTROLS)
-  return control !== null && event.currentTarget.contains(control)
-}
-
-// The clicks of a double click, or selecting text, aren't a row click.
-const isRowClick = (event: React.MouseEvent) =>
-  !isFromControl(event) &&
-  event.detail <= 1 &&
-  (window.getSelection()?.isCollapsed ?? true)
 
 /**
  * Renders a `useDataTable` table: sticky header, pinned columns, loading,
  * empty and error states. The container scrolls, so give it a height (e.g.
- * `className="max-h-[600px]"`) for the header to stay in view.
+ * `className="max-h-[600px]"`) for the header to stay in view. Scrolls back
+ * to the top when the sort, page or filter changes.
  */
 export function DataTable<TData extends object>({
   table,
-  isLoading = false,
-  isError = false,
+  messages = enTableMessages,
+  virtualize = false,
+  estimateRowHeight = 37,
+  isLoading,
+  isError,
   onRetry,
   onRowClick,
   onRowDoubleClick,
   rowClassName,
   emptyState,
   errorState,
-  messages = enTableMessages,
-  skeletonRows = 5,
+  skeletonRows,
   className,
   ...props
 }: DataTableProps<TData>) {
   const [scrollRef, scrolled] = useScrollEdges<HTMLDivElement>()
   useTableContainer(table, scrollRef)
-  const rows = table.getRowModel().rows
   const columns = [
     ...table.getStartVisibleLeafColumns(),
     ...table.getCenterVisibleLeafColumns(),
@@ -98,85 +77,21 @@ export function DataTable<TData extends object>({
   ]
   const edges = getPinnedEdges(table)
   const headerGroups = table.getHeaderGroups()
-  const isReloading = isLoading && rows.length > 0
-
-  let body: React.ReactNode
-  if (isError) {
-    body = (
-      <StateRow colSpan={columns.length}>
-        {errorState ?? (
-          <div className="flex flex-col items-center gap-2">
-            <p>{messages.states.error}</p>
-            {onRetry && (
-              <Button variant="outline" size="sm" onPress={onRetry}>
-                {messages.actions.retry}
-              </Button>
-            )}
-          </div>
-        )}
-      </StateRow>
-    )
-  } else if (isLoading && rows.length === 0) {
-    body = Array.from({ length: skeletonRows }, (_, index) => (
-      <TableRow key={index} className="group/row hover:bg-transparent">
-        {columns.map((column) => (
-          <TableCell
-            key={column.id}
-            {...getColumnCellProps(column, edges)}
-            className={pinnedCellClassName}
-          >
-            <Skeleton className="h-4 w-full" />
-          </TableCell>
-        ))}
-      </TableRow>
-    ))
-  } else if (rows.length === 0) {
-    body = (
-      <StateRow colSpan={columns.length}>
-        {emptyState ?? messages.states.empty}
-      </StateRow>
-    )
-  } else {
-    body = rows.map((row) => (
-      <TableRow
-        key={row.id}
-        data-state={row.getIsSelected() ? "selected" : undefined}
-        onClick={
-          onRowClick &&
-          ((event) => {
-            if (isRowClick(event)) onRowClick(row, event)
-          })
-        }
-        onDoubleClick={
-          onRowDoubleClick &&
-          ((event) => {
-            if (!isFromControl(event)) onRowDoubleClick(row, event)
-          })
-        }
-        className={cn(
-          "group/row",
-          onRowClick && "cursor-pointer",
-          rowClassName?.(row)
-        )}
-      >
-        {[
-          ...row.getStartVisibleCells(),
-          ...row.getCenterVisibleCells(),
-          ...row.getEndVisibleCells(),
-        ].map((cell) => (
-          <TableCell
-            key={cell.id}
-            {...getColumnCellProps(cell.column, edges)}
-            className={pinnedCellClassName}
-          >
-            <div className="truncate">
-              <table.FlexRender cell={cell} />
-            </div>
-          </TableCell>
-        ))}
-      </TableRow>
-    ))
-  }
+  const rows = table.getRowModel().rows
+  const rowCount = rows.length
+  const { sorting, pagination } = table.store.state
+  const { queryKey } = useAppliedFilter()
+  useScrollToTopOnChange(
+    scrollRef,
+    JSON.stringify([sorting, pagination, queryKey])
+  )
+  const virtual = useVirtualRows({
+    enabled: virtualize && !isError,
+    count: rowCount,
+    getRowId: React.useCallback((index: number) => rows[index]!.id, [rows]),
+    scrollRef,
+    estimateRowHeight,
+  })
 
   return (
     <div
@@ -194,6 +109,10 @@ export function DataTable<TData extends object>({
         <table
           data-slot="table"
           aria-busy={isLoading || undefined}
+          // Screen readers count every row, not only those rendered.
+          aria-rowcount={
+            virtual && rowCount > 0 ? headerGroups.length + rowCount : undefined
+          }
           className="table-fixed caption-bottom text-sm"
           style={{ width: table.getTotalSize() }}
         >
@@ -229,35 +148,25 @@ export function DataTable<TData extends object>({
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody
-            className={cn(
-              "transition-opacity",
-              isReloading && "pointer-events-none opacity-60"
-            )}
-          >
-            {body}
-          </TableBody>
+          <DataTableBody
+            table={table}
+            columns={columns}
+            edges={edges}
+            messages={messages}
+            virtual={virtual}
+            headerRowCount={headerGroups.length}
+            isLoading={isLoading}
+            isError={isError}
+            onRetry={onRetry}
+            onRowClick={onRowClick}
+            onRowDoubleClick={onRowDoubleClick}
+            rowClassName={rowClassName}
+            emptyState={emptyState}
+            errorState={errorState}
+            skeletonRows={skeletonRows}
+          />
         </table>
       </ColumnReorder>
     </div>
-  )
-}
-
-function StateRow({
-  colSpan,
-  children,
-}: {
-  colSpan: number
-  children: React.ReactNode
-}) {
-  return (
-    <TableRow className="hover:bg-transparent">
-      <TableCell
-        colSpan={colSpan}
-        className="h-24 text-center text-muted-foreground"
-      >
-        {children}
-      </TableCell>
-    </TableRow>
   )
 }
