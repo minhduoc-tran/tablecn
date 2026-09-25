@@ -2,7 +2,10 @@ import { defineConfig } from "tsup"
 
 // Same output contract as filter-core; react and filter-core stay external.
 export default defineConfig({
-  entry: { index: "src/index.ts" },
+  entry: {
+    index: "src/index.ts",
+    "react-router": "src/react-router/index.ts",
+  },
   format: ["esm"],
   dts: true,
   clean: true,

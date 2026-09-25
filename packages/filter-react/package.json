@@ -18,6 +18,10 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./react-router": {
+      "types": "./dist/react-router.d.ts",
+      "import": "./dist/react-router.js"
+    },
     "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
@@ -40,7 +44,13 @@
     "@querycn/filter-core": "workspace:*"
   },
   "peerDependencies": {
-    "react": ">=18"
+    "react": ">=18",
+    "react-router": ">=6.4"
+  },
+  "peerDependenciesMeta": {
+    "react-router": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@testing-library/dom": "^10",
@@ -53,6 +63,7 @@
     "jsdom": "^26",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "react-router": "^7.18.4",
     "tsup": "^8.5.1",
     "typescript": "^5",
     "vitest": "^5.0.1"

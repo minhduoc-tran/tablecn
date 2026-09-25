@@ -1,5 +1,6 @@
 import { useMemo } from "react"
 
+import { applyParamChanges } from "./apply-param-changes"
 import type { ParamPatch, UrlStateAdapter } from "./url-state-adapter-types"
 
 export interface BrowserUrlAdapterOptions {
@@ -16,18 +17,10 @@ function notify() {
 }
 
 function writeParams(changes: ParamPatch) {
-  const params = new URLSearchParams(window.location.search)
-  if (
-    Object.entries(changes).every(([key, value]) => params.get(key) === value)
-  ) {
-    return
-  }
-  for (const [key, value] of Object.entries(changes)) {
-    if (value === null) params.delete(key)
-    else params.set(key, value)
-  }
+  const search = applyParamChanges(window.location.search, changes)
+  if (search === null) return
   const url = new URL(window.location.href)
-  url.search = params.toString()
+  url.search = search
   // Keep `history.state`: routers store their own data there.
   window.history.replaceState(window.history.state, "", url)
   notify()

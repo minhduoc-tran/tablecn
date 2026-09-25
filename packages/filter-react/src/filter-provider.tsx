@@ -126,6 +126,9 @@ export function FilterProvider({
       const next = decodeFilters(value, context)
       if (value !== latest.current.queryKey) {
         write(value, latest.current.onApply?.(next) || undefined)
+        // A second commit before the next render builds on this one.
+        latest.current.applied = next
+        latest.current.queryKey = value
       }
       replaceDraft(next)
     },
