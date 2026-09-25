@@ -7,7 +7,8 @@ import {
   type FieldDefinition,
   type QueryParams,
 } from "@querycn/filter-core"
-import { FilterProvider, useAppliedFilter } from "@querycn/filter-react"
+import { useAppliedFilter } from "@querycn/filter-react"
+import { NextFilterProvider } from "@querycn/filter-next"
 
 import { FilterBuilder } from "@/registry/radix/filter/filter-builder"
 import { FilterChips } from "@/registry/radix/filter/filter-chips"
@@ -104,17 +105,20 @@ function Orders() {
   )
 }
 
-/** Live filter builder for the docs: rows are filtered in the browser with `applyFilter`. */
+/** Live filter builder for the docs: the filter lives in the page URL, rows are filtered in the browser with `applyFilter`. */
 export function FilterPreview() {
   return (
     <div className="not-prose my-6 flex flex-col gap-3 rounded-lg border p-4">
-      <FilterProvider fields={fields}>
-        <div className="flex flex-wrap items-center gap-2">
-          <FilterBuilder />
-          <FilterChips />
-        </div>
-        <Orders />
-      </FilterProvider>
+      {/* `useSearchParams` on a prerendered page needs a Suspense boundary */}
+      <React.Suspense fallback={<div className="h-80" />}>
+        <NextFilterProvider fields={fields} shallow>
+          <div className="flex flex-wrap items-center gap-2">
+            <FilterBuilder />
+            <FilterChips />
+          </div>
+          <Orders />
+        </NextFilterProvider>
+      </React.Suspense>
     </div>
   )
 }
