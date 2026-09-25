@@ -180,3 +180,12 @@ export function useDataTable<TData extends RowData>(
     columnResizeMode: "onEnd",
   })
 }
+
+/** What `useDataTable` returns: the TanStack table the UI renders. */
+export type DataTableInstance<TData extends RowData> = ReturnType<
+  typeof useDataTable<TData>
+>
+
+export type DataTableRow<TData extends RowData> = ReturnType<
+  DataTableInstance<TData>["getRow"]
+>

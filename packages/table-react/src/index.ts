@@ -38,6 +38,8 @@ export type {
 export { useDataTable } from "./use-data-table"
 export type {
   ClientDataTableOptions,
+  DataTableInstance,
+  DataTableRow,
   ServerDataTableOptions,
   UseDataTableOptions,
 } from "./use-data-table"

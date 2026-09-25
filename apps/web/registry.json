@@ -137,6 +137,26 @@
       ],
       "files": [
         {
+          "path": "registry/{base}/table/data-table.tsx",
+          "type": "registry:component",
+          "target": "@components/data-table/data-table.tsx"
+        },
+        {
+          "path": "registry/{base}/table/data-table-selection-column.tsx",
+          "type": "registry:component",
+          "target": "@components/data-table/data-table-selection-column.tsx"
+        },
+        {
+          "path": "registry/shared/table/data-table-pinning.ts",
+          "type": "registry:lib",
+          "target": "@components/data-table/data-table-pinning.ts"
+        },
+        {
+          "path": "registry/shared/table/use-scroll-edges.ts",
+          "type": "registry:hook",
+          "target": "@components/data-table/use-scroll-edges.ts"
+        },
+        {
           "path": "registry/shared/table/page-range.ts",
           "type": "registry:lib",
           "target": "@components/data-table/page-range.ts"
