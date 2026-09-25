@@ -200,6 +200,15 @@ describe("useTableUrlState", () => {
     expect(writes).toEqual([])
   })
 
+  it("clamps with rowCount and the page size in the URL", () => {
+    const { result, rerender } = setup("?page=9&per_page=50", { rowCount: 120 })
+    expect(result.current.pagination.pageIndex).toBe(2)
+    rerender({ rowCount: 0 })
+    expect(result.current.pagination.pageIndex).toBe(0)
+    rerender({ rowCount: 120, pageCount: 5 })
+    expect(result.current.pagination.pageIndex).toBe(4)
+  })
+
   it("steps back from a clamped page", () => {
     const { adapter, result } = setup("?page=9", { pageCount: 3 })
     act(() =>

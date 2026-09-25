@@ -24,6 +24,8 @@ export interface UseTableUrlStateOptions extends TableUrlOptions {
   adapter?: UrlStateAdapter
   /** Pages past the last one read as the last one; the URL is left alone. */
   pageCount?: number
+  /** Total rows, when the page count isn't known: clamps with the page size in the URL. */
+  rowCount?: number
 }
 
 export interface TableUrlStateValue extends TableUrlState {
@@ -58,7 +60,13 @@ const normalize = (state: TableUrlState, options: TableUrlOptions) =>
 const sameSorting = (a: SortingState, b: SortingState) =>
   JSON.stringify(a) === JSON.stringify(b)
 
-function clampPage(state: TableUrlState, pageCount: number | undefined) {
+function clampPage(
+  state: TableUrlState,
+  pageCount: number | undefined,
+  rowCount: number | undefined
+) {
+  pageCount ??=
+    rowCount === undefined ? undefined : rowCount / state.pagination.pageSize
   // Undefined, NaN or -1 while the total is loading or unknown.
   if (pageCount === undefined || !(pageCount >= 0)) return state
   const lastPageIndex = Math.max(0, Math.ceil(pageCount) - 1)
@@ -77,6 +85,7 @@ function clampPage(state: TableUrlState, pageCount: number | undefined) {
 export function useTableUrlState({
   adapter,
   pageCount,
+  rowCount,
   ...options
 }: UseTableUrlStateOptions = {}): TableUrlStateValue {
   const [memoryAdapter] = useState(() => createMemoryAdapter())
@@ -86,8 +95,8 @@ export function useTableUrlState({
   const key = JSON.stringify(decodeTableParams(raw, options))
   const decoded = useMemo(() => JSON.parse(key) as TableUrlState, [key])
   const state = useMemo(
-    () => clampPage(decoded, pageCount),
-    [decoded, pageCount]
+    () => clampPage(decoded, pageCount, rowCount),
+    [decoded, pageCount, rowCount]
   )
 
   // Handlers read these so two updates in one event build on each other.

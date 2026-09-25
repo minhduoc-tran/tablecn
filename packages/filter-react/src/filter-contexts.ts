@@ -14,6 +14,7 @@ import {
 } from "@querycn/filter-core"
 import { createContext } from "react"
 
+import type { UrlStateAdapter } from "./adapters/url-state-adapter-types"
 import { NO_RULE_ISSUES, type RuleIssues } from "./serializer-capabilities"
 
 interface FilterConfigValue {
@@ -87,3 +88,5 @@ export const FilterActionsContext = createContext<FilterActionsValue | null>(
 
 export const AppliedFilterContext =
   createContext<AppliedFilterValue<unknown>>(EMPTY_APPLIED_FILTER)
+
+export const FilterAdapterContext = createContext<UrlStateAdapter | null>(null)

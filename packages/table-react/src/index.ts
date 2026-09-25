@@ -35,3 +35,20 @@ export type {
   LayoutColumnDef,
   TableLayoutState,
 } from "./table-layout-state"
+export { useDataTable } from "./use-data-table"
+export type {
+  ClientDataTableOptions,
+  ServerDataTableOptions,
+  UseDataTableOptions,
+} from "./use-data-table"
+export {
+  createDataTableColumnHelper,
+  dataTableFeatures,
+} from "./data-table-features"
+export type {
+  DataTableColumnDef,
+  DataTableFeatures,
+} from "./data-table-features"
+export { mergeTableMessages } from "./table-messages"
+export type { TableMessages, TableMessagesOverrides } from "./table-messages"
+export { enTableMessages } from "./locales/en"

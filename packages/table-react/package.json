@@ -34,6 +34,10 @@
       "types": "./dist/server.d.ts",
       "import": "./dist/server.js"
     },
+    "./locales/vi": {
+      "types": "./dist/locales/vi.d.ts",
+      "import": "./dist/locales/vi.js"
+    },
     "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
@@ -52,13 +56,15 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint"
   },
+  "dependencies": {
+    "@querycn/filter-core": "workspace:^"
+  },
   "peerDependencies": {
     "@querycn/filter-react": "workspace:^",
     "@tanstack/react-table": "^9.2.0",
     "react": ">=18"
   },
   "devDependencies": {
-    "@querycn/filter-core": "workspace:*",
     "@querycn/filter-react": "workspace:*",
     "@tanstack/react-table": "^9.2.4",
     "@testing-library/dom": "^10",

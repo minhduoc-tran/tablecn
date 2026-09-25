@@ -66,6 +66,7 @@ describe("getLayoutColumns", () => {
       id: "select",
       canHide: false,
       canPin: false,
+      canSort: false,
       defaultHidden: false,
       defaultPinned: "start",
     })
@@ -73,6 +74,17 @@ describe("getLayoutColumns", () => {
 
   it("counts a group with no columns as a leaf, like TanStack Table", () => {
     expect(getLayoutColumns([{ id: "empty", columns: [] }])).toHaveLength(1)
+  })
+
+  it("marks columns with a value and sorting on as sortable", () => {
+    expect(columns.filter((c) => c.canSort).map((c) => c.id)).toEqual([
+      "customer_name",
+      "amount",
+      "status",
+    ])
+    expect(
+      getLayoutColumns([{ accessorKey: "a", enableSorting: false }])[0]!.canSort
+    ).toBe(false)
   })
 
   it("falls back to a string header and skips columns with no id", () => {

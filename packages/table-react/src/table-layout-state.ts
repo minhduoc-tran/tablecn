@@ -25,10 +25,12 @@ export interface DataTableColumnMeta {
 export interface LayoutColumnDef {
   id?: string
   accessorKey?: unknown
+  accessorFn?: unknown
   header?: unknown
   columns?: readonly LayoutColumnDef[]
   enableHiding?: boolean
   enablePinning?: boolean
+  enableSorting?: boolean
   meta?: object
 }
 
@@ -36,6 +38,8 @@ export interface LayoutColumn {
   id: string
   canHide: boolean
   canPin: boolean
+  /** Has a value to sort by and doesn't turn sorting off. */
+  canSort: boolean
   defaultHidden: boolean
   defaultPinned?: "start" | "end"
 }
@@ -64,6 +68,9 @@ export function getLayoutColumns(
         id,
         canHide: def.enableHiding ?? true,
         canPin: def.enablePinning ?? true,
+        canSort:
+          (def.enableSorting ?? true) &&
+          (def.accessorKey !== undefined || def.accessorFn !== undefined),
         defaultHidden: meta?.defaultHidden ?? false,
         defaultPinned: meta?.defaultPinned,
       },

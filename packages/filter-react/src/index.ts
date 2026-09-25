@@ -28,3 +28,4 @@ export type {
 export { clearFieldOptionsCache } from "./field-options-cache"
 export { applyParamChanges } from "./adapters/apply-param-changes"
 export { useAdapterValue } from "./use-adapter-value"
+export { useFilterAdapter } from "./use-filter-adapter"

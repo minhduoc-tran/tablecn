@@ -36,6 +36,7 @@ import type {
 } from "./adapters/url-state-adapter-types"
 import {
   AppliedFilterContext,
+  FilterAdapterContext,
   FilterActionsContext,
   FilterDraftContext,
   type AppliedFilterValue,
@@ -102,7 +103,8 @@ export function FilterProvider({
   children,
 }: FilterProviderProps) {
   const [memoryAdapter] = useState(() => createMemoryAdapter())
-  const [raw, write] = useAdapterValue(adapterProp ?? memoryAdapter)
+  const adapter = adapterProp ?? memoryAdapter
+  const [raw, write] = useAdapterValue(adapter)
 
   const context = useMemo(() => ({ fields, registry }), [fields, registry])
   const messages = useMemo(
@@ -234,12 +236,14 @@ export function FilterProvider({
   )
 
   return (
-    <AppliedFilterContext.Provider value={appliedValue}>
-      <FilterActionsContext.Provider value={actions}>
-        <FilterDraftContext.Provider value={draftValue}>
-          {children}
-        </FilterDraftContext.Provider>
-      </FilterActionsContext.Provider>
-    </AppliedFilterContext.Provider>
+    <FilterAdapterContext.Provider value={adapter}>
+      <AppliedFilterContext.Provider value={appliedValue}>
+        <FilterActionsContext.Provider value={actions}>
+          <FilterDraftContext.Provider value={draftValue}>
+            {children}
+          </FilterDraftContext.Provider>
+        </FilterActionsContext.Provider>
+      </AppliedFilterContext.Provider>
+    </FilterAdapterContext.Provider>
   )
 }
