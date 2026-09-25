@@ -38,8 +38,15 @@ export function useAdapterValue(adapter: UrlStateAdapter) {
     (changes: ParamPatch) => {
       adapter.write(changes)
       const base = adapter.read()
-      const value = applyParamChanges(base, changes)
-      setPending(value === null ? null : { adapter, base, value })
+      // Builds on a write the adapter hasn't applied yet, so both show until it lands.
+      setPending((previous) => {
+        const from =
+          previous?.adapter === adapter && previous.base === base
+            ? previous.value
+            : base
+        const value = applyParamChanges(from, changes) ?? from
+        return value === base ? null : { adapter, base, value }
+      })
     },
     [adapter]
   )

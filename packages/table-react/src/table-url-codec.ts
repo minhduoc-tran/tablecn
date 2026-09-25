@@ -122,3 +122,8 @@ export function decodeTableParams(
 
   return { sorting, pagination: { pageIndex: page - 1, pageSize } }
 }
+
+/** For `FilterProvider`'s `onApply`: a new filter starts again at page 1. */
+export const resetPagePatch = (options: TableUrlOptions = {}): ParamPatch => ({
+  [options.params?.page ?? "page"]: null,
+})
