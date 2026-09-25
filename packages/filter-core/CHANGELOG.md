@@ -1,5 +1,11 @@
 # @querycn/filter-core
 
+## 0.2.0
+
+### Minor Changes
+
+- ecfd3c6: Export `toSearchText`, the case- and accent-insensitive text normalization `applyFilter` uses, so other packages can search rows the same way.
+
 ## 0.1.0
 
 ### Minor Changes
