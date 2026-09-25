@@ -29,17 +29,10 @@ const query = serializer(parseFilters(searchParams, { fields }), { fields })
 
 ## The example filter
 
-The outputs below all come from this filter:
+The outputs below all come from this filter, as it appears in the URL:
 
-```json
-{"and":[
-  ["status","eq","active"],
-  ["amount","between",[10,50]],
-  ["tags","in",["urgent","vip"]],
-  ["name","notContains","test"],
-  ["createdAt","isEmpty"],
-  ["paid","eq",true]
-]}
+```txt
+?status__eq=active&amount__between=10,50&tags__in=urgent,vip&name__notContains=test&createdAt__isEmpty&paid__eq=true
 ```
 
 ## jsonApiSerializer

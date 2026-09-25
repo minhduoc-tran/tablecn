@@ -36,6 +36,11 @@ import { FilterProvider } from "@querycn/filter-react"
       type: "UrlStateAdapter",
       default: "in memory",
     },
+    urlFormat: {
+      description: "How rules map to query params. See URL state.",
+      type: "UrlFormat",
+      default: "defaultUrlFormat",
+    },
     serializer: {
       description: "Builds `query` for useAppliedFilter. Built-in serializers also tell the UI which operators to offer.",
       type: "QuerySerializer",

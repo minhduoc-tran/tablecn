@@ -15,14 +15,14 @@ The filter is the first building block of tablecn, but it doesn't need the rest 
 
 - **With the ready-made UI.** Add the `filter-builder` block from the registry. You get the builder popover, rule rows, value inputs and chips, as source code in your project.
 - **With your own UI.** Use `@querycn/filter-react` hooks and render whatever you like. The hooks handle the draft, validation, the URL and the backend query.
-- **Without React.** `@querycn/filter-core` has no dependencies. Decode `?filters=` in an API route, check it against your fields, and turn it into query params, a SQL builder call or an ORM `where`.
+- **Without React.** `@querycn/filter-core` has no dependencies. Decode `?status__eq=paid` in an API route, check it against your fields, and turn it into query params, a SQL builder call or an ORM `where`.
 
 ## Features
 
 - **Seven field types**: `text`, `number`, `date`, `datetime`, `boolean`, `select`, `multiSelect`. You can [add your own](/docs/filter/customization#custom-field-types).
 - **Fifteen operators**, from `eq` and `contains` to `between`, `in` and `isEmpty`, each with a fixed value shape. You can add custom ones too.
 - **AND / OR** between rules.
-- **URL state.** The applied filter is one query param, so links are shareable and back/forward work. Adapters exist for the browser history API, react-router and the Next.js App Router.
+- **URL state.** Each applied rule is a readable query param (`?status__eq=paid`), so links are shareable and back/forward work. Adapters exist for the browser history API, react-router and the Next.js App Router.
 - **Backend serializers** for JSON:API style params, django-filter and PostgREST, plus helpers to write your own. They report rules the backend can't handle, and the UI flags them.
 - **Client-side filtering** with the same rules, accent- and case-insensitive for text.
 - **Async options** for select fields: search-as-you-type, caching, and labels resolved for values that come from a URL.
@@ -32,7 +32,7 @@ The filter is the first building block of tablecn, but it doesn't need the rest 
 ## How it works
 
 ```txt
-fields ──► draft rules ──► Apply ──► ?filters={"and":[...]} ──► applied filter
+fields ──► draft rules ──► Apply ──► ?status__eq=paid&... ────► applied filter
              (editing)                      (URL)                   │
                                                                     ├─► serializer ──► backend query
                                                                     └─► applyFilter ──► rows in the browser

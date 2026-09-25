@@ -120,12 +120,12 @@ export default async function Page(props: PageProps<"/orders">) {
 }
 ```
 
-The examples use Next.js 15.5+ types (`PageProps`, async `searchParams`); on Next.js 14, pass `props.searchParams` directly. Applying writes `?filters=…` with `router.replace`, so the page re-renders on the server with the new filter. See [Next.js](/docs/filter/nextjs) for client-only filtering, route handlers and `<Suspense>`.
+The examples use Next.js 15.5+ types (`PageProps`, async `searchParams`); on Next.js 14, pass `props.searchParams` directly. Applying writes the filter params (`?status__eq=paid`) with `router.replace`, so the page re-renders on the server with the new filter. See [Next.js](/docs/filter/nextjs) for client-only filtering, route handlers and `<Suspense>`.
 
 </Tab>
 <Tab value="Vite / plain React">
 
-`useBrowserUrlAdapter` keeps the filter in `?filters=` through the History API:
+`useBrowserUrlAdapter` keeps the filter in the query string through the History API:
 
 ```tsx title="src/orders-page.tsx"
 import { FilterProvider, useBrowserUrlAdapter } from "@querycn/filter-react"

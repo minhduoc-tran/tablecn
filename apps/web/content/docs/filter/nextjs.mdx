@@ -31,7 +31,7 @@ If a field has `loadOptions` or `resolveLabels`, it still works: the server only
 
 ## Filtering on the server
 
-The default. Applying a filter calls `router.replace` with the new `?filters=`. The page re-renders on the server and reads the filter from `searchParams`.
+The default. Applying a filter calls `router.replace` with the new filter params. The page re-renders on the server and reads the filter from `searchParams`.
 
 ```tsx title="app/orders/orders-filter.tsx"
 "use client"
@@ -106,7 +106,7 @@ export async function GET(request: NextRequest) {
   type={{
     fields: { description: "The same fields as the client.", type: "readonly FieldDefinition[]", required: true },
     registry: { description: "Needed if you use custom field types or operators.", type: "FilterRegistry" },
-    param: { description: "Query param holding the filter.", type: "string", default: '"filters"' },
+    urlFormat: { description: "Needed if the client uses a custom urlFormat.", type: "UrlFormat" },
   }}
 />
 
@@ -160,7 +160,6 @@ Takes every [`FilterProvider` prop](/docs/filter/react#filterprovider) except `a
 
 <TypeTable
   type={{
-    param: { description: "Query param holding the filter.", type: "string", default: '"filters"' },
     shallow: {
       description: "Update the URL without a server request, for data filtered in the browser.",
       type: "boolean",

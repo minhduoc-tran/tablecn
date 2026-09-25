@@ -87,7 +87,7 @@ The array order is the order of the field picker.
 
 The name is the contract between the UI, the URL and your backend:
 
-- The URL stores it: `?filters={"and":[["status","eq","paid"]]}`.
+- The URL stores it: `?status__eq=paid`.
 - Serializers use it as the key: `filter[status][eq]=paid`, `status=paid`.
 - [`applyFilter`](/docs/filter/client-filtering) reads `row[name]` by default.
 
