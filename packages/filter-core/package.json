@@ -3,6 +3,16 @@
   "version": "0.0.0",
   "description": "Framework-agnostic conditional filter engine: rules AST, URL codec, backend query serializers and client-side filtering.",
   "license": "MIT",
+  "author": "minhduoc-tran",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/minhduoc-tran/tablecn.git",
+    "directory": "packages/filter-core"
+  },
+  "homepage": "https://github.com/minhduoc-tran/tablecn#readme",
+  "bugs": {
+    "url": "https://github.com/minhduoc-tran/tablecn/issues"
+  },
   "type": "module",
   "sideEffects": false,
   "keywords": [

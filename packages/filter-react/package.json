@@ -3,6 +3,16 @@
   "version": "0.0.0",
   "description": "Headless React bindings for @querycn/filter-core: provider, hooks and URL state adapters.",
   "license": "MIT",
+  "author": "minhduoc-tran",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/minhduoc-tran/tablecn.git",
+    "directory": "packages/filter-react"
+  },
+  "homepage": "https://github.com/minhduoc-tran/tablecn#readme",
+  "bugs": {
+    "url": "https://github.com/minhduoc-tran/tablecn/issues"
+  },
   "type": "module",
   "sideEffects": false,
   "keywords": [

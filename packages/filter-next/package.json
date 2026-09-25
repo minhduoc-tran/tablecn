@@ -3,6 +3,16 @@
   "version": "0.0.0",
   "description": "Next.js App Router bindings for @querycn/filter-react: URL adapter, provider and a server-side filter parser.",
   "license": "MIT",
+  "author": "minhduoc-tran",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/minhduoc-tran/tablecn.git",
+    "directory": "packages/filter-next"
+  },
+  "homepage": "https://github.com/minhduoc-tran/tablecn#readme",
+  "bugs": {
+    "url": "https://github.com/minhduoc-tran/tablecn/issues"
+  },
   "type": "module",
   "sideEffects": false,
   "keywords": [

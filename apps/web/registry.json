@@ -9,8 +9,8 @@
       "title": "Filter Builder",
       "description": "A filter builder for data tables: field, operator and value rows applied to the URL, built on @querycn/filter-react.",
       "dependencies": [
-        "@querycn/filter-core",
-        "@querycn/filter-react",
+        "@querycn/filter-core@^0.1.0",
+        "@querycn/filter-react@^0.1.0",
         "lucide-react"
       ],
       "registryDependencies": [
