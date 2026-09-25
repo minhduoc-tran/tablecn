@@ -21,3 +21,11 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm turbo run lint typecheck test build
+      # The web build rebuilt the registry: it must match the committed one.
+      - name: Check the committed registry is up to date
+        run: |
+          if [ -n "$(git status --porcelain -- apps/web/public/r)" ]; then
+            git status --porcelain -- apps/web/public/r
+            echo "::error::apps/web/public/r is out of date. Run 'pnpm --filter web registry:build' and commit it."
+            exit 1
+          fi
