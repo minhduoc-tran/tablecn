@@ -17,7 +17,6 @@
         "badge",
         "button",
         "calendar",
-        "command",
         "input",
         "popover",
         "select"
@@ -27,6 +26,26 @@
           "path": "registry/{base}/filter/filter-builder.tsx",
           "type": "registry:component",
           "target": "@components/filter/filter-builder.tsx"
+        },
+        {
+          "path": "registry/{base}/filter/filter-builder-panel.tsx",
+          "type": "registry:component",
+          "target": "@components/filter/filter-builder-panel.tsx"
+        },
+        {
+          "path": "registry/{base}/filter/filter-join-select.tsx",
+          "type": "registry:component",
+          "target": "@components/filter/filter-join-select.tsx"
+        },
+        {
+          "path": "registry/{base}/filter/filter-rule-warnings.tsx",
+          "type": "registry:component",
+          "target": "@components/filter/filter-rule-warnings.tsx"
+        },
+        {
+          "path": "registry/{base}/filter/filter-chips.tsx",
+          "type": "registry:component",
+          "target": "@components/filter/filter-chips.tsx"
         },
         {
           "path": "registry/{base}/filter/filter-combobox.tsx",
@@ -77,9 +96,20 @@
           "path": "registry/shared/filter/filter-date-format.ts",
           "type": "registry:lib",
           "target": "@components/filter/filter-date-format.ts"
+        },
+        {
+          "path": "registry/shared/filter/filter-rule-summary.ts",
+          "type": "registry:lib",
+          "target": "@components/filter/filter-rule-summary.ts"
         }
       ],
       "bases": {
+        "radix": {
+          "registryDependencies": ["command"]
+        },
+        "base": {
+          "registryDependencies": ["command"]
+        },
         "aria": {
           "dependencies": ["react-aria-components", "@internationalized/date"]
         }

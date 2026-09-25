@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/registry/radix/ui/button"
 import { FilterFieldSelect } from "@/registry/radix/filter/filter-field-select"
 import { FilterOperatorSelect } from "@/registry/radix/filter/filter-operator-select"
+import { FilterDraftRuleWarnings } from "@/registry/radix/filter/filter-rule-warnings"
 import { FilterValueInput } from "@/registry/radix/filter/filter-value-input"
 
 export interface FilterValueSlotProps {
@@ -81,14 +82,19 @@ export const FilterRuleRow = React.memo(function FilterRuleRow({
           setValue={setValue}
         />
       )}
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        aria-label={messages.actions.removeRule}
-        onClick={remove}
-      >
-        <XIcon />
-      </Button>
+      {/* Right-aligned so remove buttons line up across rows. */}
+      <div className="ml-auto flex items-center gap-1">
+        <FilterDraftRuleWarnings rule={rule} />
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          aria-label={messages.actions.removeRule}
+          onClick={remove}
+        >
+          <XIcon />
+        </Button>
+      </div>
     </div>
   )
 })

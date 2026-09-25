@@ -12,6 +12,8 @@ export { useFilter } from "./use-filter"
 export { useFilterActions } from "./use-filter-actions"
 export { useFilterRule } from "./use-filter-rule"
 export type { FilterRuleValue, OperatorOption } from "./use-filter-rule"
+export { useRuleWarnings } from "./use-rule-warnings"
+export type { RuleWarningKey } from "./use-rule-warnings"
 export { useAppliedFilter } from "./use-applied-filter"
 export type {
   AppliedFilterValue,

@@ -43,6 +43,8 @@ export function FilterOperatorSelect({
         open.current = next
       }}
       onValueChange={(next) => {
+        // Inside a form Radix mirrors the value into a hidden <select>, which can report "".
+        if (!operators.some((o) => o.id === next && o.supported)) return
         picked.current = open.current
         onValueChange(next)
       }}

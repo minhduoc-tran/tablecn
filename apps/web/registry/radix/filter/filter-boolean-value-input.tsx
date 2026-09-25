@@ -21,7 +21,10 @@ export function BooleanValueInput({
   return (
     <Select
       value={typeof rule.value === "boolean" ? String(rule.value) : ""}
-      onValueChange={(next) => setValue(next === "true")}
+      onValueChange={(next) => {
+        // Inside a form Radix mirrors the value into a hidden <select>, which can report "".
+        if (next === "true" || next === "false") setValue(next === "true")
+      }}
     >
       <SelectTrigger
         id={id}
