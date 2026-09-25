@@ -30,6 +30,11 @@
           "target": "@components/filter/filter-builder.tsx"
         },
         {
+          "path": "registry/{base}/filter/filter-combobox.tsx",
+          "type": "registry:component",
+          "target": "@components/filter/filter-combobox.tsx"
+        },
+        {
           "path": "registry/{base}/filter/filter-field-select.tsx",
           "type": "registry:component",
           "target": "@components/filter/filter-field-select.tsx"
@@ -43,6 +48,26 @@
           "path": "registry/{base}/filter/filter-rule-row.tsx",
           "type": "registry:component",
           "target": "@components/filter/filter-rule-row.tsx"
+        },
+        {
+          "path": "registry/{base}/filter/filter-value-input.tsx",
+          "type": "registry:component",
+          "target": "@components/filter/filter-value-input.tsx"
+        },
+        {
+          "path": "registry/{base}/filter/filter-text-value-input.tsx",
+          "type": "registry:component",
+          "target": "@components/filter/filter-text-value-input.tsx"
+        },
+        {
+          "path": "registry/{base}/filter/filter-boolean-value-input.tsx",
+          "type": "registry:component",
+          "target": "@components/filter/filter-boolean-value-input.tsx"
+        },
+        {
+          "path": "registry/{base}/filter/filter-select-value-input.tsx",
+          "type": "registry:component",
+          "target": "@components/filter/filter-select-value-input.tsx"
         }
       ],
       "bases": {

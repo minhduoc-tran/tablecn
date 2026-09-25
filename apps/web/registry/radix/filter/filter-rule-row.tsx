@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/registry/radix/ui/button"
 import { FilterFieldSelect } from "@/registry/radix/filter/filter-field-select"
 import { FilterOperatorSelect } from "@/registry/radix/filter/filter-operator-select"
+import { FilterValueInput } from "@/registry/radix/filter/filter-value-input"
 
 export interface FilterValueSlotProps {
   /** Put on the first focusable element; it gets focus after an operator is picked. */
@@ -26,14 +27,17 @@ export interface FilterValueSlotProps {
 
 export interface FilterRuleRowProps {
   rule: FilterRule
-  /** A component, not a render function, so the memoized row keeps its props stable. */
+  /**
+   * Defaults to `FilterValueInput`. A component, not a render function, so the
+   * memoized row keeps its props stable.
+   */
   valueInput?: React.ComponentType<FilterValueSlotProps>
   className?: string
 }
 
 export const FilterRuleRow = React.memo(function FilterRuleRow({
   rule,
-  valueInput: ValueInput,
+  valueInput: ValueInput = FilterValueInput,
   className,
 }: FilterRuleRowProps) {
   const { messages } = useFilterActions()
@@ -66,8 +70,10 @@ export const FilterRuleRow = React.memo(function FilterRuleRow({
         focusAfterSelect={valueId}
         disabled={!field}
       />
-      {ValueInput && field && arity && arity !== "none" && (
+      {field && arity && arity !== "none" && (
+        // Keyed so a new field starts with fresh input state (search, loaded options).
         <ValueInput
+          key={field.name}
           id={valueId}
           rule={rule}
           field={field}

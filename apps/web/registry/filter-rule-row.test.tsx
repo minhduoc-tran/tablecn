@@ -38,6 +38,15 @@ const withoutEq: QuerySerializer<unknown> = Object.assign(
 
 const url = (...rules: unknown[]) => JSON.stringify({ and: rules })
 
+// Popups move focus to their search input a frame after opening; type once it's there.
+async function typeInSearch(
+  user: ReturnType<typeof userEvent.setup>,
+  text: string
+) {
+  await waitFor(() => expect(document.activeElement?.tagName).toBe("INPUT"))
+  await user.keyboard(text)
+}
+
 // The trigger role differs: a combobox button for Radix and Base UI, a plain button for React Aria.
 const BASES: [string, ComponentType<FilterRuleRowProps>, string][] = [
   ["radix", RadixRuleRow, "combobox"],
@@ -94,7 +103,7 @@ describe.each(BASES)("%s FilterRuleRow", (_, Row, triggerRole) => {
       (await screen.findAllByRole("option")).map((o) => o.textContent)
     ).toEqual(["Name", "Amount", "Thành phố"])
 
-    await user.keyboard("thanh")
+    await typeInSearch(user, "thanh")
     await waitFor(() =>
       expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual([
         "Thành phố",
