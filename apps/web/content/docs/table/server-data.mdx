@@ -1,0 +1,211 @@
+---
+title: Server data
+description: Client mode for rows already in the browser, server mode for a backend that filters, sorts and pages.
+---
+
+`useDataTable` has two modes. They differ in who does the work: the browser, or your backend.
+
+| | Client mode (default) | Server mode |
+| --- | --- | --- |
+| `data` | every row | one page, already filtered and sorted |
+| Filter, sort, pages | run in the browser | done by the backend |
+| Row count | `data.length` after filtering | `rowCount` from the backend |
+| Use it for | up to a few thousand rows | anything bigger, or data you can't send whole |
+
+## Client mode
+
+Pass every row. The applied filter runs on them with [`applyFilter`](/docs/filter/client-filtering), then TanStack Table sorts and pages:
+
+```tsx title="components/orders-table.tsx"
+"use client"
+
+import { useDataTable } from "@querycn/table-react"
+
+export function OrdersTable({ orders }: { orders: Order[] }) {
+  const table = useDataTable({
+    data: orders,
+    columns: orderColumns,
+    getRowId: (order) => order.id,
+  })
+  // render <DataTable table={table} />…
+}
+```
+
+`data` must keep its identity between renders (state, a query result, a `useMemo`), as for any TanStack table.
+
+By default a filter field reads `row[field.name]`. When a field's name isn't a key of the row (nested data, a computed value), pass `getFilterValue`:
+
+```tsx title="Nested values"
+const getFilterValue = (order: Order, field: FieldDefinition) =>
+  field.name === "customer" ? order.customer.name : order[field.name as keyof Order]
+
+useDataTable({ data: orders, columns, getRowId, getFilterValue })
+```
+
+Keep `getFilterValue` stable too: define it at module level or wrap it in `useCallback`. A new function each render filters the rows again each render.
+
+## Server mode
+
+With `mode: "server"`, `data` is the current page and `rowCount` is the total across pages. `rowCount` is `undefined` while it's unknown, such as during the first fetch. The pagination then shows the page without a total, and a full page means another one may follow.
+
+The table needs to know what to fetch before it can render the result. `useTableQuery` reads the filter, sort and page from the URL and turns them into your backend's params. Call it first, fetch, then pass the rows to `useDataTable`.
+
+```tsx title="app/orders/orders-page.tsx"
+"use client"
+
+import { djangoSerializer } from "@querycn/filter-core"
+import { NextFilterProvider } from "@querycn/filter-next"
+import { resetPagePatch } from "@querycn/table-react"
+
+const filterSerializer = djangoSerializer()
+
+export function OrdersPage() {
+  return (
+    <NextFilterProvider
+      fields={orderFields}
+      serializer={filterSerializer}
+      onApply={() => resetPagePatch()}
+    >
+      <OrdersTable />
+    </NextFilterProvider>
+  )
+}
+```
+
+```tsx title="app/orders/orders-table.tsx"
+"use client"
+
+import { toSearchParams } from "@querycn/filter-core"
+import { djangoTableParams, useDataTable, useTableQuery } from "@querycn/table-react"
+import { keepPreviousData, useQuery } from "@tanstack/react-query"
+
+import { DataTable } from "@/components/data-table/data-table"
+import { DataTablePagination } from "@/components/data-table/data-table-pagination"
+
+const tableParams = djangoTableParams()
+const NO_ORDERS: Order[] = []
+
+export function OrdersTable() {
+  const { params, queryKey } = useTableQuery({ columns: orderColumns, serializer: tableParams })
+  const orders = useQuery({
+    queryKey: ["orders", queryKey],
+    queryFn: () => fetch(`/api/orders?${toSearchParams(params)}`).then((r) => r.json()),
+    placeholderData: keepPreviousData,
+  })
+
+  const table = useDataTable({
+    mode: "server",
+    columns: orderColumns,
+    data: orders.data?.results ?? NO_ORDERS,
+    rowCount: orders.data?.count,
+    getRowId: (order) => order.id,
+  })
+
+  return (
+    <>
+      <DataTable
+        table={table}
+        isLoading={orders.isFetching}
+        isError={orders.isError}
+        onRetry={() => orders.refetch()}
+      />
+      <DataTablePagination table={table} />
+    </>
+  )
+}
+```
+
+- `NO_ORDERS` is a module constant: `?? []` inline would be a new array on every render.
+- `keepPreviousData` keeps the old page on screen while the next one loads. `isLoading` shows skeleton rows when there are none yet, and dims the old rows otherwise.
+- Pass `useTableQuery` the same `columns` and `url` as `useDataTable`, so both read the URL the same way.
+- The provider's serializer must return query params (`djangoSerializer`, `jsonApiSerializer`, `postgrestSerializer` all do). `useTableQuery` throws if it gets something else, such as a request body.
+- Without a `FilterProvider`, pass the table's `adapter` to both hooks.
+
+`queryKey` is a string that changes only when the filter, sort or page does. Use it as the react-query or SWR key.
+
+## Sort and page params
+
+The table's part of the request comes from a `TableParamsSerializer`. Three presets are included:
+
+| Preset | Output for sort `-amount,name`, page 2 of 20 |
+| --- | --- |
+| `jsonApiTableParams()` | `sort=-amount,name&page[number]=2&page[size]=20` |
+| `djangoTableParams()` | `ordering=-amount,name&page=2&page_size=20` |
+| `postgrestTableParams()` | `order=amount.desc,name.asc&limit=20&offset=20` |
+
+`djangoTableParams` takes `orderingParam`, `pageParam` and `pageSizeParam`, to match your DRF `OrderingFilter` and pagination class. PostgREST returns the total in `Content-Range` when you send the `Prefer: count=exact` header.
+
+All three take `sortField`, for when column ids aren't the backend's field names:
+
+```ts title="Field names"
+const tableParams = djangoTableParams({
+  sortField: (columnId) => columnId.replaceAll("_", "__"), // customer_name → customer__name
+})
+```
+
+### Your own
+
+A serializer is a function from the table's URL state to query params:
+
+```ts title="lib/table-params.ts"
+import type { TableParamsSerializer } from "@querycn/table-react"
+
+export const tableParams: TableParamsSerializer = ({ sorting, pagination }) => ({
+  ...(sorting.length > 0 && {
+    sortBy: sorting.map((s) => s.id).join(","),
+    sortDir: sorting.map((s) => (s.desc ? "desc" : "asc")).join(","),
+  }),
+  skip: String(pagination.pageIndex * pagination.pageSize),
+  take: String(pagination.pageSize),
+})
+```
+
+Create it once, outside the component.
+
+## Rendering on the server
+
+In a Next.js server component, read the same URL with the server entry points and fetch before the page renders.
+
+Column definitions usually live in a client module (cells render JSX, and `createSelectionColumn` is a client component), so the server can't call `tableUrlOptions(columns)`. Put the URL options in a plain module instead, with the ids users may sort by, and give the same object to both sides:
+
+```ts title="lib/order-table-url.ts"
+import type { TableUrlOptions } from "@querycn/table-react/server"
+
+export const orderTableUrl: TableUrlOptions = {
+  sortableColumns: ["customer", "status", "amount", "createdAt"],
+  defaultSorting: [{ id: "createdAt", desc: true }],
+}
+```
+
+```tsx title="app/orders/page.tsx"
+import { djangoSerializer } from "@querycn/filter-core"
+import { parseFilters } from "@querycn/filter-next/server"
+import { djangoTableParams, parseTableParams } from "@querycn/table-react/server"
+
+import { orderFields } from "@/lib/order-fields"
+import { orderTableUrl } from "@/lib/order-table-url"
+
+export default async function Page(props: PageProps<"/orders">) {
+  const searchParams = await props.searchParams
+  const filter = parseFilters(searchParams, { fields: orderFields })
+  const table = parseTableParams(searchParams, orderTableUrl)
+
+  const params = {
+    ...djangoSerializer()(filter, { fields: orderFields }),
+    ...djangoTableParams()(table),
+  }
+  const orders = await getOrders(params) // your data access
+  // pass orders.results and orders.count to a client component with useDataTable
+}
+```
+
+On the client, pass `url={orderTableUrl}` to `useDataTable` (and to `useTableQuery`). `parseTableParams` decodes exactly as the client does, so the first render matches after hydration. When the page reads `searchParams` like this, leave `shallow` off the `NextFilterProvider`, so a new filter, sort or page asks the server for new rows.
+
+## Selection
+
+Row selection holds within one page. It clears when the page, sort or filter changes, since the selected rows may no longer be on screen. `getRowId` keeps the selection across refetches of the same page.
+
+<Cards>
+  <Card title="Components" href="/docs/table/components" description="DataTable, pagination, toolbar and their props." />
+  <Card title="Filter serializers" href="/docs/filter/serializers" description="The filter's part of the request." />
+</Cards>

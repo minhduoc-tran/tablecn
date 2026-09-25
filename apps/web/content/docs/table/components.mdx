@@ -1,0 +1,202 @@
+---
+title: Components
+description: The data-table block — what's in it, its props, and how the pieces fit.
+---
+
+The `data-table` registry block is the UI from the [preview](/docs/table). It's copied into your project (see [Installation](/docs/table/installation)), so every file is yours to edit. The Radix UI, Base UI and React Aria versions have the same files and props.
+
+Every component takes the `table` returned by [`useDataTable`](/docs/table/installation). They don't need a provider, and they don't depend on the filter: without a `FilterProvider`, the filter parts simply don't show.
+
+## Usage
+
+```tsx title="components/orders-table.tsx"
+"use client"
+
+import { FilterProvider, useBrowserUrlAdapter } from "@querycn/filter-react"
+import { resetPagePatch, useDataTable } from "@querycn/table-react"
+
+import { DataTable } from "@/components/data-table/data-table"
+import { DataTablePagination } from "@/components/data-table/data-table-pagination"
+import { DataTableToolbar } from "@/components/data-table/data-table-toolbar"
+import { FilterBuilder } from "@/components/filter/filter-builder"
+import { FilterChips } from "@/components/filter/filter-chips"
+
+export function OrdersPage({ orders }: { orders: Order[] }) {
+  const adapter = useBrowserUrlAdapter()
+  return (
+    // A new filter starts again at page 1.
+    <FilterProvider fields={orderFields} adapter={adapter} onApply={() => resetPagePatch()}>
+      <OrdersTable orders={orders} />
+    </FilterProvider>
+  )
+}
+
+function OrdersTable({ orders }: { orders: Order[] }) {
+  const table = useDataTable({
+    data: orders,
+    columns,
+    getRowId: (order) => order.id,
+    storageKey: "orders-table",
+  })
+
+  return (
+    <div className="flex flex-col gap-3">
+      <DataTableToolbar
+        table={table}
+        selectionActions={(rows) => <DeleteOrders ids={rows.map((row) => row.id)} />}
+      >
+        <FilterBuilder />
+        <FilterChips />
+      </DataTableToolbar>
+      <DataTable table={table} className="max-h-[600px]" />
+      <DataTablePagination table={table} />
+    </div>
+  )
+}
+```
+
+The table reads the filter, sort and page from the same adapter, so one URL holds all of them: `?status__eq=paid&sort=-amount&page=2`.
+
+## DataTable
+
+The table itself: sticky header, pinned columns, sortable, resizable and reorderable headers, and the loading, empty and error states.
+
+<TypeTable
+  type={{
+    table: { description: "From useDataTable.", type: "DataTableInstance<TData>", required: true },
+    isLoading: {
+      description: "Skeleton rows while there are no rows yet; with rows, dims them while they reload.",
+      type: "boolean",
+      default: "false",
+    },
+    isError: { description: "Shows the error state instead of the rows.", type: "boolean", default: "false" },
+    onRetry: { description: "Adds a Retry button to the default error state.", type: "() => void" },
+    onRowClick: {
+      description: "A click on a row. Clicks on controls inside it (buttons, links, checkboxes, menus), the clicks of a double click and text selection don't count.",
+      type: "(row, event: React.MouseEvent) => void",
+    },
+    onRowDoubleClick: { description: "A double click on a row, outside its controls.", type: "(row, event: React.MouseEvent) => void" },
+    rowClassName: { description: "Classes per row.", type: "(row) => string | undefined" },
+    emptyState: { description: "Replaces the \"No results.\" message.", type: "React.ReactNode" },
+    errorState: { description: "Replaces the default error state.", type: "React.ReactNode" },
+    messages: { description: "See Customization.", type: "TableMessages", default: "enTableMessages" },
+    skeletonRows: { description: "How many skeleton rows the first load shows.", type: "number", default: "5" },
+    virtualize: { description: "Renders only the rows in view. See Virtualization.", type: "boolean", default: "false" },
+    estimateRowHeight: { description: "A row's height before it's measured, with virtualize.", type: "number", default: "37" },
+    className: { description: "Classes for the scroll container, e.g. its height.", type: "string" },
+  }}
+/>
+
+The table scrolls inside its own container. Give it a height (`className="max-h-[600px]"`) and the header stays in view while the rows scroll. The container scrolls back to the top when the sort, page or filter changes. Other `div` props (`id`, `aria-label`…) go to the container.
+
+The header cells are rendered for you (`DataTableColumnHeader`, one per column):
+
+- **Click** a sortable header to sort: ascending, descending, then off. <kbd>Shift</kbd>+click adds the column to the sort, and a small number shows its place.
+- **Drag** a header to reorder; the grip appears when it has keyboard focus.
+- **Drag** the header's end edge to resize, or double-click it to fit the content. See [Layout & persistence](/docs/table/layout).
+- `meta.required` adds a red `*` after the title. See [Columns](/docs/table/columns).
+
+## createSelectionColumn
+
+A checkbox column for row selection. The header checkbox selects the rows of the page:
+
+```tsx title="Selection column"
+import { createSelectionColumn } from "@/components/data-table/data-table-selection-column"
+
+const columns = [createSelectionColumn<Order>(), helper.accessor("customer", { header: "Customer" })]
+```
+
+It's pinned to the start and can't be hidden, sorted, resized or moved. Pass `messages` (the `selection` group) to translate its labels. Selection holds within one page: it clears when the page, sort or filter changes. Limit which rows can be selected with `enableRowSelection` in `useDataTable`.
+
+## DataTablePagination
+
+The row count, a rows-per-page picker and page buttons. It renders nothing while there are no rows.
+
+<TypeTable
+  type={{
+    table: { description: "From useDataTable.", type: "DataTableInstance<TData>", required: true },
+    messages: { description: "See Customization.", type: "TableMessages", default: "enTableMessages" },
+    slots: { description: "Page buttons between the arrows, ellipses included.", type: "number", default: "7" },
+    className: { description: "Classes for the bar.", type: "string" },
+  }}
+/>
+
+- **Count**: "1,234 rows", or "3 of 20 selected" while rows on the page are selected.
+- **Rows per page** offers the table's `pageSizes` (see [URL state](/docs/table/url-state)), and hides when every size would show every row.
+- **Pages**: first, previous, numbered pages with ellipses, next, last. In server mode, before the backend sends a total, only previous and next show; a full page is taken as a sign that another one follows.
+
+## DataTableViewOptions
+
+The **Columns** button. Its popover lists the columns (hidden ones too) with a checkbox to show or hide each, a grip to reorder, and a **⋯** menu per column: pin to the start or end, unpin, fit to content, and a color. Under the list: **Fit all columns** and **Reset layout**.
+
+<TypeTable
+  type={{
+    table: { description: "From useDataTable.", type: "DataTableInstance<TData>", required: true },
+    messages: { description: "See Customization.", type: "TableMessages", default: "enTableMessages" },
+    className: { description: "Classes for the trigger button.", type: "string" },
+  }}
+/>
+
+`DataTableToolbar` includes it. Render it yourself when you don't use the toolbar.
+
+## DataTableToolbar
+
+Above the table: your controls on the left; **Clear filters**, reload and **Columns** on the right; and under them, the selection bar while rows are selected.
+
+<TypeTable
+  type={{
+    table: { description: "From useDataTable.", type: "DataTableInstance<TData>", required: true },
+    children: { description: "Your controls: a search box, FilterBuilder, FilterChips…", type: "React.ReactNode" },
+    onRefresh: { description: "Shows a reload button.", type: "() => void" },
+    isRefreshing: {
+      description: "Spins the reload icon and ignores presses; the button stays focusable.",
+      type: "boolean",
+      default: "false",
+    },
+    selectionActions: {
+      description: "Actions for the selected rows, shown in the selection bar.",
+      type: "(rows: DataTableRow<TData>[]) => React.ReactNode",
+    },
+    messages: { description: "See Customization.", type: "TableMessages", default: "enTableMessages" },
+    className: { description: "Classes for the toolbar.", type: "string" },
+  }}
+/>
+
+## DataTableResetFiltersButton
+
+**Clear filters**: clears the applied filter in one step. It only shows while a filter applies, so it's hidden outside a `FilterProvider`. Props: `messages`, `className`.
+
+It doesn't touch the page itself. Pass `onApply={() => resetPagePatch()}` to the `FilterProvider`, as in [Usage](#usage): clearing is a filter change like any other, and the page param is removed in the same URL update.
+
+## DataTableSelectionBar
+
+The selected rows' count, your actions, and **Clear selection**. It renders nothing while no row is selected. It only counts the selected rows of the page, so actions never receive a row the user can't see.
+
+<TypeTable
+  type={{
+    table: { description: "From useDataTable.", type: "DataTableInstance<TData>", required: true },
+    actions: {
+      description: "What can be done with the selected rows, e.g. a delete button.",
+      type: "(rows: DataTableRow<TData>[]) => React.ReactNode",
+    },
+    messages: { description: "See Customization.", type: "TableMessages", default: "enTableMessages" },
+    className: { description: "Classes for the bar.", type: "string" },
+  }}
+/>
+
+`row.original` is the row's data, `row.id` its id from `getRowId`.
+
+## Keyboard and accessibility
+
+- **Headers** have `aria-sort`. To move a column from the keyboard, focus its grip (in the header or the **Columns** list), press <kbd>Space</kbd> or <kbd>Enter</kbd>, move with the arrow keys, and press <kbd>Space</kbd> again; <kbd>Esc</kbd> cancels. Each step is announced.
+- **Resize handles** are focusable separators: <kbd>←</kbd> / <kbd>→</kbd> resize, <kbd>Shift</kbd> for bigger steps.
+- **Pagination**: moving to the first or last page disables the button that did it; focus moves to the current page's button instead of falling to the page.
+- **Toolbar**: when a control that has focus goes away (**Clear filters**, **Clear selection**, an action that deletes the selected rows), focus moves to the toolbar.
+- **Reload** stays focusable while `isRefreshing`, marked as disabled.
+- **Selection checkboxes** are labelled "Select all" and "Select row".
+- With `virtualize`, the table has `aria-rowcount` and each row `aria-rowindex`, so screen readers count every row of the page.
+
+<Cards>
+  <Card title="Customization" href="/docs/table/customization" description="Messages, the Vietnamese locale and restyling." />
+  <Card title="Layout & persistence" href="/docs/table/layout" description="What the Columns menu changes, and how it's saved." />
+</Cards>

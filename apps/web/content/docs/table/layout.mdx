@@ -1,0 +1,134 @@
+---
+title: Layout & persistence
+description: Hide, reorder, pin, resize and color columns, and keep the layout across visits.
+---
+
+Users can arrange the columns of a `useDataTable` table the way they work, and get the same arrangement back on their next visit. The layout is separate from the [URL state](/docs/table/url-state): sort and page belong to a link, the layout belongs to a user's browser.
+
+## What users can change
+
+| Change | Where |
+| --- | --- |
+| Show or hide a column | The checkboxes in the **Columns** menu |
+| Reorder | Drag a header, or the grip in the **Columns** menu. From the keyboard, focus the grip and use <kbd>Space</kbd>, the arrow keys and <kbd>Space</kbd> again (<kbd>Esc</kbd> cancels). |
+| Pin to the start or the end | A column's **⋯** menu in the **Columns** menu |
+| Resize | Drag the edge of a header, or focus it and use <kbd>←</kbd> / <kbd>→</kbd> (<kbd>Shift</kbd> for bigger steps) |
+| Fit a column to its content | Double-click the edge of a header, or **Fit to content** in the column's menu |
+| Fit every column | **Fit all columns** in the **Columns** menu |
+| Color a column | **Color** in the column's menu: eight presets or a custom color |
+| Go back to the defaults | **Reset layout** in the **Columns** menu |
+
+Pinned columns stay in view while the rest scroll sideways, with a shadow on the edge once something scrolls under them. A later pin sits next to the scrolling columns, so columns pinned for good (like the selection column) keep the outer edge.
+
+Column definitions decide what's allowed. `enableHiding: false`, `enablePinning: false`, `enableResizing: false` and `meta.enableOrdering: false` each lock one part. A column that can't be hidden, pinned or reordered (like the selection column) isn't listed in the **Columns** menu. `size`, `minSize` and `maxSize` bound the width. See [Columns](/docs/table/columns).
+
+## Saving the layout
+
+Give the table a `storageKey` and the layout is saved to `localStorage` on every change:
+
+```tsx title="components/orders-table.tsx"
+const table = useDataTable({
+  data,
+  columns,
+  getRowId: (order) => order.id,
+  storageKey: "orders-table",
+})
+```
+
+Without a `storageKey`, the layout lasts until the table unmounts.
+
+<TypeTable
+  type={{
+    storageKey: {
+      description: "Saves the layout under this key. Use one key per table.",
+      type: "string",
+    },
+    layoutVersion: {
+      description: "Bump it when saved layouts no longer fit the columns; layouts saved under another version are ignored.",
+      type: "number",
+      default: "0",
+    },
+    layoutStorage: {
+      description: "Where to save. Pass a stable object, such as sessionStorage or your own getItem/setItem/removeItem. Tabs stay in sync only with localStorage or sessionStorage itself.",
+      type: "Pick<Storage, \"getItem\" | \"setItem\" | \"removeItem\">",
+      default: "localStorage",
+    },
+  }}
+/>
+
+What's saved: column visibility, order, pinning, widths and colors. Tables using the same key stay in sync, in this tab and in others.
+
+### When the columns change
+
+A saved layout is read against the current column definitions, so you can ship new columns without breaking anyone's layout:
+
+- **New columns** get their defaults (hidden or pinned from `meta`) and go at the end of the order.
+- **Removed columns** are dropped from the saved layout.
+- **Columns users can't change** (`enableHiding: false`, `enablePinning: false`) keep what the definitions say.
+- **Anything unreadable** (hand-edited JSON, a wrong shape, a layout from another `layoutVersion`) gives the defaults.
+
+Bump `layoutVersion` when a saved layout would be wrong rather than outdated, for example after renaming column ids.
+
+If the browser refuses to store (quota, privacy mode), changes still apply for the page's lifetime.
+
+### Server rendering
+
+The server has no `localStorage`, so the server render and the first client render both use the column definitions. The saved layout applies right after hydration, with no hydration mismatch. If the flash of the default layout matters, render the table on the client only.
+
+## Resetting
+
+**Reset layout** calls `table.options.meta.resetLayout()`. It goes back to the column definitions and removes the saved layout, so later changes to your definitions apply again:
+
+```tsx title="Your own reset button"
+<Button variant="ghost" onClick={() => table.options.meta?.resetLayout()}>
+  Reset layout
+</Button>
+```
+
+<Callout title="Use resetLayout, not TanStack's reset methods" type="warn">
+  TanStack Table reads `initialState` once, on the first render. `table.resetColumnOrder()`, `resetColumnVisibility()` and the like go back to the columns of that first render, and they don't clear the saved layout. `meta.resetLayout()` always uses the current definitions.
+</Callout>
+
+## Column colors
+
+Colors are TanStack Table state, added by `columnColorFeature` (part of `dataTableFeatures`):
+
+```ts title="Column colors"
+column.getColor() // "blue", "#ff8800", or undefined
+column.setColor("blue")
+column.setColor(undefined) // removes it
+table.setColumnColors({ amount: "green" })
+table.resetColumnColors(true) // no colors
+```
+
+A color is a preset name (`red`, `orange`, `amber`, `green`, `teal`, `blue`, `violet`, `pink`) or a CSS color. Presets are mid-tone `oklch()` values that read in light and dark themes; change them in `column-color-palette.ts` in your copy.
+
+Cells don't take the color as their background. They get a `--column-color` CSS variable, and the cell classes layer a light tint of it over the cell's own background, so hover, selection and pinned cells still look right. Saved colors come back from storage, so only plain color syntax (hex, names, `rgb()`, `hsl()`, `oklch()`…) reaches a style; anything else is ignored.
+
+## Right-to-left
+
+Pass `dir: "rtl"` to `useDataTable` in right-to-left layouts. Resizing then follows the pointer, and <kbd>←</kbd> / <kbd>→</kbd> on a resize handle still widen the column away from it. Pinning uses `start` and `end`, so pinned columns and their shadows flip with the page.
+
+## Without useDataTable
+
+`useTableLayout` is the hook `useDataTable` uses. It returns the layout as controlled TanStack state, for a table you set up yourself:
+
+```tsx title="useTableLayout"
+import { useTableLayout } from "@querycn/table-react"
+
+const layout = useTableLayout({ columns, storageKey: "orders-table", version: 1 })
+
+const table = useTable({
+  // …
+  state: { ...layout.state },
+  ...layout.handlers,
+})
+// layout.reset() goes back to the defaults
+```
+
+Add `columnColorFeature` to your table's features for `columnColors` to work.
+
+<Cards>
+  <Card title="Columns" href="/docs/table/columns" description="Column definitions and the meta keys the layout reads." />
+  <Card title="Components" href="/docs/table/components" description="The Columns menu, headers and the rest of the UI." />
+</Cards>

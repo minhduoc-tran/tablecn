@@ -1,0 +1,14 @@
+{
+  "title": "Table",
+  "pages": [
+    "index",
+    "installation",
+    "columns",
+    "url-state",
+    "server-data",
+    "layout",
+    "virtualization",
+    "components",
+    "customization"
+  ]
+}

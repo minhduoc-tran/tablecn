@@ -1,0 +1,129 @@
+---
+title: Customization
+description: Translate the table UI and restyle it.
+---
+
+## Messages and locales
+
+Every string the table UI shows comes from a `TableMessages` object. English (`enTableMessages`) is the default. Each component takes a `messages` prop:
+
+```tsx title="Vietnamese"
+import { viTableMessages } from "@querycn/table-react/locales/vi"
+
+<DataTableToolbar table={table} messages={viTableMessages}>…</DataTableToolbar>
+<DataTable table={table} messages={viTableMessages} />
+<DataTablePagination table={table} messages={viTableMessages} />
+```
+
+The selection column's labels are part of its definition, so pass them where you build the columns:
+
+```ts title="Selection column"
+const columns = [createSelectionColumn<Order>(viTableMessages), …]
+```
+
+`DataTable` passes its `messages` on to the headers. `DataTableToolbar` passes them to **Clear filters**, **Columns** and the selection bar; render those on their own and give them `messages` too.
+
+Column headers are part of your column definitions, so translate them where you define the columns. The filter has its own messages: see [filter customization](/docs/filter/customization).
+
+### Overriding some messages
+
+`mergeTableMessages` merges overrides group by group, so you only list what changes:
+
+```ts title="lib/table-messages.ts"
+import { enTableMessages, mergeTableMessages } from "@querycn/table-react"
+
+export const tableMessages = mergeTableMessages(enTableMessages, {
+  states: { empty: "No orders yet." },
+  actions: { reload: "Refresh" },
+  counts: { rows: (count) => `${count} orders` },
+})
+```
+
+Keep the result at module scope (or in `useMemo`) and pass it to every component.
+
+| Group | Contains |
+| --- | --- |
+| `columns` | The **Columns** menu: `menu`, `hide` (unused by the built-in UI), `pinStart`, `pinEnd`, `unpin`, `color`, `noColor`, `customColor`, `fitContent`, `fitAll`, `resetLayout`, and `options(column)`, the name of a column's own menu. |
+| `colors` | Names of the preset colors: `red`, `orange`, `amber`, `green`, `teal`, `blue`, `violet`, `pink`. |
+| `sorting` | `asc`, `desc`, `clear`. The built-in headers don't use them; they're there for your own sort controls. |
+| `pagination` | `label` (the nav's name), `rowsPerPage`, `first`, `previous`, `next`, `last`, `morePages`. |
+| `selection` | `selectAll`, `selectRow`, `clear`. |
+| `actions` | `reload`, `clearFilters`, `retry`. |
+| `states` | `empty`, `error`, `loading`. |
+| `header` | Names of the header controls, `move(column)` and `resize(column)`, and what screen readers hear while a column moves: `instructions`, `pickedUp`, `movedTo`, `dropped`, `cancelled`. |
+| `counts` | Functions: `number(value)`, `page(page, pageCount)`, `selected(selected, total)`, `rows(count)`. |
+
+### Numbers
+
+`counts.number` formats the numbers shown on their own: page buttons and page sizes. The other `counts` functions format their numbers inside the sentence. The built-in locales use `Intl.NumberFormat` (`1,234` in English, `1.234` in Vietnamese). To format for the user's locale instead:
+
+```ts title="Locale-aware numbers"
+const format = new Intl.NumberFormat(navigator.language).format
+
+mergeTableMessages(enTableMessages, {
+  counts: {
+    number: format,
+    rows: (count) => (count === 1 ? "1 row" : `${format(count)} rows`),
+  },
+})
+```
+
+`page(page, pageCount)` gets `pageCount` as `undefined` while a server-mode table doesn't know the total yet: "Page 3" rather than "Page 3 of 12".
+
+### Another language
+
+Write a complete `TableMessages` object; TypeScript lists every key you still need. Start from `packages/table-react/src/locales/en.ts` in the repository.
+
+```ts title="lib/table-messages-fr.ts"
+import type { TableMessages } from "@querycn/table-react"
+
+export const frTableMessages: TableMessages = {
+  states: { empty: "Aucun résultat.", error: "Une erreur est survenue.", loading: "Chargement…" },
+  // …every other group
+}
+```
+
+## Restyling
+
+The block is source code in your project, so change anything. A few places to start:
+
+| File | What it holds |
+| --- | --- |
+| `data-table-cell-classes.ts` | `pinnedCellClassName` (every cell: pinned backgrounds, the shadow on the pinned edge, the column color tint) and `headerCellClassName` (the header's bottom border). |
+| `column-color-palette.ts` | The preset colors, and which custom colors are accepted. |
+| `data-table.tsx` | The scroll container, the table and the sticky header. |
+| `data-table-body.tsx` | Rows, skeleton rows, and the empty and error states. |
+
+### Data attributes
+
+Style states from the outside with the `data-*` attributes the components set:
+
+| Attribute | On | Meaning |
+| --- | --- | --- |
+| `data-slot` | Parts | `data-table` (the scroll container), `data-table-toolbar`, `data-table-selection-bar`, `data-table-pagination`, `data-table-resize-handle` |
+| `data-scroll-start`, `data-scroll-end` | `data-table` | Columns are scrolled out of view at that side: the pinned edge shows a shadow. |
+| `data-column-id` | Header and body cells | The column's id: style one column. |
+| `data-pinned`, `data-pinned-edge` | Cells | `start` or `end`; the edge one is the innermost pinned column on that side. |
+| `data-state="selected"` | Rows | The row is selected. |
+| `data-dragging`, `data-resizing` | Header cells, resize handles | While a column moves or resizes. |
+
+```css title="globals.css"
+/* Line up the digits of the amount column */
+[data-slot="data-table"] td[data-column-id="amount"] {
+  font-variant-numeric: tabular-nums;
+}
+```
+
+For per-row styles, use `rowClassName` on `DataTable`; for a cell's content, render what you need in the column's `cell`.
+
+### Flavours
+
+The three versions differ only in their primitives, so the same changes apply:
+
+- **Radix UI** and **Base UI** render the **Columns** list in a `Popover` and the column menu in a `DropdownMenu` from your shadcn components.
+- **React Aria** uses `react-aria-components` (`Popover` with a `Dialog`, `Menu`), and its buttons take `onPress` rather than `onClick`. Its **Columns** popover is modal, so the rest of the page is hidden from screen readers while it's open.
+
+<Cards>
+  <Card title="Components" href="/docs/table/components" description="Every component and its props." />
+  <Card title="Filter customization" href="/docs/filter/customization" description="Translating and extending the filter." />
+</Cards>
