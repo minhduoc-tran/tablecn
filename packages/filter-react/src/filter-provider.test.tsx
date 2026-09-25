@@ -1,4 +1,8 @@
-import { djangoSerializer, type QuerySerializer } from "@querycn/filter-core"
+import {
+  djangoSerializer,
+  type QuerySerializer,
+  type UrlFormat,
+} from "@querycn/filter-core"
 import { act, cleanup, render, renderHook } from "@testing-library/react"
 import type { ReactNode } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
@@ -35,12 +39,12 @@ describe("FilterProvider", () => {
     addRule(result, "status", "active")
     act(() => result.current.draft.addRule())
 
-    expect(adapter.read()).toBeNull()
+    expect(adapter.read()).toBe("")
     expect(result.current.applied.activeCount).toBe(0)
     expect(result.current.draft.isDirty).toBe(true)
 
     act(() => result.current.draft.apply())
-    expect(adapter.read()).toBe(STATUS_ACTIVE)
+    expect(adapter.read()).toBe(`?${STATUS_ACTIVE}`)
     expect(result.current.applied.activeCount).toBe(1)
     // The incomplete rule is dropped and ids match the applied state.
     expect(result.current.draft.state).toEqual(result.current.applied.state)
@@ -65,10 +69,10 @@ describe("FilterProvider", () => {
       join: "and",
       rules: [{ id: "u0", field: "status", operator: "eq", value: "active" }],
     })
-    expect(write).toHaveBeenCalledWith(STATUS_ACTIVE, { page: null })
+    expect(write).toHaveBeenCalledWith({ page: null, status__eq: ["active"] })
   })
 
-  it("reset clears the draft and removes the param", () => {
+  it("reset clears the draft and removes the filter params", () => {
     const onApply = vi.fn()
     const { adapter, result } = setup({
       adapter: createMemoryAdapter(STATUS_ACTIVE),
@@ -77,7 +81,7 @@ describe("FilterProvider", () => {
     addRule(result, "name", "x")
     act(() => result.current.draft.reset())
 
-    expect(adapter.read()).toBeNull()
+    expect(adapter.read()).toBe("")
     expect(result.current.draft.state.rules).toEqual([])
     expect(onApply).toHaveBeenCalledWith({ join: "and", rules: [] })
   })
@@ -92,7 +96,7 @@ describe("FilterProvider", () => {
   it("follows changes made outside, e.g. back/forward", () => {
     const { adapter, result } = setup()
     addRule(result, "name", "unsaved")
-    act(() => adapter.write(STATUS_ACTIVE))
+    act(() => adapter.write({ status__eq: "active" }))
 
     expect(result.current.applied.activeCount).toBe(1)
     expect(result.current.draft.state).toBe(result.current.applied.state)
@@ -113,13 +117,59 @@ describe("FilterProvider", () => {
 
   it("removes one applied rule at once", () => {
     const { adapter, result } = setup({
-      adapter: createMemoryAdapter(
-        '{"and":[["status","eq","active"],["amount","gt",5]]}'
-      ),
+      adapter: createMemoryAdapter("status__eq=active&amount__gt=5"),
     })
     act(() => result.current.applied.removeRule("u0"))
-    expect(adapter.read()).toBe('{"and":[["amount","gt",5]]}')
+    expect(adapter.read()).toBe("?amount__gt=5")
     expect(result.current.draft.state.rules).toHaveLength(1)
+  })
+
+  it("replaces every filter param on apply, keeping the others", () => {
+    const { adapter, result } = setup({
+      adapter: createMemoryAdapter(
+        "page=2&name__nope=x&amount__gt=5&sort=name&join=or"
+      ),
+    })
+    addRule(result, "status", "active")
+    act(() => result.current.draft.apply())
+    expect(adapter.read()).toBe(
+      "?page=2&sort=name&join=or&amount__gt=5&status__eq=active"
+    )
+  })
+
+  it("reads and writes through a custom urlFormat", () => {
+    const urlFormat: UrlFormat = {
+      encodeRule: ({ field, operator, value }) => [
+        `_${field}`,
+        JSON.stringify([operator, value]),
+      ],
+      decodeRule: (key, value) => {
+        if (!key.startsWith("_")) return null
+        const [operator, ruleValue] = JSON.parse(value) as [string, string]
+        return { field: key.slice(1), operator, value: ruleValue }
+      },
+    }
+    const { adapter, result } = setup({
+      urlFormat,
+      adapter: createMemoryAdapter(
+        'page=2&_status=["eq","active"]&_amount=bad'
+      ),
+    })
+    expect(result.current.applied.state.rules).toEqual([
+      { id: "u0", field: "status", operator: "eq", value: "active" },
+    ])
+    act(() => result.current.draft.reset())
+    // The format threw on `_amount`, so it can't tell it's a filter param.
+    expect(adapter.read()).toBe("?page=2&_amount=bad")
+  })
+
+  it("does not change the applied state when other params change", () => {
+    const { adapter, result } = setup({
+      adapter: createMemoryAdapter(STATUS_ACTIVE),
+    })
+    const applied = result.current.applied.state
+    act(() => adapter.write({ page: "2" }))
+    expect(result.current.applied.state).toBe(applied)
   })
 
   it("stops adding rules at maxRules", () => {
@@ -168,9 +218,7 @@ describe("serializer issues", () => {
 
   it("reports rules whose keys collide", () => {
     const { result } = setup({
-      adapter: createMemoryAdapter(
-        '{"and":[["status","eq","active"],["status","eq","archived"]]}'
-      ),
+      adapter: createMemoryAdapter("status__eq=active&status__eq=archived"),
     })
     expect(result.current.applied.ruleIssues).toEqual({ u1: ["conflict"] })
   })
@@ -220,7 +268,7 @@ describe("outside a provider", () => {
     const { result } = renderHook(() => useAppliedFilter())
     expect(result.current.activeCount).toBe(0)
     expect(result.current.query).toEqual({})
-    expect(result.current.queryKey).toBeNull()
+    expect(result.current.queryKey).toBe("")
   })
 
   it("useFilter throws", () => {

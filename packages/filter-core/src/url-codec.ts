@@ -1,67 +1,87 @@
-import type { FilterContext } from "./context"
-import { hasOwn } from "./has-own"
-import { EMPTY_FILTER_STATE } from "./reducer"
-import type { FilterRule, FilterState, FilterValue, Join } from "./types"
+import { findField, type FilterContext } from "./context"
+import { renderQueryString } from "./query-string"
+import type { FilterRule, FilterState } from "./types"
+import { defaultUrlFormat, type UrlFormat, type UrlRule } from "./url-format"
 import { normalizeRule, normalizeState } from "./validation"
 
-type EncodedRule =
-  | [field: string, operator: string]
-  | [field: string, operator: string, value: FilterValue]
+const DEFAULT_JOIN_PARAM = "join"
 
-const JOINS: readonly Join[] = ["and", "or"]
-
-/**
- * `{"and":[["status","eq","active"],["amount","between",[1,5]]]}` — only
- * complete rules are kept; returns `null` when nothing is left, so the caller
- * can drop the param.
- */
-export function encodeFilters(
-  state: FilterState,
+// A custom format may throw on bad input, e.g. `JSON.parse`.
+function tryDecodeRule(
+  format: UrlFormat,
+  key: string,
+  value: string,
   context: FilterContext
-): string | null {
-  const { join, rules } = normalizeState(state, context)
-  if (rules.length === 0) return null
-  const encoded = rules.map(({ field, operator, value }): EncodedRule =>
-    value === null ? [field, operator!] : [field, operator!, value]
-  )
-  return JSON.stringify({ [join]: encoded })
+): UrlRule | null {
+  try {
+    return format.decodeRule(key, value, context)
+  } catch {
+    return null
+  }
 }
 
 /**
- * Never throws: URLs are user input, so anything malformed (bad JSON, unknown
- * field/operator, wrong value type) is dropped rule by rule. Ids are positional
- * (`u0`, `u1`…) so server and client decode the same URL to the same state.
+ * Whether a param belongs to the filter, including rules the decoder drops, so
+ * a write can clear them.
+ */
+export function isFilterParam(
+  key: string,
+  value: string,
+  context: FilterContext,
+  format: UrlFormat = defaultUrlFormat
+): boolean {
+  if (key === (format.joinParam ?? DEFAULT_JOIN_PARAM)) return true
+  const rule = tryDecodeRule(format, key, value, context)
+  return rule !== null && findField(context, rule.field) !== undefined
+}
+
+/**
+ * One param per complete rule, plus the join param for an OR:
+ * `status__eq=paid&amount__between=10,50` with the default format. `""` when
+ * no rule is complete.
+ */
+export function encodeFilters(
+  state: FilterState,
+  context: FilterContext,
+  format: UrlFormat = defaultUrlFormat
+): string {
+  const { join, rules } = normalizeState(state, context)
+  const params = new URLSearchParams()
+  if (join === "or" && rules.length > 0) {
+    params.append(format.joinParam ?? DEFAULT_JOIN_PARAM, "or")
+  }
+  for (const { field, operator, value } of rules) {
+    params.append(...format.encodeRule({ field, operator: operator!, value }))
+  }
+  return renderQueryString(params)
+}
+
+/**
+ * Never throws: URLs are user input, so bad rules (unknown field/operator,
+ * wrong value) are dropped one by one and unrelated params are ignored. Ids
+ * are positional (`u0`, `u1`…) so server and client decode the same URL to the
+ * same state.
  */
 export function decodeFilters(
-  raw: string | null,
-  context: FilterContext
+  search: string | URLSearchParams | null | undefined,
+  context: FilterContext,
+  format: UrlFormat = defaultUrlFormat
 ): FilterState {
-  if (!raw) return EMPTY_FILTER_STATE
-
-  let parsed: unknown
-  try {
-    parsed = JSON.parse(raw)
-  } catch {
-    return EMPTY_FILTER_STATE
-  }
-  if (typeof parsed !== "object" || parsed === null) return EMPTY_FILTER_STATE
-
-  const object = parsed as Record<string, unknown>
-  const join = JOINS.find(
-    (key) => hasOwn(object, key) && Array.isArray(object[key])
-  )
-  if (!join) return EMPTY_FILTER_STATE
+  const params =
+    search instanceof URLSearchParams
+      ? search
+      : new URLSearchParams(search ?? "")
 
   const rules: FilterRule[] = []
-  for (const entry of object[join] as unknown[]) {
-    if (!Array.isArray(entry) || entry.length < 2 || entry.length > 3) continue
-    const [field, operator, value = null] = entry as unknown[]
-    if (typeof field !== "string" || typeof operator !== "string") continue
-    const rule = normalizeRule(
-      { id: `u${rules.length}`, field, operator, value: value as FilterValue },
-      context
-    )
+  for (const [key, raw] of params) {
+    const decoded = tryDecodeRule(format, key, raw, context)
+    if (!decoded) continue
+    const rule = normalizeRule({ id: `u${rules.length}`, ...decoded }, context)
     if (rule) rules.push(rule)
   }
-  return { join, rules }
+  const joinParam = format.joinParam ?? DEFAULT_JOIN_PARAM
+  return {
+    join: params.get(joinParam) === "or" && rules.length > 0 ? "or" : "and",
+    rules,
+  }
 }

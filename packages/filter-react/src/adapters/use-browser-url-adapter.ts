@@ -1,12 +1,5 @@
-import { useMemo } from "react"
-
 import { applyParamChanges } from "./apply-param-changes"
 import type { ParamPatch, UrlStateAdapter } from "./url-state-adapter-types"
-
-export interface BrowserUrlAdapterOptions {
-  /** Query param holding the encoded filter. */
-  param?: string
-}
 
 // Shared by every instance: `replaceState` fires no event, so each write must tell all readers of the URL.
 // One entry per subscription, so the same callback subscribed twice unsubscribes independently.
@@ -26,41 +19,33 @@ function writeParams(changes: ParamPatch) {
   notify()
 }
 
-function createBrowserUrlAdapter(param: string): UrlStateAdapter {
-  return {
-    read: () =>
-      typeof window === "undefined"
-        ? null
-        : new URLSearchParams(window.location.search).get(param),
-    write: (value, otherParams) => {
-      if (typeof window === "undefined") return
-      writeParams({ ...otherParams, [param]: value })
-    },
-    subscribe: (onChange) => {
-      const subscription = { onChange }
+const browserUrlAdapter: UrlStateAdapter = {
+  read: () => (typeof window === "undefined" ? "" : window.location.search),
+  write: (changes) => {
+    if (typeof window === "undefined") return
+    writeParams(changes)
+  },
+  subscribe: (onChange) => {
+    const subscription = { onChange }
+    if (subscriptions.size === 0) {
+      window.addEventListener("popstate", notify)
+    }
+    subscriptions.add(subscription)
+    return () => {
+      subscriptions.delete(subscription)
       if (subscriptions.size === 0) {
-        window.addEventListener("popstate", notify)
+        window.removeEventListener("popstate", notify)
       }
-      subscriptions.add(subscription)
-      return () => {
-        subscriptions.delete(subscription)
-        if (subscriptions.size === 0) {
-          window.removeEventListener("popstate", notify)
-        }
-      }
-    },
-    readServer: () => null,
-  }
+    }
+  },
+  readServer: () => "",
 }
 
 /**
- * Stores the filter in `?filters=` via the History API, for plain React/Vite.
- * Writing re-encodes the other params (same values, e.g. `a,b` → `a%2Cb`).
- * With a client router, use its adapter instead: navigations it makes with
- * `pushState` are not observed here.
+ * Stores the filter in the query string via the History API, for plain
+ * React/Vite. With a client router, use its adapter instead: navigations it
+ * makes with `pushState` are not observed here.
  */
-export function useBrowserUrlAdapter({
-  param = "filters",
-}: BrowserUrlAdapterOptions = {}): UrlStateAdapter {
-  return useMemo(() => createBrowserUrlAdapter(param), [param])
+export function useBrowserUrlAdapter(): UrlStateAdapter {
+  return browserUrlAdapter
 }

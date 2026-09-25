@@ -42,7 +42,7 @@ function Probe({ into }: { into: Harness }) {
   return draft.state.rules.length > 0 ? <RuleProbe into={into} /> : null
 }
 
-function setup(url: string | null = null, serializer = withoutEq) {
+function setup(url = "", serializer = withoutEq) {
   const harness = {} as Harness
   render(
     <FilterProvider
@@ -79,7 +79,7 @@ describe("useFilterRule", () => {
   })
 
   it("keeps an unsupported operator from the URL, flagged", () => {
-    const { result } = setup('{"and":[["status","eq","active"]]}')
+    const { result } = setup("status__eq=active")
     expect(result.current.rule!.operators.at(-1)).toEqual({
       id: "eq",
       label: "is",
@@ -88,7 +88,7 @@ describe("useFilterRule", () => {
   })
 
   it("edits its own rule", () => {
-    const { result } = setup(null, jsonApiSerializer())
+    const { result } = setup("", jsonApiSerializer())
     act(() => result.current.draft.addRule())
     expect(result.current.rule!.field).toBeUndefined()
     expect(result.current.rule!.operators).toEqual([])

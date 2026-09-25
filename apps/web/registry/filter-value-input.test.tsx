@@ -107,7 +107,14 @@ const FIELDS: FieldDefinition[] = [
   { name: "updated", label: "Updated", type: "datetime" },
 ]
 
-const url = (...rules: unknown[]) => JSON.stringify({ and: rules })
+const url = (...rules: unknown[][]) =>
+  `?${rules
+    .map(([field, operator, value]) =>
+      value === undefined
+        ? `${field}__${operator}`
+        : `${field}__${operator}=${[value].flat().join(",")}`
+    )
+    .join("&")}`
 
 // The trigger formats in the runtime's locale.
 const dayText = (year: number, month: number, day: number) =>
@@ -146,7 +153,7 @@ function Rows({
 }
 
 describe.each(BASES)("%s value inputs", (_, Row, inputs, selectRole) => {
-  function setup(initial: string | null = null, fields = FIELDS) {
+  function setup(initial = "", fields = FIELDS) {
     clearFieldOptionsCache()
     const h = { current: undefined as unknown as Harness }
     render(

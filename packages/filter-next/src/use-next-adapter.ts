@@ -3,8 +3,6 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useMemo } from "react"
 
 export interface NextAdapterOptions {
-  /** Query param holding the encoded filter. */
-  param?: string
   /**
    * Update the URL without a server request, for data filtered on the
    * client. Leave off when a server component reads `searchParams`.
@@ -19,14 +17,13 @@ function createNextAdapter(
   pathname: string,
   search: string,
   router: NextRouter,
-  { param = "filters", shallow = false }: NextAdapterOptions
+  { shallow = false }: NextAdapterOptions
 ): UrlStateAdapter {
   // Writes chain until then: `router.replace` lands after a server round trip.
   let current = search
   return {
-    read: () => new URLSearchParams(search).get(param),
-    write: (value, otherParams) => {
-      const changes = { ...otherParams, [param]: value }
+    read: () => search,
+    write: (changes) => {
       if (shallow) {
         // The browser URL is current here and keeps `basePath`, which `usePathname` strips.
         const url = new URL(window.location.href)
@@ -48,12 +45,11 @@ function createNextAdapter(
 }
 
 /**
- * Stores the filter in `?filters=` through the App Router. Writes replace the
+ * Stores the filter in the query string through the App Router. Writes replace the
  * history entry and keep the path, hash and other params. On a statically
  * prerendered route, wrap the component in `<Suspense>` (`useSearchParams`).
  */
 export function useNextAdapter({
-  param,
   shallow,
 }: NextAdapterOptions = {}): UrlStateAdapter {
   // Both can be null under the Pages Router; this adapter targets the App Router.
@@ -63,9 +59,8 @@ export function useNextAdapter({
   return useMemo(
     () =>
       createNextAdapter(pathname, search ? `?${search}` : "", router, {
-        param,
         shallow,
       }),
-    [pathname, search, router, param, shallow]
+    [pathname, search, router, shallow]
   )
 }

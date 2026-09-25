@@ -19,12 +19,10 @@ function Value({ adapter }: { adapter: UrlStateAdapter }) {
     adapter.read,
     adapter.readServer ?? adapter.read
   )
-  return <output>{value ?? "none"}</output>
+  return <output>{value || "none"}</output>
 }
 
-const adapterFor = (param?: string) =>
-  renderHook(() => useBrowserUrlAdapter(param ? { param } : undefined)).result
-    .current
+const adapterFor = () => renderHook(() => useBrowserUrlAdapter()).result.current
 
 afterEach(() => {
   cleanup()
@@ -32,10 +30,9 @@ afterEach(() => {
 })
 
 describe("useBrowserUrlAdapter", () => {
-  it("reads the filters param", () => {
-    window.history.replaceState(null, "", "/list?filters=abc&page=2")
-    expect(adapterFor().read()).toBe("abc")
-    expect(adapterFor("f").read()).toBeNull()
+  it("reads the whole query string", () => {
+    window.history.replaceState(null, "", "/list?status__eq=paid&page=2")
+    expect(adapterFor().read()).toBe("?status__eq=paid&page=2")
   })
 
   it("writes with replaceState, keeping other params, hash and history state", () => {
@@ -43,13 +40,13 @@ describe("useBrowserUrlAdapter", () => {
     const length = window.history.length
     const adapter = adapterFor()
 
-    adapter.write("x y")
-    expect(window.location.search).toBe("?page=2&filters=x+y")
+    adapter.write({ name__eq: "x y", tags__in: "a,b" })
+    expect(window.location.search).toBe("?page=2&name__eq=x%20y&tags__in=a,b")
     expect(window.location.hash).toBe("#top")
     expect(window.history.state).toEqual({ router: 1 })
     expect(window.history.length).toBe(length)
 
-    adapter.write(null)
+    adapter.write({ name__eq: null, tags__in: null })
     expect(window.location.search).toBe("?page=2")
   })
 
@@ -58,29 +55,24 @@ describe("useBrowserUrlAdapter", () => {
     render(<Value adapter={adapterFor()} />)
     expect(screen.getByRole("status").textContent).toBe("none")
 
-    act(() => writer.write("abc"))
-    expect(screen.getByRole("status").textContent).toBe("abc")
+    act(() => writer.write({ name__eq: "abc" }))
+    expect(screen.getByRole("status").textContent).toBe("?name__eq=abc")
   })
 
   it("follows back/forward through popstate", () => {
     render(<Value adapter={adapterFor()} />)
     act(() => {
-      window.history.pushState(null, "", "/?filters=old")
+      window.history.pushState(null, "", "/?name__eq=old")
       window.dispatchEvent(new PopStateEvent("popstate"))
     })
-    expect(screen.getByRole("status").textContent).toBe("old")
+    expect(screen.getByRole("status").textContent).toBe("?name__eq=old")
   })
 
-  it("keeps the same adapter across renders for the same param", () => {
-    const { result, rerender } = renderHook(
-      ({ param }) => useBrowserUrlAdapter({ param }),
-      { initialProps: { param: "filters" } }
-    )
+  it("keeps the same adapter across renders", () => {
+    const { result, rerender } = renderHook(() => useBrowserUrlAdapter())
     const first = result.current
-    rerender({ param: "filters" })
+    rerender()
     expect(result.current).toBe(first)
-    rerender({ param: "other" })
-    expect(result.current).not.toBe(first)
   })
 
   it("skips unchanged writes, leaving a non-canonical URL untouched", () => {
@@ -90,8 +82,8 @@ describe("useBrowserUrlAdapter", () => {
     const adapter = adapterFor()
     const unsubscribe = adapter.subscribe!(listener)
 
-    adapter.write(null)
-    adapter.write(null, { page: null })
+    adapter.write({ name__eq: null })
+    adapter.write({ name__eq: null, page: null, tags: "a,b" })
     expect(replace).not.toHaveBeenCalled()
     expect(listener).not.toHaveBeenCalled()
     expect(window.location.search).toBe("?tags=a,b&debug")
@@ -103,18 +95,16 @@ describe("useBrowserUrlAdapter", () => {
   it("changes other params in the same write", () => {
     window.history.replaceState(null, "", "/?page=3&sort=name")
     const replace = vi.spyOn(window.history, "replaceState")
-    adapterFor().write("abc", { page: null, view: "grid" })
+    adapterFor().write({ page: null, view: "grid", name__eq: "abc" })
     expect(replace).toHaveBeenCalledTimes(1)
-    expect(new URLSearchParams(window.location.search).toString()).toBe(
-      "sort=name&view=grid&filters=abc"
-    )
+    expect(window.location.search).toBe("?sort=name&view=grid&name__eq=abc")
     replace.mockRestore()
   })
 
   it("keeps each subscription when the same callback is used twice", () => {
     const listener = vi.fn()
     const offFirst = adapterFor().subscribe!(listener)
-    const offSecond = adapterFor("other").subscribe!(listener)
+    const offSecond = adapterFor().subscribe!(listener)
     offFirst()
     window.dispatchEvent(new PopStateEvent("popstate"))
     expect(listener).toHaveBeenCalledTimes(1)
@@ -129,8 +119,8 @@ describe("useBrowserUrlAdapter", () => {
     remove.mockRestore()
   })
 
-  it("reports null during server render so hydration matches", () => {
-    window.history.replaceState(null, "", "/?filters=abc")
-    expect(adapterFor().readServer?.()).toBeNull()
+  it("reports an empty query during server render so hydration matches", () => {
+    window.history.replaceState(null, "", "/?name__eq=abc")
+    expect(adapterFor().readServer?.()).toBe("")
   })
 })

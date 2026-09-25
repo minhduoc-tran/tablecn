@@ -2,8 +2,12 @@ import type { FieldDefinition } from "@querycn/filter-core"
 import { act, renderHook } from "@testing-library/react"
 import type { ReactNode } from "react"
 
+import { applyParamChanges } from "./adapters/apply-param-changes"
 import { createMemoryAdapter } from "./adapters/memory-adapter"
-import type { UrlStateAdapter } from "./adapters/url-state-adapter-types"
+import type {
+  ParamPatch,
+  UrlStateAdapter,
+} from "./adapters/url-state-adapter-types"
 import { FilterProvider, type FilterProviderProps } from "./filter-provider"
 import { useAppliedFilter } from "./use-applied-filter"
 import { useFilter } from "./use-filter"
@@ -22,7 +26,7 @@ export const FIELDS: FieldDefinition[] = [
   },
 ]
 
-export const STATUS_ACTIVE = '{"and":[["status","eq","active"]]}'
+export const STATUS_ACTIVE = "status__eq=active"
 
 export function setup(
   props: Partial<FilterProviderProps> = {},
@@ -51,18 +55,19 @@ export function addRule(result: Hook, field: string, value: string | number) {
 }
 
 /** Like a router adapter: writes land only when `flush` runs, i.e. after navigation. */
-export function createDeferredAdapter(initial: string | null = null) {
+export function createDeferredAdapter(initial = "") {
   let value = initial
-  let queued: { value: string | null } | null = null
+  let queued: ParamPatch | null = null
   const listeners = new Set<() => void>()
-  const set = (next: string | null) => {
+  const set = (next: string) => {
     value = next
     for (const listener of listeners) listener()
   }
   const adapter: UrlStateAdapter = {
     read: () => value,
-    write: (next) => {
-      queued = { value: next }
+    write: (changes) => {
+      // Chains like a router adapter: later writes build on the queued ones.
+      queued = { ...queued, ...changes }
     },
     subscribe: (onChange) => {
       listeners.add(onChange)
@@ -72,7 +77,7 @@ export function createDeferredAdapter(initial: string | null = null) {
   return {
     adapter,
     flush: () => {
-      if (queued) set(queued.value)
+      if (queued) set(applyParamChanges(value, queued) ?? value)
       queued = null
     },
     navigate: set,

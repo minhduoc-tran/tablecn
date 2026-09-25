@@ -10,10 +10,9 @@ export interface NextFilterProviderProps
  * `fields` holding functions (`loadOptions`) can't cross from the server.
  */
 export function NextFilterProvider({
-  param,
   shallow,
   ...props
 }: NextFilterProviderProps) {
-  const adapter = useNextAdapter({ param, shallow })
+  const adapter = useNextAdapter({ shallow })
   return <FilterProvider {...props} adapter={adapter} />
 }

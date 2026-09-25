@@ -29,7 +29,7 @@ function Probe({ into }: { into: Harness }) {
   ))
 }
 
-function setup(url: string | null = null) {
+function setup(url = "") {
   const harness = {} as Harness
   render(
     <FilterProvider
@@ -69,9 +69,7 @@ describe("useRuleWarnings", () => {
   })
 
   it("drops a serializer issue once the rule is edited", () => {
-    const { result } = setup(
-      '{"and":[["status","eq","active"],["status","eq","archived"]]}'
-    )
+    const { result } = setup("status__eq=active&status__eq=archived")
     expect(result.current.warnings).toEqual([[], ["conflict"]])
     act(() => result.current.draft.setValue("u1", "active"))
     expect(result.current.warnings).toEqual([[], []])
@@ -81,9 +79,7 @@ describe("useRuleWarnings", () => {
   })
 
   it("drops a conflict once an earlier rule or the join changes", () => {
-    const { result } = setup(
-      '{"and":[["status","eq","active"],["status","eq","archived"]]}'
-    )
+    const { result } = setup("status__eq=active&status__eq=archived")
     act(() => result.current.draft.removeRule("u0"))
     expect(result.current.warnings).toEqual([[]])
     act(() => result.current.draft.discard())
@@ -97,7 +93,7 @@ describe("useRuleWarnings", () => {
   })
 
   it("keeps an unsupported applied rule flagged", () => {
-    const { result } = setup('{"and":[["name","ne","x"]]}')
+    const { result } = setup("name__ne=x")
     expect(result.current.warnings).toEqual([["unsupported"]])
   })
 })

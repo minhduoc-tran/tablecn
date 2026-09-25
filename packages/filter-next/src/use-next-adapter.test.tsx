@@ -62,10 +62,9 @@ const FIELDS: FieldDefinition[] = [
   { name: "amount", label: "Amount", type: "number" },
 ]
 
-const ACTIVE = '{"and":[["status","eq","active"]]}'
-const TWO_RULES = '{"and":[["status","eq","active"],["amount","gt",5]]}'
-const withFilters = (filters: string, rest = "") =>
-  `/orders?${rest}filters=${encodeURIComponent(filters)}`
+const ACTIVE = "status__eq=active"
+const TWO_RULES = "status__eq=active&amount__gt=5"
+const withFilters = (filters: string) => `/orders?${filters}`
 
 interface Harness {
   draft: ReturnType<typeof useFilter>
@@ -118,15 +117,13 @@ describe("NextFilterProvider", () => {
     applyStatusActive(h)
 
     expect(replace).toHaveBeenCalledTimes(1)
-    expect(replace).toHaveBeenCalledWith(
-      `/orders?sort=name&filters=${encodeURIComponent(ACTIVE)}#top`,
-      { scroll: false }
-    )
+    expect(replace).toHaveBeenCalledWith(`/orders?sort=name&${ACTIVE}#top`, {
+      scroll: false,
+    })
     // Shown right away, before the navigation lands.
     expect(h.applied.queryKey).toBe(ACTIVE)
     act(() => router.flush())
-    expect(router.url.searchParams.get("filters")).toBe(ACTIVE)
-    expect(router.url.searchParams.has("page")).toBe(false)
+    expect(router.url.search).toBe(`?sort=name&${ACTIVE}`)
   })
 
   it("chains writes made before the navigation lands", () => {
@@ -147,7 +144,7 @@ describe("NextFilterProvider", () => {
     applyStatusActive(h)
     act(() => router.flush())
 
-    expect(router.url.searchParams.get("filters")).toBe(ACTIVE)
+    expect(router.url.search).toBe(`?${ACTIVE}`)
     expect(h.applied.queryKey).toBe(ACTIVE)
   })
 
@@ -172,23 +169,7 @@ describe("NextFilterProvider", () => {
     expect(replaceState.mock.calls.at(-1)?.[0]).toBeNull()
     expect(window.location.pathname).toBe("/admin/orders")
     expect(window.location.hash).toBe("#top")
-    const params = new URLSearchParams(window.location.search)
-    expect(params.get("filters")).toBe(ACTIVE)
-    expect(params.has("page")).toBe(false)
+    expect(window.location.search).toBe(`?${ACTIVE}`)
     expect(h.applied.queryKey).toBe(ACTIVE)
-  })
-
-  it("uses a custom param", () => {
-    router.set(`/orders?f=${encodeURIComponent(ACTIVE)}`)
-    const harness = {} as Harness
-    render(
-      <NextFilterProvider fields={FIELDS} param="f">
-        <Probe report={(h) => Object.assign(harness, h)} />
-      </NextFilterProvider>
-    )
-    expect(harness.applied.queryKey).toBe(ACTIVE)
-    act(() => harness.draft.reset())
-    act(() => router.flush())
-    expect(router.url.search).toBe("")
   })
 })

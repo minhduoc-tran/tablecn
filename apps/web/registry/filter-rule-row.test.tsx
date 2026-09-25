@@ -36,7 +36,14 @@ const withoutEq: QuerySerializer<unknown> = Object.assign(
   { supports: (operator: string) => operator !== "eq" }
 )
 
-const url = (...rules: unknown[]) => JSON.stringify({ and: rules })
+const url = (...rules: unknown[][]) =>
+  `?${rules
+    .map(([field, operator, value]) =>
+      value === undefined
+        ? `${field}__${operator}`
+        : `${field}__${operator}=${[value].flat().join(",")}`
+    )
+    .join("&")}`
 
 // Popups move focus to their search input a frame after opening; type once it's there.
 async function typeInSearch(
@@ -76,7 +83,7 @@ function Rows({
 }
 
 describe.each(BASES)("%s FilterRuleRow", (_, Row, triggerRole) => {
-  function setup(initial: string | null = null) {
+  function setup(initial = "") {
     valueRenders.clear()
     const draft = { current: undefined as unknown as FilterDraftValue }
     render(

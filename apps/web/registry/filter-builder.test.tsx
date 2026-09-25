@@ -49,7 +49,14 @@ const FIELDS: FieldDefinition[] = [
   { name: "created", label: "Created", type: "date" },
 ]
 
-const url = (...rules: unknown[]) => JSON.stringify({ and: rules })
+const url = (...rules: unknown[][]) =>
+  `?${rules
+    .map(([field, operator, value]) =>
+      value === undefined
+        ? `${field}__${operator}`
+        : `${field}__${operator}=${[value].flat().join(",")}`
+    )
+    .join("&")}`
 
 const dayText = (year: number, month: number, day: number) =>
   new Date(year, month, day).toLocaleDateString(undefined, {
@@ -77,7 +84,7 @@ describe.each(BASES)(
   "%s FilterBuilder",
   (_, Builder, Chips, selectRole, Panel) => {
     function setup(
-      initial: string | null = null,
+      initial = "",
       {
         serializer,
         maxRules,
@@ -194,7 +201,7 @@ describe.each(BASES)(
       await user.click(
         screen.getByRole("button", { name: "Remove filter: Name contains ab" })
       )
-      expect(adapter.read()).toBeNull()
+      expect(adapter.read()).toBe("")
       expect(onSubmit).not.toHaveBeenCalled()
     })
 
@@ -238,12 +245,7 @@ describe.each(BASES)(
       )
       await user.click(await screen.findByRole("option", { name: "or" }))
       await user.click(button("Apply"))
-      expect(JSON.parse(adapter.read()!)).toEqual({
-        or: [
-          ["name", "contains", "a"],
-          ["amount", "gt", 1],
-        ],
-      })
+      expect(adapter.read()).toBe("?join=or&name__contains=a&amount__gt=1")
       expect(screen.getByText("or")).toBeTruthy()
     })
 
@@ -264,7 +266,7 @@ describe.each(BASES)(
       const { user, adapter } = setup(url(["name", "contains", "a"]))
       await open(user)
       await user.click(button("Clear all"))
-      expect(adapter.read()).toBeNull()
+      expect(adapter.read()).toBe("")
       expect(within(panel()!).getByText("No filters yet")).toBeTruthy()
       await waitFor(() =>
         expect(document.activeElement).toBe(button("Add filter"))
@@ -395,7 +397,7 @@ describe.each(BASES)(
           name: "Remove filter: Amount is greater than 1",
         })
       )
-      expect(adapter.read()).toBeNull()
+      expect(adapter.read()).toBe("")
       expect(document.querySelector("[data-slot=filter-chips]")).toBeNull()
     })
 

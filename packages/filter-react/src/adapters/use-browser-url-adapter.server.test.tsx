@@ -6,8 +6,8 @@ import { useBrowserUrlAdapter } from "./use-browser-url-adapter"
 
 function Probe() {
   const adapter = useBrowserUrlAdapter()
-  adapter.write("ignored")
-  return <span>{adapter.read() ?? "none"}</span>
+  adapter.write({ ignored: "1" })
+  return <span>{adapter.read() || "none"}</span>
 }
 
 it("renders on the server without touching window", () => {

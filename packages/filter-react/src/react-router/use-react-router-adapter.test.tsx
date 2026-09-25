@@ -27,9 +27,8 @@ const FIELDS: FieldDefinition[] = [
   { name: "amount", label: "Amount", type: "number" },
 ]
 
-const ACTIVE = '{"and":[["status","eq","active"]]}'
-const TWO_RULES = '{"and":[["status","eq","active"],["amount","gt",5]]}'
-const query = (filters: string) => `filters=${encodeURIComponent(filters)}`
+const ACTIVE = "status__eq=active"
+const TWO_RULES = "status__eq=active&amount__gt=5"
 
 interface Harness {
   draft: ReturnType<typeof useFilter>
@@ -76,7 +75,7 @@ function renderInMemoryRouter(entries: string[]) {
 
 describe("useReactRouterAdapter", () => {
   it("reads the filter from the URL", () => {
-    const h = renderInMemoryRouter([`/orders?${query(ACTIVE)}`])
+    const h = renderInMemoryRouter([`/orders?${ACTIVE}`])
     expect(h.applied.queryKey).toBe(ACTIVE)
   })
 
@@ -88,23 +87,22 @@ describe("useReactRouterAdapter", () => {
 
     expect(h.location.pathname).toBe("/orders")
     expect(h.location.hash).toBe("#top")
-    expect(new URLSearchParams(h.location.search).get("sort")).toBe("name")
-    expect(new URLSearchParams(h.location.search).has("page")).toBe(false)
+    expect(h.location.search).toBe("?sort=name&status__eq=active")
     expect(h.applied.queryKey).toBe(ACTIVE)
     expect(h.navigationType).toBe("REPLACE")
   })
 
-  it("removes the param on reset", () => {
-    const h = renderInMemoryRouter([`/orders?${query(ACTIVE)}&sort=name`])
+  it("removes the filter params on reset", () => {
+    const h = renderInMemoryRouter([`/orders?${ACTIVE}&sort=name`])
     act(() => h.draft.reset())
     expect(h.location.search).toBe("?sort=name")
     expect(h.applied.activeCount).toBe(0)
   })
 
   it("restores the filter on back", () => {
-    const h = renderInMemoryRouter([`/orders?${query(ACTIVE)}`])
+    const h = renderInMemoryRouter([`/orders?${ACTIVE}`])
     act(() => {
-      void h.navigate(`/orders?${query(TWO_RULES)}`)
+      void h.navigate(`/orders?${TWO_RULES}`)
     })
     expect(h.applied.activeCount).toBe(2)
 
@@ -137,7 +135,7 @@ describe("with a data router", () => {
     const harness: Partial<Harness> = {}
     const router = createMemoryRouter(
       [{ path: "/orders", element: <Filtered into={harness} /> }],
-      { initialEntries: [`/orders?${query(TWO_RULES)}`] }
+      { initialEntries: [`/orders?${TWO_RULES}`] }
     )
     render(<RouterProvider router={router} />)
     const h = harness as Harness
@@ -165,7 +163,7 @@ describe("with a data router", () => {
         },
       ],
       {
-        initialEntries: [`/orders?${query(TWO_RULES)}`],
+        initialEntries: [`/orders?${TWO_RULES}`],
         hydrationData: { loaderData: { "0": null } },
       }
     )
@@ -197,7 +195,7 @@ describe("with a data router", () => {
         },
       ],
       {
-        initialEntries: [`/orders?${query(ACTIVE)}`],
+        initialEntries: [`/orders?${ACTIVE}`],
         hydrationData: { loaderData: { "0": null } },
       }
     )
@@ -210,7 +208,7 @@ describe("with a data router", () => {
     act(() => h.draft.apply())
     await act(async () => release())
 
-    expect(router.state.location.search).toBe(`?${query(ACTIVE)}`)
+    expect(router.state.location.search).toBe(`?${ACTIVE}`)
     expect(h.applied.queryKey).toBe(ACTIVE)
   })
 
@@ -239,12 +237,12 @@ describe("with a data router", () => {
     const harness: Partial<Harness> = {}
     const router = createMemoryRouter(
       [{ path: "/orders", element: <Filtered into={harness} /> }],
-      { initialEntries: [`/orders?${query(ACTIVE)}`] }
+      { initialEntries: [`/orders?${ACTIVE}`] }
     )
     render(<RouterProvider router={router} />)
     const h = harness as Harness
 
-    await act(() => router.navigate(`/orders?${query(TWO_RULES)}`))
+    await act(() => router.navigate(`/orders?${TWO_RULES}`))
     expect(h.applied.activeCount).toBe(2)
     await act(() => router.navigate(-1))
     expect(h.applied.queryKey).toBe(ACTIVE)

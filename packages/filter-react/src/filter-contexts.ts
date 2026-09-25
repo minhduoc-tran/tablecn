@@ -55,8 +55,8 @@ export interface AppliedFilterValue<T = QueryParams> extends FilterConfigValue {
   activeCount: number
   /** Serializer output, recomputed only when the applied filter changes. */
   query: T
-  /** The encoded filter (`null` when empty): a stable string for effect deps and cache keys. */
-  queryKey: string | null
+  /** The filter's query params (`""` when empty): a stable string for effect deps and cache keys. */
+  queryKey: string
   /** Per rule id, how the serializer handled it. Computed on apply, not while editing. */
   ruleIssues: RuleIssues
   /** Removes one applied rule right away, e.g. from a chip. */
@@ -74,7 +74,7 @@ export const EMPTY_APPLIED_FILTER: AppliedFilterValue<unknown> = {
   state: EMPTY_FILTER_STATE,
   activeCount: 0,
   query: jsonApiSerializer()(EMPTY_FILTER_STATE, EMPTY_CONTEXT),
-  queryKey: null,
+  queryKey: "",
   ruleIssues: NO_RULE_ISSUES,
   removeRule: () => {},
 }

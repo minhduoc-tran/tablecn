@@ -1,5 +1,6 @@
 import { useCallback, useState, useSyncExternalStore } from "react"
 
+import { applyParamChanges } from "./adapters/apply-param-changes"
 import type {
   ParamPatch,
   UrlStateAdapter,
@@ -10,8 +11,8 @@ const noopSubscribe = () => () => {}
 interface PendingWrite {
   adapter: UrlStateAdapter
   /** What the adapter still returned right after the write. */
-  base: string | null
-  value: string | null
+  base: string
+  value: string
 }
 
 /**
@@ -34,10 +35,11 @@ export function useAdapterValue(adapter: UrlStateAdapter) {
   if (pending !== null && !isPending) setPending(null)
 
   const write = useCallback(
-    (value: string | null, otherParams?: ParamPatch) => {
-      adapter.write(value, otherParams)
+    (changes: ParamPatch) => {
+      adapter.write(changes)
       const base = adapter.read()
-      setPending(base === value ? null : { adapter, base, value })
+      const value = applyParamChanges(base, changes)
+      setPending(value === null ? null : { adapter, base, value })
     },
     [adapter]
   )

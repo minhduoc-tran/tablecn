@@ -26,9 +26,8 @@ function Filtered() {
 
 describe("useReactRouterAdapter on the server", () => {
   it("reads the filter from the request URL", () => {
-    const filters = encodeURIComponent('{"and":[["amount","gt",5]]}')
     const html = renderToString(
-      <StaticRouter location={`/orders?filters=${filters}`}>
+      <StaticRouter location="/orders?amount__gt=5">
         <Filtered />
       </StaticRouter>
     )

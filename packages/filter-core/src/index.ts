@@ -45,7 +45,10 @@ export { EMPTY_FILTER_STATE, filterReducer } from "./reducer"
 export type { FilterAction, ReducerContext } from "./reducer"
 export { createId } from "./create-id"
 
-export { decodeFilters, encodeFilters } from "./url-codec"
+export { decodeFilters, encodeFilters, isFilterParam } from "./url-codec"
+export { renderQueryString } from "./query-string"
+export { defaultUrlFormat } from "./url-format"
+export type { UrlFormat, UrlRule } from "./url-format"
 
 export { filterOptions } from "./select-options"
 export { parseDateOnly, toDateOnly } from "./client-filter/comparable-values"

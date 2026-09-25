@@ -11,7 +11,7 @@ import { useAppliedFilter } from "./use-applied-filter"
 const FIELDS: FieldDefinition[] = [
   { name: "status", label: "Status", type: "text" },
 ]
-const FILTER = '{"and":[["status","eq","active"]]}'
+const FILTER = "status__eq=active"
 
 function Count() {
   return <>{useAppliedFilter().activeCount}</>
@@ -28,7 +28,7 @@ describe("FilterProvider on the server", () => {
   it("renders from readServer when the adapter has one", () => {
     const html = renderWith({
       read: () => FILTER,
-      readServer: () => null,
+      readServer: () => "",
       write: () => {},
     })
     expect(html).toBe("0")

@@ -23,7 +23,7 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-const TWO_RULES = '{"and":[["status","eq","active"],["amount","gt",5]]}'
+const TWO_RULES = "status__eq=active&amount__gt=5"
 
 describe("adapters that write asynchronously", () => {
   it("builds the next write on the pending one", () => {
@@ -31,11 +31,11 @@ describe("adapters that write asynchronously", () => {
     const { result } = setup({ adapter })
 
     act(() => result.current.applied.removeRule("u0"))
-    expect(result.current.applied.queryKey).toBe('{"and":[["amount","gt",5]]}')
+    expect(result.current.applied.queryKey).toBe("amount__gt=5")
     act(() => result.current.applied.removeRule("u0"))
     act(() => flush())
 
-    expect(adapter.read()).toBeNull()
+    expect(adapter.read()).toBe("")
     expect(result.current.applied.activeCount).toBe(0)
   })
 
@@ -92,7 +92,7 @@ describe("apply", () => {
       result.current.draft.setValue(id, "active")
       result.current.draft.apply()
     })
-    expect(adapter.read()).toBe(STATUS_ACTIVE)
+    expect(adapter.read()).toBe(`?${STATUS_ACTIVE}`)
   })
 
   it("skips onApply and the write when nothing changed", () => {
@@ -117,19 +117,17 @@ describe("apply", () => {
     act(() => result.current.draft.setJoin("or"))
     expect(result.current.draft.isDirty).toBe(true)
     act(() => result.current.draft.apply())
-    expect(adapter.read()).toBe(TWO_RULES.replace("and", "or"))
+    expect(adapter.read()).toBe(`?join=or&${TWO_RULES}`)
   })
 
   it("rewrites a malformed URL value in canonical form", () => {
     const { adapter, result } = setup({
-      adapter: createMemoryAdapter(
-        '{"and":[["status","eq","active"],["nope"]]'
-      ),
+      adapter: createMemoryAdapter("status__eq=&amount__nope=5&page=2"),
     })
     expect(result.current.applied.activeCount).toBe(0)
     addRule(result, "status", "active")
     act(() => result.current.draft.apply())
-    expect(adapter.read()).toBe(STATUS_ACTIVE)
+    expect(adapter.read()).toBe(`?page=2&${STATUS_ACTIVE}`)
   })
 
   it("keeps action identities while editing", () => {
@@ -168,9 +166,9 @@ describe("StrictMode", () => {
     const { adapter, result } = setup({}, { strict: true })
     addRule(result, "status", "active")
     act(() => result.current.draft.apply())
-    expect(adapter.read()).toBe(STATUS_ACTIVE)
+    expect(adapter.read()).toBe(`?${STATUS_ACTIVE}`)
 
-    act(() => adapter.write(TWO_RULES))
+    act(() => adapter.write({ amount__gt: "5" }))
     expect(result.current.draft.state.rules).toHaveLength(2)
   })
 })
@@ -179,7 +177,7 @@ describe("hydration", () => {
   it("renders the server value first, then the URL, without a mismatch", async () => {
     const adapter: UrlStateAdapter = {
       read: () => STATUS_ACTIVE,
-      readServer: () => null,
+      readServer: () => "",
       write: () => {},
     }
     let draftRules = -1
