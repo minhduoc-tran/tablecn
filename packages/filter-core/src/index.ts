@@ -48,6 +48,7 @@ export { createId } from "./create-id"
 export { decodeFilters, encodeFilters } from "./url-codec"
 
 export { filterOptions } from "./select-options"
+export { parseDateOnly, toDateOnly } from "./client-filter/comparable-values"
 
 export { getOperatorLabel, mergeMessages } from "./messages"
 export type { FilterMessages, FilterMessagesOverrides } from "./messages"

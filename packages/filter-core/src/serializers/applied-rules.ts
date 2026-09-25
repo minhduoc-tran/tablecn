@@ -10,7 +10,11 @@ import type {
 } from "../types"
 import { normalizeState } from "../validation"
 
-/** A complete, normalized rule; narrow `value` by checking `arity`. */
+/**
+ * A complete, normalized rule; narrow `value` by checking `arity`. Values keep
+ * their field type's form, except that a number field passes through text that
+ * isn't a number (e.g. "12,5") for the backend to read.
+ */
 export type AppliedRule = {
   id: string
   field: string

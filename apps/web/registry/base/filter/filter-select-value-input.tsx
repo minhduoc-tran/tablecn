@@ -1,37 +1,62 @@
 "use client"
 
 import * as React from "react"
+import type { FilterValue } from "@querycn/filter-core"
 import { useFieldOptions, useFilterActions } from "@querycn/filter-react"
 
+import { Badge } from "@/registry/base/ui/badge"
 import { FilterCombobox } from "@/registry/base/filter/filter-combobox"
 import type { FilterValueSlotProps } from "@/registry/base/filter/filter-rule-row"
 
-/** Static `options` or `loadOptions`; the row keys it by field, so a new field starts fresh. */
+const toValues = (value: FilterValue): string[] =>
+  value === null
+    ? []
+    : Array.isArray(value)
+      ? value.map(String)
+      : [String(value)]
+
+/**
+ * One value, or several for `multi` operators (`in`, `notIn`), from static
+ * `options` or `loadOptions`. The row keys it by field, so a new field starts fresh.
+ */
 export function SelectValueInput({
   id,
   rule,
   field,
+  arity,
   setValue,
 }: FilterValueSlotProps) {
   const { messages } = useFilterActions()
   const [open, setOpen] = React.useState(false)
-  const value =
-    typeof rule.value === "string" || typeof rule.value === "number"
-      ? String(rule.value)
-      : null
-  const selected = React.useMemo(() => (value === null ? [] : [value]), [value])
+  const multiple = arity === "multi"
+  const selected = React.useMemo(() => toValues(rule.value), [rule.value])
   const { options, loading, error, query, search, retry, getLabel } =
     useFieldOptions(field, { selected, enabled: open })
+  const [first] = selected
 
   return (
     <FilterCombobox
       id={id}
       aria-label={field.label}
-      label={value === null ? undefined : getLabel(value)}
+      label={
+        first === undefined ? undefined : selected.length > 1 ? (
+          <span className="flex min-w-0 items-center gap-1">
+            <span className="truncate">{getLabel(first)}</span>
+            <Badge variant="secondary" className="shrink-0">
+              {messages.counts.more(selected.length - 1)}
+            </Badge>
+          </span>
+        ) : (
+          getLabel(first)
+        )
+      }
       placeholder={messages.placeholders.value}
       options={options}
-      value={value}
-      onValueChange={setValue}
+      selected={selected}
+      multiple={multiple}
+      onSelectedChange={(values) =>
+        setValue(multiple ? values : (values[0] ?? null))
+      }
       search={query}
       onSearchChange={search}
       emptyText={messages.empty.options}

@@ -34,8 +34,10 @@ export function FilterFieldSelect({
       placeholder={messages.placeholders.field}
       // Matches ignoring accents, like the rest of the filter.
       options={filterOptions(options, search)}
-      value={field?.name ?? null}
-      onValueChange={onFieldChange}
+      selected={field ? [field.name] : []}
+      onSelectedChange={([name]) => {
+        if (name !== undefined) onFieldChange(name)
+      }}
       search={search}
       onSearchChange={setSearch}
       emptyText={messages.empty.fields}

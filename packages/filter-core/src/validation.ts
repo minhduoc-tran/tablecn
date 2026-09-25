@@ -74,7 +74,14 @@ export function getRuleWarnings(
   const arity = getOperatorArity(normalized.operator, registry.operators)
   if (arity !== "range" || !Array.isArray(normalized.value)) return []
 
-  const [from, to] = normalized.value
+  // Compared as the field type sees them, so number text like "9,5" isn't ordered as a string.
+  const { toComparable } = getFieldType(
+    findField(context, normalized.field)!,
+    registry
+  )!
+  const [from, to] = normalized.value.map((value) =>
+    toComparable ? toComparable(value, { accentInsensitive: false }) : value
+  )
   const comparable =
     typeof from === typeof to &&
     (typeof from === "number" || typeof from === "string")

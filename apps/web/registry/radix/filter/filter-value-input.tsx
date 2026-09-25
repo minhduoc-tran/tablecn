@@ -4,9 +4,11 @@ import type * as React from "react"
 import type { FieldTypeId } from "@querycn/filter-core"
 
 import { BooleanValueInput } from "@/registry/radix/filter/filter-boolean-value-input"
+import { DateValueInput } from "@/registry/radix/filter/filter-date-value-input"
 import type { FilterValueSlotProps } from "@/registry/radix/filter/filter-rule-row"
 import { SelectValueInput } from "@/registry/radix/filter/filter-select-value-input"
 import {
+  DateTimeValueInput,
   NumberValueInput,
   TextValueInput,
 } from "@/registry/radix/filter/filter-text-value-input"
@@ -21,6 +23,9 @@ export const filterValueInputs: FilterValueInputs = {
   number: NumberValueInput,
   boolean: BooleanValueInput,
   select: SelectValueInput,
+  multiSelect: SelectValueInput,
+  date: DateValueInput,
+  datetime: DateTimeValueInput,
 }
 
 export interface FilterValueInputProps extends FilterValueSlotProps {

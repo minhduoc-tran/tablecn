@@ -117,6 +117,18 @@ describe("jsonApiSerializer", () => {
     ).toEqual({ "filter[tags][in]": "a,b", "filter[amount][between]": "1,5" })
   })
 
+  it("skips a comma inside a list item only when comma-joining", () => {
+    const range = rule("amount", "between", ["12,5", "20"])
+    const comma = jsonApiSerializer({ arrayFormat: "comma" })
+    expect(comma(state("and", range), context)).toEqual({})
+    expect(comma.inspect(state("and", range), context).skipped).toEqual([
+      range.id,
+    ])
+    expect(serialize(state("and", range), context)).toEqual({
+      "filter[amount][between]": ["12,5", "20"],
+    })
+  })
+
   it("returns no params for an empty state", () => {
     expect(serialize(state("or"), context)).toEqual({})
   })

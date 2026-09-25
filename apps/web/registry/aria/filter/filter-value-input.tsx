@@ -4,9 +4,11 @@ import type * as React from "react"
 import type { FieldTypeId } from "@querycn/filter-core"
 
 import { BooleanValueInput } from "@/registry/aria/filter/filter-boolean-value-input"
+import { DateValueInput } from "@/registry/aria/filter/filter-date-value-input"
 import type { FilterValueSlotProps } from "@/registry/aria/filter/filter-rule-row"
 import { SelectValueInput } from "@/registry/aria/filter/filter-select-value-input"
 import {
+  DateTimeValueInput,
   NumberValueInput,
   TextValueInput,
 } from "@/registry/aria/filter/filter-text-value-input"
@@ -21,6 +23,9 @@ export const filterValueInputs: FilterValueInputs = {
   number: NumberValueInput,
   boolean: BooleanValueInput,
   select: SelectValueInput,
+  multiSelect: SelectValueInput,
+  date: DateValueInput,
+  datetime: DateTimeValueInput,
 }
 
 export interface FilterValueInputProps extends FilterValueSlotProps {

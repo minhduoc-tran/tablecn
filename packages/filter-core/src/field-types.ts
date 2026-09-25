@@ -74,6 +74,11 @@ const parseNumber: ParsePrimitive = (raw) => {
   return Number.isFinite(value) ? value : undefined
 }
 
+// Text that isn't a number (e.g. "12,5") is sent as typed; the backend decides what it means.
+const parseNumberInput: ParsePrimitive = (raw) =>
+  parseNumber(raw) ??
+  (typeof raw === "string" && raw.trim() !== "" ? raw.trim() : undefined)
+
 // Dates stay as `YYYY-MM-DD` strings: converting to Date would shift the day across time zones.
 const DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/
 
@@ -133,7 +138,7 @@ export const BUILTIN_FIELD_TYPES: Readonly<
     id: "number",
     operators: ["eq", "ne", ...RANGE_OPERATORS, ...EMPTY_OPERATORS],
     defaultOperator: "eq",
-    parseValue: createValueParser(parseNumber),
+    parseValue: createValueParser(parseNumberInput),
     toComparable: (value) => parseNumber(value) ?? null,
   },
   date: {

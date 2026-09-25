@@ -50,6 +50,13 @@ export function addParam(
 }
 
 /** Operators without a value send `true`. */
+/** A comma-joined list would split an item holding a comma, e.g. number text "12,5". */
+export function hasCommaItem(value: FilterValue): boolean {
+  return (
+    Array.isArray(value) && value.some((item) => String(item).includes(","))
+  )
+}
+
 export function formatValue(
   value: FilterValue,
   arrayFormat: ArrayFormat

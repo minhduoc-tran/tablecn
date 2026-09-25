@@ -129,7 +129,7 @@ describe("decodeFilters", () => {
       and: [
         ["ghost", "eq", "x"],
         ["name", "nope", "x"],
-        ["amount", "eq", "abc"],
+        ["amount", "eq", true],
         ["amount", "between", [1]],
         ["tags", "in", []],
         ["createdAt", "eq", "2026-02-30"],

@@ -46,7 +46,8 @@ describe("isRuleComplete", () => {
     ["no operator", rule("name", null, "x"), false],
     ["operator not offered by type", rule("name", "gt", "x"), false],
     ["operator narrowed away by field", rule("code", "contains", "x"), false],
-    ["unparseable number", rule("amount", "eq", "abc"), false],
+    ["number given as a non-number type", rule("amount", "eq", true), false],
+    ["number text kept for the backend", rule("amount", "eq", "12,5"), true],
   ])("%s", (_, input, expected) => {
     expect(isRuleComplete(input, context)).toBe(expected)
   })
@@ -163,6 +164,15 @@ describe("getRuleWarnings", () => {
   it("compares coerced values, not raw strings", () => {
     expect(
       getRuleWarnings(rule("amount", "between", ["9", "10"]), context)
+    ).toEqual([])
+  })
+
+  it("doesn't order number text the backend reads", () => {
+    expect(
+      getRuleWarnings(rule("amount", "between", ["9,5", "12,1"]), context)
+    ).toEqual([])
+    expect(
+      getRuleWarnings(rule("amount", "between", ["12,5", 3]), context)
     ).toEqual([])
   })
 

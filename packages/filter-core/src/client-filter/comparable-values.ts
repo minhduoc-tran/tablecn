@@ -30,7 +30,7 @@ const pad = (part: number) => String(part).padStart(2, "0")
 const localDay = (date: Date) =>
   Number.isNaN(date.getTime())
     ? null
-    : `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+    : `${String(date.getFullYear()).padStart(4, "0")}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
 
 // Instants (Date, epoch ms, ISO with a zone) are read in local time: the day the table shows.
 // Zone-less strings already name the day.
@@ -51,6 +51,21 @@ export function toDateOnly(value: unknown): string | null {
   return date.getUTCMonth() === month - 1 && date.getUTCDate() === day
     ? match[0]
     : null
+}
+
+/** Local midnight of a `YYYY-MM-DD` day, e.g. for a date picker; `null` if it isn't a real day. */
+export function parseDateOnly(value: string): Date | null {
+  const day = toDateOnly(value)
+  if (day === null || day !== value) return null
+  const [year, month, date] = day.split("-").map(Number) as [
+    number,
+    number,
+    number,
+  ]
+  // `new Date(99, …)` would mean 1999; setFullYear keeps years below 100.
+  const local = new Date(2000, 0, 1)
+  local.setFullYear(year, month - 1, date)
+  return local
 }
 
 // `Date.parse` accepts almost anything ("12", "Sept 3"), so require an ISO date first.

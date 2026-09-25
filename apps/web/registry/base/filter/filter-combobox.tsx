@@ -24,13 +24,15 @@ import {
 export interface FilterComboboxProps {
   id?: string
   "aria-label": string
-  /** Trigger text; `undefined` shows the placeholder. */
-  label: string | undefined
+  /** Trigger content; `undefined` shows the placeholder. */
+  label: React.ReactNode | undefined
   placeholder: string
   /** Already filtered for `search`. */
   options: readonly SelectOption[]
-  value: string | null
-  onValueChange: (value: string) => void
+  selected: readonly string[]
+  /** Picks toggle values and the list stays open. */
+  multiple?: boolean
+  onSelectedChange: (values: string[]) => void
   search: string
   onSearchChange: (search: string) => void
   emptyText: string
@@ -41,15 +43,16 @@ export interface FilterComboboxProps {
   className?: string
 }
 
-/** A searchable single select; the caller does the filtering. */
+/** A searchable select of one or several values; the caller does the filtering. */
 export function FilterCombobox({
   id,
   "aria-label": ariaLabel,
   label,
   placeholder,
   options,
-  value,
-  onValueChange,
+  selected,
+  multiple = false,
+  onSelectedChange,
   search,
   onSearchChange,
   emptyText,
@@ -103,7 +106,7 @@ export function FilterCombobox({
             value={search}
             onValueChange={onSearchChange}
           />
-          <CommandList>
+          <CommandList aria-multiselectable={multiple || undefined}>
             {error ? (
               <div
                 role="alert"
@@ -126,24 +129,45 @@ export function FilterCombobox({
               <CommandEmpty>{emptyText}</CommandEmpty>
             )}
             <CommandGroup>
-              {options.map((option) => (
-                <CommandItem
-                  key={option.value}
-                  value={option.value}
-                  onSelect={() => {
-                    onValueChange(option.value)
-                    handleOpenChange(false)
-                  }}
-                >
-                  <span className="truncate">{option.label}</span>
-                  <CheckIcon
-                    className={cn(
-                      "ml-auto",
-                      option.value !== value && "opacity-0"
+              {options.map((option) => {
+                const checked = selected.includes(option.value)
+                return (
+                  <CommandItem
+                    key={option.value}
+                    value={option.value}
+                    // Shows the item's own check mark; several values get a checkbox instead.
+                    data-checked={!multiple && checked}
+                    // cmdk's aria-selected marks the highlighted item, not a picked one.
+                    aria-checked={multiple ? checked : undefined}
+                    onSelect={() => {
+                      if (multiple) {
+                        onSelectedChange(
+                          checked
+                            ? selected.filter((v) => v !== option.value)
+                            : [...selected, option.value]
+                        )
+                      } else {
+                        onSelectedChange([option.value])
+                        handleOpenChange(false)
+                      }
+                    }}
+                  >
+                    {multiple && (
+                      <span
+                        aria-hidden
+                        className={cn(
+                          "flex size-4 shrink-0 items-center justify-center rounded-[4px] border border-input",
+                          checked &&
+                            "border-primary bg-primary text-primary-foreground"
+                        )}
+                      >
+                        {checked && <CheckIcon className="size-3" />}
+                      </span>
                     )}
-                  />
-                </CommandItem>
-              ))}
+                    <span className="truncate">{option.label}</span>
+                  </CommandItem>
+                )
+              })}
             </CommandGroup>
           </CommandList>
         </Command>

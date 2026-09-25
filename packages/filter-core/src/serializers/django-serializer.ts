@@ -1,7 +1,11 @@
 import { createParamsSerializer } from "./create-params-serializer"
 import type { MapRule } from "./encode-applied-rules"
 import { mapOperator, type OperatorMapping } from "./operator-mapping"
-import { formatValue, type InspectableSerializer } from "./query-params"
+import {
+  formatValue,
+  hasCommaItem,
+  type InspectableSerializer,
+} from "./query-params"
 
 // django-filter conventions; an empty lookup means the bare field name (exact match).
 const DEFAULT_LOOKUPS: OperatorMapping<string> = {
@@ -34,7 +38,7 @@ export interface DjangoSerializerOptions {
 /**
  * `status=active`, `name__icontains=abc`, `amount__range=1,5`. Rules whose
  * operator has no lookup are skipped. Lists are comma-joined as django-filter's
- * CSV filters expect, so list items can't contain commas.
+ * CSV filters expect, so a rule with a comma inside a list item is skipped too.
  */
 export function djangoSerializer({
   lookups,
@@ -45,7 +49,7 @@ export function djangoSerializer({
   return createParamsSerializer({
     encodeRule: ({ field, operator, value }) => {
       const lookup = mapOperator(lookupByOperator, operator)
-      if (lookup === undefined) return undefined
+      if (lookup === undefined || hasCommaItem(value)) return undefined
       const paramValue =
         mapOperator(NULL_CHECK_VALUES, operator) ?? formatValue(value, "comma")
       return [[lookup ? `${field}__${lookup}` : field, paramValue]]

@@ -26,6 +26,20 @@ describe("djangoSerializer", () => {
     expect(serialize(state("and", input), context)).toEqual(expected)
   })
 
+  it("skips a list with a comma inside an item, which comma-joining would split", () => {
+    const range = rule("amount", "between", ["12,5", "20"])
+    const serializer = djangoSerializer()
+    const withRange = state("and", range, rule("tags", "in", ["a"]))
+    expect(serializer(withRange, context)).toEqual({ tags__in: "a" })
+    expect(serializer.inspect(withRange, context).skipped).toEqual([range.id])
+    // A single value is sent as is.
+    expect(
+      serializer(state("and", rule("amount", "gt", "12,5")), context)
+    ).toEqual({
+      amount__gt: "12,5",
+    })
+  })
+
   it("skips operators without a lookup", () => {
     expect(
       serialize(

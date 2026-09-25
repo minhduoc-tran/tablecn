@@ -13,9 +13,11 @@ import {
   type AppliedFilterValue,
   type FilterDraftValue,
 } from "@querycn/filter-react"
-import { act, render, screen, waitFor } from "@testing-library/react"
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import type { ComponentType } from "react"
+import { hydrateRoot } from "react-dom/client"
+import { renderToString } from "react-dom/server"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import type {
@@ -73,7 +75,11 @@ const resolveCities = vi.fn(async (values: string[]) =>
 )
 
 // Back to the default implementation, so a leftover `…Once` can't leak into the next base.
-afterEach(() => loadCities.mockReset())
+afterEach(() => {
+  loadCities.mockReset()
+  vi.unstubAllEnvs()
+  vi.useRealTimers()
+})
 
 const FIELDS: FieldDefinition[] = [
   { name: "name", label: "Name", type: "text" },
@@ -87,9 +93,27 @@ const FIELDS: FieldDefinition[] = [
     loadOptions: loadCities,
     resolveLabels: resolveCities,
   },
+  {
+    name: "tags",
+    label: "Tags",
+    type: "multiSelect",
+    options: [
+      { label: "Red", value: "red" },
+      { label: "Green", value: "green" },
+      { label: "Blue", value: "blue" },
+    ],
+  },
+  { name: "created", label: "Created", type: "date" },
+  { name: "updated", label: "Updated", type: "datetime" },
 ]
 
 const url = (...rules: unknown[]) => JSON.stringify({ and: rules })
+
+// The trigger formats in the runtime's locale.
+const dayText = (year: number, month: number, day: number) =>
+  new Date(year, month, day).toLocaleDateString(undefined, {
+    dateStyle: "medium",
+  })
 
 // Popups move focus to their search input a frame after opening; type once it's there.
 async function typeInSearch(
@@ -145,7 +169,7 @@ describe.each(BASES)("%s value inputs", (_, Row, inputs, selectRole) => {
     expect(h.current.applied.state.rules[0]!.value).toBe("acme")
   })
 
-  it("number: keeps partial text, flags what can't parse, applies a number", async () => {
+  it("number: keeps partial text, applies numbers and sends other text as typed", async () => {
     const { user, h } = setup(url(["amount", "gt", 1]))
     const input = screen.getByRole("textbox", { name: "Amount" })
     expect((input as HTMLInputElement).value).toBe("1")
@@ -153,15 +177,16 @@ describe.each(BASES)("%s value inputs", (_, Row, inputs, selectRole) => {
     await user.clear(input)
     await user.type(input, "12.")
     expect((input as HTMLInputElement).value).toBe("12.")
-    expect(input.getAttribute("aria-invalid")).toBeNull()
-
-    await user.type(input, "x")
-    expect(input.getAttribute("aria-invalid")).toBe("true")
-
-    await user.clear(input)
-    await user.type(input, "12.5")
+    await user.type(input, "5")
     act(() => h.current.draft.apply())
     expect(h.current.applied.state.rules[0]!.value).toBe(12.5)
+
+    // The backend decides what "12,5" means.
+    await user.clear(input)
+    await user.type(input, "12,5")
+    expect(input.getAttribute("aria-invalid")).toBeNull()
+    act(() => h.current.draft.apply())
+    expect(h.current.applied.state.rules[0]!.value).toBe("12,5")
   })
 
   it("number range: two inputs, applied as numbers", async () => {
@@ -304,6 +329,146 @@ describe.each(BASES)("%s value inputs", (_, Row, inputs, selectRole) => {
       await waitFor(() => expect(document.activeElement).toBe(target()))
     }
   )
+
+  it("multi select: toggles values, stays open and shows the extra count", async () => {
+    const { user, h } = setup(url(["tags", "in", ["red"]]))
+    const trigger = screen.getByRole(selectRole, { name: /Tags$/ })
+    expect(trigger.textContent).toContain("Red")
+
+    await user.click(trigger)
+    await user.click(await screen.findByRole("option", { name: "Green" }))
+    expect(firstRule(h).value).toEqual(["red", "green"])
+    expect(screen.getByRole("option", { name: "Blue" })).toBeTruthy()
+    await waitFor(() => expect(trigger.textContent).toContain("+1 more"))
+
+    await user.click(screen.getByRole("option", { name: "Red" }))
+    expect(firstRule(h).value).toEqual(["green"])
+    act(() => h.current.draft.apply())
+    expect(h.current.applied.state.rules[0]!.value).toEqual(["green"])
+  })
+
+  it.each([
+    ["Pacific/Kiritimati", -840],
+    // Daylight saving time already started on 2026-03-08.
+    ["America/Los_Angeles", 420],
+  ])("date: picks a day without shifting it in %s", async (tz, offset) => {
+    vi.stubEnv("TZ", tz)
+    expect(new Date(2026, 2, 10).getTimezoneOffset()).toBe(offset)
+    const { user, h } = setup(url(["created", "eq", "2026-03-10"]))
+    const trigger = screen.getByRole("button", { name: /^Created:/ })
+    expect(trigger.textContent).toContain(dayText(2026, 2, 10))
+
+    await user.click(trigger)
+    await user.click(
+      await screen.findByRole("button", { name: /March 15(th)?, 2026/ })
+    )
+    expect(firstRule(h).value).toBe("2026-03-15")
+    await waitFor(() =>
+      expect(trigger.textContent).toContain(dayText(2026, 2, 15))
+    )
+  })
+
+  it("date: hydrates without a mismatch, then formats in the browser's locale", async () => {
+    const app = (
+      <FilterProvider
+        fields={FIELDS}
+        adapter={createMemoryAdapter(url(["created", "eq", "2026-03-10"]))}
+      >
+        <Rows Row={Row} report={() => {}} />
+      </FilterProvider>
+    )
+    const container = document.createElement("div")
+    document.body.append(container)
+    container.innerHTML = renderToString(app)
+    expect(container.textContent).toContain("2026-03-10")
+
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {})
+    const onRecoverableError = vi.fn()
+    const root = await act(async () =>
+      hydrateRoot(container, app, { onRecoverableError })
+    )
+    expect(onRecoverableError).not.toHaveBeenCalled()
+    expect(errors).not.toHaveBeenCalled()
+    expect(container.textContent).toContain(dayText(2026, 2, 10))
+    errors.mockRestore()
+    act(() => root.unmount())
+    container.remove()
+  })
+
+  it("date: clicking the picked day again keeps it", async () => {
+    const { user, h } = setup(url(["created", "eq", "2026-03-10"]))
+    await user.click(screen.getByRole("button", { name: /^Created:/ }))
+    await user.click(
+      await screen.findByRole("button", { name: /March 10(th)?, 2026/ })
+    )
+    expect(firstRule(h).value).toBe("2026-03-10")
+  })
+
+  it("datetime: shows a zoned value in local time", () => {
+    vi.stubEnv("TZ", "Asia/Ho_Chi_Minh")
+    setup(url(["updated", "gt", "2026-03-01T01:00:00Z"]))
+    const input = screen
+      .getAllByLabelText("Updated")
+      .find((el): el is HTMLInputElement => el instanceof HTMLInputElement)
+    expect(input?.value).toBe("2026-03-01T08:00")
+  })
+
+  it("multi select: keeps values the search hides and exposes the checked state", async () => {
+    const { user, h } = setup(url(["tags", "in", ["red"]]))
+    await user.click(screen.getByRole(selectRole, { name: /Tags$/ }))
+    await typeInSearch(user, "gr")
+    await waitFor(() =>
+      expect(screen.getAllByRole("option").map((o) => o.textContent)).toEqual([
+        "Green",
+      ])
+    )
+    await user.click(screen.getByRole("option", { name: "Green" }))
+    expect(firstRule(h).value).toEqual(["red", "green"])
+
+    // cmdk uses aria-selected for the highlighted item, so Radix and Base UI mark picks with aria-checked.
+    const state = selectRole === "button" ? "aria-selected" : "aria-checked"
+    expect(
+      screen.getByRole("option", { name: "Green" }).getAttribute(state)
+    ).toBe("true")
+  })
+
+  it("date range: two clicks pick the start and end days", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] })
+    vi.setSystemTime(new Date(2026, 2, 10))
+    const { user, h } = setup()
+    act(() => h.current.draft.addRule("created"))
+    act(() => h.current.draft.setOperator(firstRule(h).id, "between"))
+
+    await user.click(screen.getByRole("button", { name: /^Created:/ }))
+    await user.click(
+      await screen.findByRole("button", { name: /March 5(th)?, 2026/ })
+    )
+    await user.click(
+      screen.getByRole("button", { name: /March 20(th)?, 2026/ })
+    )
+    expect(firstRule(h).value).toEqual(["2026-03-05", "2026-03-20"])
+    act(() => h.current.draft.apply())
+    expect(h.current.applied.state.rules[0]!.value).toEqual([
+      "2026-03-05",
+      "2026-03-20",
+    ])
+  })
+
+  it("datetime: local date-time inputs for a range", () => {
+    const { h } = setup(
+      url(["updated", "between", ["2026-03-01T08:00", "2026-03-02T09:30"]])
+    )
+    const from = screen.getByLabelText("Updated From") as HTMLInputElement
+    expect(from.type).toBe("datetime-local")
+    expect(from.value).toBe("2026-03-01T08:00")
+
+    fireEvent.change(from, { target: { value: "2026-03-01T07:15" } })
+    act(() => h.current.draft.apply())
+    expect(h.current.applied.state.rules[0]!.value).toEqual([
+      "2026-03-01T07:15",
+      "2026-03-02T09:30",
+    ])
+  })
 
   it("falls back to a text input for a type without one, and takes overrides", () => {
     const registry = createRegistry({

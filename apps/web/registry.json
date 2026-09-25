@@ -17,7 +17,6 @@
         "badge",
         "button",
         "calendar",
-        "checkbox",
         "command",
         "input",
         "popover",
@@ -68,11 +67,21 @@
           "path": "registry/{base}/filter/filter-select-value-input.tsx",
           "type": "registry:component",
           "target": "@components/filter/filter-select-value-input.tsx"
+        },
+        {
+          "path": "registry/{base}/filter/filter-date-value-input.tsx",
+          "type": "registry:component",
+          "target": "@components/filter/filter-date-value-input.tsx"
+        },
+        {
+          "path": "registry/shared/filter/filter-date-format.ts",
+          "type": "registry:lib",
+          "target": "@components/filter/filter-date-format.ts"
         }
       ],
       "bases": {
         "aria": {
-          "dependencies": ["react-aria-components"]
+          "dependencies": ["react-aria-components", "@internationalized/date"]
         }
       }
     }

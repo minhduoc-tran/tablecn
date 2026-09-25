@@ -3,7 +3,7 @@
 import * as React from "react"
 import type { SelectOption } from "@querycn/filter-core"
 import { useFilterActions } from "@querycn/filter-react"
-import { Autocomplete } from "react-aria-components"
+import { Autocomplete, type Key } from "react-aria-components"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/registry/aria/ui/button"
@@ -21,13 +21,15 @@ import {
 export interface FilterComboboxProps {
   id?: string
   "aria-label": string
-  /** Trigger text; `undefined` shows the placeholder. */
-  label: string | undefined
+  /** Trigger content; `undefined` shows the placeholder. */
+  label: React.ReactNode | undefined
   placeholder: string
   /** Already filtered for `search`. */
   options: readonly SelectOption[]
-  value: string | null
-  onValueChange: (value: string) => void
+  selected: readonly string[]
+  /** Picks toggle values and the list stays open. */
+  multiple?: boolean
+  onSelectedChange: (values: string[]) => void
   search: string
   onSearchChange: (search: string) => void
   emptyText: string
@@ -38,15 +40,16 @@ export interface FilterComboboxProps {
   className?: string
 }
 
-/** A searchable single select; the caller does the filtering. */
+/** A searchable select of one or several values; the caller does the filtering. */
 export function FilterCombobox({
   id,
   "aria-label": ariaLabel,
   label,
   placeholder,
   options,
-  value,
-  onValueChange,
+  selected,
+  multiple = false,
+  onSelectedChange,
   search,
   onSearchChange,
   emptyText,
@@ -66,9 +69,17 @@ export function FilterCombobox({
       placeholder={placeholder}
       // Opens with nothing loaded yet, so async options can load and empty/error states show.
       allowsEmptyCollection
-      value={value}
-      onChange={(key) => {
-        if (key !== null && open.current) onValueChange(String(key))
+      selectionMode={multiple ? "multiple" : "single"}
+      value={multiple ? selected : (selected[0] ?? null)}
+      onChange={(next: Key | Key[] | null) => {
+        if (!open.current) return
+        onSelectedChange(
+          Array.isArray(next)
+            ? next.map(String)
+            : next === null
+              ? []
+              : [String(next)]
+        )
       }}
       onOpenChange={(next) => {
         open.current = next
