@@ -151,6 +151,12 @@ The provider holds the filter and connects everything to the URL. The table find
 <Tabs items={["Next.js", "Vite / plain React", "react-router"]}>
 <Tab value="Next.js">
 
+Add the Next.js adapter first. The registry doesn't install it, since only Next.js apps need it:
+
+```npm
+npm install @querycn/filter-next
+```
+
 ```tsx title="app/orders/orders-view.tsx"
 "use client"
 
