@@ -1,8 +1,6 @@
 # @querycn/table-react
 
-Headless data table for React on [TanStack Table](https://tanstack.com/table) v9: sorting and pagination synced to the URL, a persisted column layout, row selection, and integration with [`@querycn/filter-react`](../filter-react).
-
-> Work in progress — not published yet.
+Headless data table for React on [TanStack Table](https://tanstack.com/table) v9: sorting and pagination synced to the URL, a persisted column layout, row selection, and integration with [`@querycn/filter-react`](https://www.npmjs.com/package/@querycn/filter-react).
 
 - **URL state.** Search, sort, page and page size live next to the filter: `?q=nguyen&status__eq=paid&sort=-amount,name&page=2&per_page=50`. Links are shareable, back/forward work, and a new filter sends the page back to 1.
 - **Client or server data.** Search, sort, filter and page rows in the browser (the search ignores case and accents), or turn the URL into your backend's params (JSON:API, Django REST framework, PostgREST, or your own).

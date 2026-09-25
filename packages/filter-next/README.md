@@ -1,8 +1,6 @@
 # @querycn/filter-next
 
-Next.js App Router bindings for [`@querycn/filter-react`](../filter-react): a URL adapter, a ready-wired provider and `parseFilters` for server components and route handlers.
-
-> Work in progress — not published yet.
+Next.js App Router bindings for [`@querycn/filter-react`](https://www.npmjs.com/package/@querycn/filter-react): a URL adapter, a ready-wired provider and `parseFilters` for server components and route handlers.
 
 ```bash
 pnpm add @querycn/filter-core @querycn/filter-react @querycn/filter-next
