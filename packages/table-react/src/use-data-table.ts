@@ -9,7 +9,7 @@ import {
   type RowData,
   type RowSelectionState,
 } from "@tanstack/react-table"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import {
   dataTableFeatures,
@@ -19,6 +19,7 @@ import type { TableUrlOptions } from "./table-url-codec"
 import { getDefaultLayout, getLayoutColumns } from "./table-layout-state"
 import type { LayoutStorage } from "./layout-storage"
 import { useTableLayout } from "./use-table-layout"
+import { tableUrlOptions } from "./table-url-options"
 import { useTableUrlState } from "./use-table-url-state"
 
 interface DataTableBaseOptions<TData extends RowData> {
@@ -94,22 +95,35 @@ export function useDataTable<TData extends RowData>(
   )
 
   // A refetch leaves rowCount undefined for a moment; clamping against the last
-  // known total keeps the page from jumping back and forth meanwhile.
-  const [knownRowCount, setKnownRowCount] = useState<number>()
+  // known total keeps the page from jumping back and forth meanwhile. The filter
+  // it came with tells whether it still describes the rows the URL asks for.
+  const [known, setKnown] = useState<{ rowCount: number; filterKey: string }>()
   const latestRowCount = isServer ? options.rowCount : rows.length
-  if (latestRowCount !== undefined && latestRowCount !== knownRowCount) {
-    setKnownRowCount(latestRowCount)
+  if (latestRowCount !== undefined && latestRowCount !== known?.rowCount) {
+    setKnown({ rowCount: latestRowCount, filterKey: applied.queryKey })
   }
-  const rowCount = latestRowCount ?? knownRowCount
+  const rowCount = latestRowCount ?? known?.rowCount
 
   const layoutColumns = useMemo(() => getLayoutColumns(columns), [columns])
   const urlState = useTableUrlState({
-    // Other ids in `sort` are dropped, so the backend never gets them.
-    sortableColumns: layoutColumns.filter((c) => c.canSort).map((c) => c.id),
-    ...url,
+    // Unsortable ids in `sort` are dropped, so the backend never gets them.
+    ...tableUrlOptions(columns, url),
     adapter: options.adapter ?? filterAdapter ?? undefined,
     rowCount,
   })
+  // The backend's total says the URL's page doesn't exist: point the URL, and so
+  // the next fetch, at the last page. Not with a total kept from another filter
+  // (`keepPreviousData` after back/forward), nor in client mode, where rows may
+  // still be loading.
+  const { isPageClamped, onPaginationChange } = urlState
+  const fixPage =
+    isServer &&
+    isPageClamped &&
+    options.rowCount !== undefined &&
+    known?.filterKey === applied.queryKey
+  useEffect(() => {
+    if (fixPage) onPaginationChange((pagination) => pagination)
+  }, [fixPage, onPaginationChange])
   const layout = useTableLayout({
     columns,
     storageKey: options.storageKey,

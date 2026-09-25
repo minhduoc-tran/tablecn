@@ -244,6 +244,49 @@ describe("useDataTable in server mode", () => {
     expect(result.current.getPageCount()).toBe(5)
   })
 
+  it("points the URL at the last page once the backend's total is known", () => {
+    const { adapter, writes, rerender } = server(
+      "?page=40&per_page=10",
+      undefined
+    )
+    expect(writes).toEqual([])
+    rerender({ mode: "server", data: [], rowCount: 95 })
+    expect(writes).toEqual([{ page: "10" }])
+    expect(adapter.read()).toBe("?per_page=10&page=10")
+  })
+
+  it("keeps the URL's page when the total is left over from another filter", () => {
+    const adapter = createMemoryAdapter("?page=5&per_page=10")
+    const writes = track(adapter)
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <FilterProvider fields={FIELDS} adapter={adapter}>
+        {children}
+      </FilterProvider>
+    )
+    const { result, rerender } = renderHook(
+      ({ rowCount }: { rowCount: number }) =>
+        useDataTable({
+          mode: "server",
+          data: PAGE,
+          rowCount,
+          columns: COLUMNS,
+          getRowId: (row) => row.id,
+        }),
+      { wrapper, initialProps: { rowCount: 200 } }
+    )
+    // A link to a filtered list, its total, then back to page 5 while
+    // `keepPreviousData` still hands over the filtered total.
+    act(() => adapter.write({ page: null, status__eq: "open" }))
+    rerender({ rowCount: 10 })
+    act(() => adapter.write({ page: "5", status__eq: null }))
+    rerender({ rowCount: 10 })
+    expect(result.current.store.state.pagination.pageIndex).toBe(0)
+    rerender({ rowCount: 200 })
+    expect(result.current.store.state.pagination.pageIndex).toBe(4)
+    expect(adapter.read()).toBe("?per_page=10&page=5")
+    expect(writes.filter((w) => !("status__eq" in w))).toEqual([])
+  })
+
   it("clamps to the last page once rowCount is known", () => {
     const { result, rerender } = server("?page=40&per_page=10", undefined)
     expect(result.current.store.state.pagination.pageIndex).toBe(39)

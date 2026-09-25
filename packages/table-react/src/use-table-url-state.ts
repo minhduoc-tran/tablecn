@@ -29,6 +29,8 @@ export interface UseTableUrlStateOptions extends TableUrlOptions {
 }
 
 export interface TableUrlStateValue extends TableUrlState {
+  /** The URL asks for a page past the last one; `pagination` shows the last. */
+  isPageClamped: boolean
   onSortingChange: (updater: Updater<SortingState>) => void
   onPaginationChange: (updater: Updater<PaginationState>) => void
 }
@@ -151,5 +153,10 @@ export function useTableUrlState({
     [commit]
   )
 
-  return { ...state, onSortingChange, onPaginationChange }
+  return {
+    ...state,
+    isPageClamped: state !== decoded,
+    onSortingChange,
+    onPaginationChange,
+  }
 }

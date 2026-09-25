@@ -17,6 +17,7 @@ import {
 } from "react"
 
 import type { ColumnColorsState } from "./column-color-feature"
+import { useStableValue } from "./use-stable-value"
 import {
   getLocalStorage,
   readLayout,
@@ -62,11 +63,6 @@ export interface TableLayout {
 
 const noopSubscribe = () => () => {}
 
-/** The same reference while the content is the same. */
-function useStableValue<T>(value: T): T {
-  const key = JSON.stringify(value)
-  return useMemo(() => JSON.parse(key) as T, [key])
-}
 const readNothing = () => null
 
 const useIsomorphicLayoutEffect =
