@@ -92,8 +92,8 @@ function Orders() {
       </div>
       <dl className="grid gap-2 font-mono text-xs">
         <div>
-          <dt className="text-muted-foreground">?filters=</dt>
-          <dd className="break-all">{queryKey ?? "(empty)"}</dd>
+          <dt className="text-muted-foreground">URL</dt>
+          <dd className="break-all">{queryKey ? `?${queryKey}` : "(empty)"}</dd>
         </div>
         <div>
           <dt className="text-muted-foreground">jsonApiSerializer()</dt>

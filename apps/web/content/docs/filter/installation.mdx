@@ -206,4 +206,4 @@ function OrdersTable() {
 }
 ```
 
-`queryKey` is the encoded filter (or `null`): a stable string for cache keys and effect dependencies. To send another format, pass a [serializer](/docs/filter/serializers). If the rows are already in the browser, filter them with [`applyFilter`](/docs/filter/client-filtering) instead.
+`queryKey` is the filter's query params (`""` when empty): a stable string for cache keys and effect dependencies. To send another format, pass a [serializer](/docs/filter/serializers). If the rows are already in the browser, filter them with [`applyFilter`](/docs/filter/client-filtering) instead.

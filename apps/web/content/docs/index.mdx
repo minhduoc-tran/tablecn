@@ -16,7 +16,7 @@ description: Data table building blocks for shadcn/ui — logic on npm, UI you o
 
 The first finished piece is the **filter**: a conditional filter builder ("Where *Status* is *Paid* and *Amount* is between *10* and *50*") that keeps its state in the URL and turns it into whatever your backend understands.
 
-The filter is a **standalone core**. It doesn't depend on the table, so you can use it on its own: above a list of cards, in a report, or only on the server to parse `?filters=` in an API route.
+The filter is a **standalone core**. It doesn't depend on the table, so you can use it on its own: above a list of cards, in a report, or only on the server to parse `?status__eq=paid` in an API route.
 
 <Cards>
   <Card title="Filter" href="/docs/filter" description="What it does, how the pieces fit, and a live preview." />

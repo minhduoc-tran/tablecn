@@ -86,7 +86,7 @@ function OrdersTable() {
 | `state` | `FilterState` | Complete rules only, with positional ids (`u0`, `u1`…). |
 | `activeCount` | `number` | Number of applied rules, e.g. for a badge. |
 | `query` | `T` (default `QueryParams`) | The serializer's output. Recomputed only when the applied filter changes. |
-| `queryKey` | `string \| null` | The encoded filter; `null` when empty. A stable string for cache keys and effect dependencies. |
+| `queryKey` | `string` | The filter's query params, e.g. `status__eq=paid`; `""` when empty. A stable string for cache keys and effect dependencies. |
 | `ruleIssues` | `Record<string, RuleIssue[]>` | Per rule id, `"conflict"` or `"unsupported"` from the serializer's `inspect`. |
 | `removeRule(id)` | `(id: string) => void` | Removes one applied rule right away, e.g. from a chip. |
 | `context` | `{ fields, registry }` | Ready to pass to core functions like `applyFilter`. |
