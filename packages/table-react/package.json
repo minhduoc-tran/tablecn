@@ -30,6 +30,10 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.js"
+    },
     "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
@@ -54,6 +58,7 @@
     "react": ">=18"
   },
   "devDependencies": {
+    "@querycn/filter-core": "workspace:*",
     "@querycn/filter-react": "workspace:*",
     "@tanstack/react-table": "^9.2.4",
     "@testing-library/dom": "^10",

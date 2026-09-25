@@ -308,6 +308,9 @@ importers:
 
   packages/table-react:
     devDependencies:
+      '@querycn/filter-core':
+        specifier: workspace:*
+        version: link:../filter-core
       '@querycn/filter-react':
         specifier: workspace:*
         version: link:../filter-react
