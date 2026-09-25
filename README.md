@@ -15,6 +15,7 @@
 <p align="center">
   <a href="https://github.com/minhduoc-tran/tablecn"><img src="https://www.shieldcn.dev/github/stars/minhduoc-tran/tablecn.svg?variant=secondary&size=xs&theme=zinc" alt="GitHub Stars" /></a>
   <a href="https://github.com/minhduoc-tran/tablecn/actions"><img src="https://www.shieldcn.dev/github/ci/minhduoc-tran/tablecn.svg?variant=secondary&size=xs&theme=zinc" alt="CI" /></a>
+  <a href="https://www.npmjs.com/package/@querycn/table-react"><img src="https://shieldcn.dev/npm/v/@querycn/table-react.svg?variant=secondary&size=xs&theme=zinc" alt="npm" /></a>
   <a href="LICENSE"><img src="https://www.shieldcn.dev/github/license/minhduoc-tran/tablecn.svg?variant=secondary&size=xs&theme=zinc" alt="License" /></a>
 </p>
 
@@ -57,12 +58,12 @@ npx shadcn@latest add @tablecn/filter-builder
 
 The logic comes along as npm packages:
 
-| Package | What it is |
-| --- | --- |
-| [`@querycn/filter-core`](packages/filter-core) | Rules, URL codec, backend serializers, client-side filtering. No dependencies |
-| [`@querycn/filter-react`](packages/filter-react) | Filter provider, hooks and URL adapters |
-| [`@querycn/filter-next`](packages/filter-next) | Next.js App Router adapter and a server parser |
-| [`@querycn/table-react`](packages/table-react) | `useDataTable` on TanStack Table v9: URL state, saved layout, search, server params |
+| Package | Version | What it is |
+| --- | --- | --- |
+| [`@querycn/filter-core`](https://www.npmjs.com/package/@querycn/filter-core) | [![npm](https://shieldcn.dev/npm/v/@querycn/filter-core.svg?variant=secondary&size=xs&theme=zinc)](https://www.npmjs.com/package/@querycn/filter-core) | Rules, URL codec, backend serializers, client-side filtering. No dependencies |
+| [`@querycn/filter-react`](https://www.npmjs.com/package/@querycn/filter-react) | [![npm](https://shieldcn.dev/npm/v/@querycn/filter-react.svg?variant=secondary&size=xs&theme=zinc)](https://www.npmjs.com/package/@querycn/filter-react) | Filter provider, hooks and URL adapters |
+| [`@querycn/filter-next`](https://www.npmjs.com/package/@querycn/filter-next) | [![npm](https://shieldcn.dev/npm/v/@querycn/filter-next.svg?variant=secondary&size=xs&theme=zinc)](https://www.npmjs.com/package/@querycn/filter-next) | Next.js App Router adapter and a server parser |
+| [`@querycn/table-react`](https://www.npmjs.com/package/@querycn/table-react) | [![npm](https://shieldcn.dev/npm/v/@querycn/table-react.svg?variant=secondary&size=xs&theme=zinc)](https://www.npmjs.com/package/@querycn/table-react) | `useDataTable` on TanStack Table v9: URL state, saved layout, search, server params |
 
 ## Community
 
