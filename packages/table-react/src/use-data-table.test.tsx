@@ -102,6 +102,12 @@ describe("useDataTable in client mode", () => {
     expect(amounts[0]).toBe(Math.max(...ORDERS.map((row) => row.amount)))
   })
 
+  it("sorts ascending first unless a column says otherwise", () => {
+    const { adapter, result } = setup()
+    act(() => result.current.getColumn("amount")!.toggleSorting())
+    expect(adapter.read()).toBe("?sort=amount")
+  })
+
   it("keeps multi-sort within maxSortColumns", () => {
     const { adapter, result } = setup("", { url: { maxSortColumns: 2 } })
     act(() => {

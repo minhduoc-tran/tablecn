@@ -15,10 +15,16 @@ export interface TableLayoutState {
   columnColors: ColumnColorsState
 }
 
-/** `meta` keys the layout reads from column definitions. */
+/** `meta` keys the data table reads from column definitions. */
 export interface DataTableColumnMeta {
+  /** Name for menus and screen readers when `header` isn't a string. */
+  label?: string
+  /** Marks the header with a red `*`. */
+  required?: boolean
   defaultHidden?: boolean
   defaultPinned?: "start" | "end"
+  /** `false` keeps the column where it is, e.g. a selection column. */
+  enableOrdering?: boolean
 }
 
 /** The parts of a column definition the layout reads; TanStack column defs fit. */

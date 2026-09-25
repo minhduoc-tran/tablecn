@@ -28,7 +28,7 @@ export function createSelectionColumn<TData extends object>(
     enableHiding: false,
     enablePinning: false,
     enableResizing: false,
-    meta: { defaultPinned: "start" },
+    meta: { defaultPinned: "start", enableOrdering: false },
     header: ({ table }) => (
       <Checkbox
         aria-label={messages.selection.selectAll}

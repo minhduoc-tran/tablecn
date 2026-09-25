@@ -36,6 +36,8 @@ interface DataTableBaseOptions<TData extends RowData> {
   layoutStorage?: LayoutStorage
   layoutVersion?: number
   enableRowSelection?: boolean | ((row: { original: TData }) => boolean)
+  /** Reading direction, so resizing follows the pointer in right-to-left layouts. */
+  dir?: "ltr" | "rtl"
 }
 
 /** `data` is one page, already filtered and sorted by the backend. */
@@ -175,9 +177,12 @@ export function useDataTable<TData extends RowData>(
     // The URL keeps the page; an out-of-range page is clamped, not rewritten.
     autoResetPageIndex: false,
     maxMultiSortColCount: url?.maxSortColumns ?? 3,
+    // Ascending first for every type; a column opts out with `sortDescFirst: true`.
+    sortDescFirst: false,
     enableRowSelection,
     // Saves the layout once per drag instead of on every pointer move.
     columnResizeMode: "onEnd",
+    columnResizeDirection: options.dir ?? "ltr",
   })
 }
 

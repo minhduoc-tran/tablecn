@@ -28,6 +28,18 @@ export const enTableMessages: TableMessages = {
     error: "Something went wrong.",
     loading: "Loading…",
   },
+  header: {
+    move: (column) => `Move column ${column}`,
+    resize: (column) => `Resize column ${column}`,
+    instructions:
+      "To pick up a column, press space or enter. Use the arrow keys to move it, space or enter to drop it, and escape to cancel.",
+    pickedUp: (column) => `Picked up column ${column}.`,
+    movedTo: (column, position, total) =>
+      `Column ${column} moved to position ${position} of ${total}.`,
+    dropped: (column, position, total) =>
+      `Column ${column} dropped at position ${position} of ${total}.`,
+    cancelled: (column) => `Moving column ${column} was cancelled.`,
+  },
   counts: {
     page: (page, pageCount) =>
       pageCount === undefined ? `Page ${page}` : `Page ${page} of ${pageCount}`,

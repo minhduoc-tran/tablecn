@@ -19,6 +19,16 @@ export interface TableMessages {
   selection: Labels<"selectAll" | "selectRow">
   actions: Labels<"reload" | "clearFilters" | "retry">
   states: Labels<"empty" | "error" | "loading">
+  /** Column header controls and what screen readers hear while moving a column. */
+  header: {
+    move: (column: string) => string
+    resize: (column: string) => string
+    instructions: string
+    pickedUp: (column: string) => string
+    movedTo: (column: string, position: number, total: number) => string
+    dropped: (column: string, position: number, total: number) => string
+    cancelled: (column: string) => string
+  }
   counts: {
     /** `page` is 1-based; `pageCount` is `undefined` while unknown. */
     page: (page: number, pageCount: number | undefined) => string

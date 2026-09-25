@@ -121,6 +121,8 @@
       "title": "Data Table",
       "description": "A data table on TanStack Table v9: sorting and pages in the URL, a saved column layout and row selection, built on @querycn/table-react.",
       "dependencies": [
+        "@dnd-kit/core@^6.3.1",
+        "@dnd-kit/sortable@^10.0.0",
         "@querycn/table-react@^0.1.0",
         "@tanstack/react-table@^9.2.0",
         "lucide-react"
@@ -145,6 +147,31 @@
           "path": "registry/{base}/table/data-table-selection-column.tsx",
           "type": "registry:component",
           "target": "@components/data-table/data-table-selection-column.tsx"
+        },
+        {
+          "path": "registry/{base}/table/data-table-column-header.tsx",
+          "type": "registry:component",
+          "target": "@components/data-table/data-table-column-header.tsx"
+        },
+        {
+          "path": "registry/shared/table/column-reorder.tsx",
+          "type": "registry:component",
+          "target": "@components/data-table/column-reorder.tsx"
+        },
+        {
+          "path": "registry/shared/table/column-resize-handle.tsx",
+          "type": "registry:component",
+          "target": "@components/data-table/column-resize-handle.tsx"
+        },
+        {
+          "path": "registry/shared/table/column-label.ts",
+          "type": "registry:lib",
+          "target": "@components/data-table/column-label.ts"
+        },
+        {
+          "path": "registry/shared/table/data-table-cell-classes.ts",
+          "type": "registry:lib",
+          "target": "@components/data-table/data-table-cell-classes.ts"
         },
         {
           "path": "registry/shared/table/data-table-pinning.ts",

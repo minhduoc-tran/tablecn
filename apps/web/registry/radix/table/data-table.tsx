@@ -19,11 +19,17 @@ import {
   TableRow,
 } from "@/registry/radix/ui/table"
 import {
+  headerCellClassName,
+  pinnedCellClassName,
+} from "@/registry/shared/table/data-table-cell-classes"
+import {
   getColumnCellProps,
   getHeaderCellProps,
   getPinnedEdges,
 } from "@/registry/shared/table/data-table-pinning"
+import { ColumnReorder } from "@/registry/shared/table/column-reorder"
 import { useScrollEdges } from "@/registry/shared/table/use-scroll-edges"
+import { DataTableColumnHeader } from "@/registry/radix/table/data-table-column-header"
 
 export interface DataTableProps<TData extends object> extends Omit<
   React.ComponentProps<"div">,
@@ -42,19 +48,6 @@ export interface DataTableProps<TData extends object> extends Omit<
   messages?: TableMessages
   skeletonRows?: number
 }
-
-// Opaque, so scrolled cells don't show through; the row's hover and selection
-// colors are mixed in. Edge columns fade a shadow over the cells scrolled under them.
-const PINNED_CELL = cn(
-  "data-pinned:z-10 data-pinned:bg-background group-hover/row:data-pinned:bg-[color-mix(in_oklab,var(--color-muted)_50%,var(--color-background))] group-data-[state=selected]/row:data-pinned:bg-muted",
-  "before:pointer-events-none before:absolute before:inset-y-0 before:w-3 before:from-foreground/10 before:to-transparent before:opacity-0 before:transition-opacity",
-  "data-[pinned-edge=start]:before:-end-3 data-[pinned-edge=start]:before:bg-linear-to-r group-data-[scroll-start]/data-table:data-[pinned-edge=start]:before:opacity-100 rtl:data-[pinned-edge=start]:before:bg-linear-to-l",
-  "data-[pinned-edge=end]:before:-start-3 data-[pinned-edge=end]:before:bg-linear-to-l group-data-[scroll-end]/data-table:data-[pinned-edge=end]:before:opacity-100 rtl:data-[pinned-edge=end]:before:bg-linear-to-r"
-)
-
-// A sticky header loses its row border to border-collapse, so each cell draws one.
-const HEADER_CELL =
-  "relative bg-background after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-border"
 
 // Controls inside a row (checkbox, link, menu) don't count as a click on it.
 const CONTROLS =
@@ -102,6 +95,7 @@ export function DataTable<TData extends object>({
     ...table.getEndVisibleLeafColumns(),
   ]
   const edges = getPinnedEdges(table)
+  const headerGroups = table.getHeaderGroups()
   const isReloading = isLoading && rows.length > 0
 
   let body: React.ReactNode
@@ -127,7 +121,7 @@ export function DataTable<TData extends object>({
           <TableCell
             key={column.id}
             {...getColumnCellProps(column, edges)}
-            className={PINNED_CELL}
+            className={pinnedCellClassName}
           >
             <Skeleton className="h-4 w-full" />
           </TableCell>
@@ -171,7 +165,7 @@ export function DataTable<TData extends object>({
           <TableCell
             key={cell.id}
             {...getColumnCellProps(cell.column, edges)}
-            className={PINNED_CELL}
+            className={pinnedCellClassName}
           >
             <div className="truncate">
               <table.FlexRender cell={cell} />
@@ -194,53 +188,55 @@ export function DataTable<TData extends object>({
       )}
       {...props}
     >
-      <table
-        data-slot="table"
-        aria-busy={isLoading || undefined}
-        className="table-fixed caption-bottom text-sm"
-        style={{ width: table.getTotalSize() }}
-      >
-        <TableHeader className="sticky top-0 z-20 bg-background">
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id} className="hover:bg-transparent">
-              {headerGroup.headers.map((header) => {
-                const sorted = header.column.getIsSorted()
-                return (
-                  <TableHead
-                    key={header.id}
-                    colSpan={header.colSpan}
-                    aria-sort={
-                      !header.isPlaceholder && header.column.getCanSort()
-                        ? sorted === "asc"
-                          ? "ascending"
-                          : sorted === "desc"
-                            ? "descending"
-                            : "none"
-                        : undefined
-                    }
-                    {...getHeaderCellProps(header, edges)}
-                    className={cn(PINNED_CELL, HEADER_CELL)}
-                  >
-                    {header.isPlaceholder ? null : (
-                      <div className="truncate">
-                        <table.FlexRender header={header} />
-                      </div>
-                    )}
-                  </TableHead>
-                )
-              })}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody
-          className={cn(
-            "transition-opacity",
-            isReloading && "pointer-events-none opacity-60"
-          )}
+      <ColumnReorder table={table} messages={messages}>
+        <table
+          data-slot="table"
+          aria-busy={isLoading || undefined}
+          className="table-fixed caption-bottom text-sm"
+          style={{ width: table.getTotalSize() }}
         >
-          {body}
-        </TableBody>
-      </table>
+          <TableHeader className="sticky top-0 z-20 bg-background">
+            {headerGroups.map((headerGroup) => (
+              <TableRow key={headerGroup.id} className="hover:bg-transparent">
+                {headerGroup.headers.map((header) =>
+                  header.subHeaders.length === 0 ? (
+                    <DataTableColumnHeader
+                      key={header.id}
+                      table={table}
+                      header={header}
+                      edges={edges}
+                      messages={messages}
+                      // Moving a column out of its group would break the group.
+                      canReorder={headerGroups.length === 1}
+                    />
+                  ) : (
+                    <TableHead
+                      key={header.id}
+                      colSpan={header.colSpan}
+                      {...getHeaderCellProps(header, edges)}
+                      className={cn(pinnedCellClassName, headerCellClassName)}
+                    >
+                      {header.isPlaceholder ? null : (
+                        <div className="truncate">
+                          <table.FlexRender header={header} />
+                        </div>
+                      )}
+                    </TableHead>
+                  )
+                )}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody
+            className={cn(
+              "transition-opacity",
+              isReloading && "pointer-events-none opacity-60"
+            )}
+          >
+            {body}
+          </TableBody>
+        </table>
+      </ColumnReorder>
     </div>
   )
 }

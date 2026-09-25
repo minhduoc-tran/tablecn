@@ -28,6 +28,18 @@ export const viTableMessages: TableMessages = {
     error: "Đã có lỗi xảy ra.",
     loading: "Đang tải…",
   },
+  header: {
+    move: (column) => `Di chuyển cột ${column}`,
+    resize: (column) => `Đổi độ rộng cột ${column}`,
+    instructions:
+      "Để nhấc cột, nhấn phím cách hoặc Enter. Dùng phím mũi tên để di chuyển, phím cách hoặc Enter để thả, Esc để huỷ.",
+    pickedUp: (column) => `Đã nhấc cột ${column}.`,
+    movedTo: (column, position, total) =>
+      `Cột ${column} ở vị trí ${position}/${total}.`,
+    dropped: (column, position, total) =>
+      `Đã thả cột ${column} ở vị trí ${position}/${total}.`,
+    cancelled: (column) => `Đã huỷ di chuyển cột ${column}.`,
+  },
   counts: {
     page: (page, pageCount) =>
       pageCount === undefined ? `Trang ${page}` : `Trang ${page}/${pageCount}`,
