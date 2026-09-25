@@ -5,3 +5,10 @@ export type {
 export { createMemoryAdapter } from "./adapters/memory-adapter"
 export { useBrowserUrlAdapter } from "./adapters/use-browser-url-adapter"
 export type { BrowserUrlAdapterOptions } from "./adapters/use-browser-url-adapter"
+
+export { FilterProvider } from "./filter-provider"
+export type { FilterProviderProps } from "./filter-provider"
+export { useFilter } from "./use-filter"
+export { useAppliedFilter } from "./use-applied-filter"
+export type { AppliedFilterValue, FilterDraftValue } from "./filter-contexts"
+export type { RuleIssues } from "./serializer-capabilities"

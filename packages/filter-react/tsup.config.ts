@@ -8,4 +8,6 @@ export default defineConfig({
   clean: true,
   sourcemap: true,
   target: "es2020",
+  // The entry exports a provider and hooks, so Next must treat it as client code.
+  banner: { js: '"use client"' },
 })
