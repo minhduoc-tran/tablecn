@@ -132,6 +132,7 @@ export function getListedColumns<TData extends object>(
     (column) =>
       column.getCanHide() ||
       column.getCanPin() ||
-      column.columnDef.meta?.enableOrdering !== false
+      (table.options.meta?.enableColumnOrdering !== false &&
+        column.columnDef.meta?.enableOrdering !== false)
   )
 }

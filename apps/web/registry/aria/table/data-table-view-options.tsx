@@ -33,6 +33,7 @@ import {
   resetLayout,
 } from "@/registry/shared/table/column-layout-actions"
 import {
+  canReorderColumns,
   ColumnReorder,
   useColumnDrag,
 } from "@/registry/shared/table/column-reorder"
@@ -57,8 +58,10 @@ export function DataTableViewOptions<TData extends object>({
   messages = enTableMessages,
   className,
 }: DataTableViewOptionsProps<TData>) {
-  // Moving a column out of its group would break the group.
-  const canReorder = table.getHeaderGroups().length === 1
+  const canReorder = canReorderColumns(table)
+  const canFit = table
+    .getVisibleLeafColumns()
+    .some((column) => column.getCanResize())
   const [open, setOpen] = React.useState(false)
   // Escape or a click outside mid-move cancels the move, not the list.
   const [dragging, setDragging] = React.useState(false)
@@ -112,6 +115,7 @@ export function DataTableViewOptions<TData extends object>({
               variant="ghost"
               size="sm"
               className="justify-start"
+              isDisabled={!canFit}
               onPress={() => fitColumns(table)}
             >
               <MoveHorizontalIcon />
@@ -167,17 +171,19 @@ function ColumnItem<TData extends object>({
       data-dragging={isDragging || undefined}
       className="relative flex items-center gap-1 rounded-md bg-popover py-0.5 ps-0.5 pe-1 data-dragging:z-10 data-dragging:shadow-sm"
     >
-      <button
-        type="button"
-        ref={setHandleRef}
-        aria-label={messages.header.move(label)}
-        disabled={isFixed}
-        {...handleProps}
-        {...pointerProps}
-        className="flex size-6 shrink-0 cursor-grab touch-none items-center justify-center rounded-sm text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50 active:cursor-grabbing disabled:invisible"
-      >
-        <GripVerticalIcon className="size-3.5" />
-      </button>
+      {canReorder && (
+        <button
+          type="button"
+          ref={setHandleRef}
+          aria-label={messages.header.move(label)}
+          disabled={isFixed}
+          {...handleProps}
+          {...pointerProps}
+          className="flex size-6 shrink-0 cursor-grab touch-none items-center justify-center rounded-sm text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50 active:cursor-grabbing disabled:invisible"
+        >
+          <GripVerticalIcon className="size-3.5" />
+        </button>
+      )}
       <div className="flex min-w-0 flex-1 items-center gap-2 py-1">
         <Checkbox
           aria-label={label}

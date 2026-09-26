@@ -268,6 +268,16 @@ describe("useDataTable in client mode", () => {
     ])
   })
 
+  it("turns sorting off for every column with enableSorting: false", () => {
+    const { result } = setup("?sort=-amount", { enableSorting: false })
+    expect(result.current.getColumn("customer")!.getCanSort()).toBe(false)
+    expect(result.current.store.state.sorting).toEqual([])
+    // Client mode shows the rows in data's order.
+    expect(result.current.getRowModel().rows.map((row) => row.id)).toEqual(
+      ORDERS.slice(0, 20).map((order) => order.id)
+    )
+  })
+
   it("resets sort and page size to the URL defaults", () => {
     const defaultSorting = [{ id: "customer", desc: false }]
     const { adapter, result } = setup("?sort=-amount&per_page=50", {
@@ -427,6 +437,17 @@ describe("useDataTable selection and layout", () => {
     })
     expect(result.current.getRow("1").getCanSelect()).toBe(true)
     expect(result.current.getRow("2").getCanSelect()).toBe(false)
+  })
+
+  it("turns resizing off for every column with enableColumnResizing: false", () => {
+    const { result } = setup("", { enableColumnResizing: false })
+    expect(result.current.getColumn("amount")!.getCanResize()).toBe(false)
+  })
+
+  it("tells the UI whether users can move columns", () => {
+    expect(setup().result.current.options.meta?.enableColumnOrdering).toBe(true)
+    const locked = setup("", { enableColumnOrdering: false })
+    expect(locked.result.current.options.meta?.enableColumnOrdering).toBe(false)
   })
 
   it("forgets the saved layout on meta.resetLayout", () => {

@@ -21,6 +21,8 @@ import type { DataTableColumnMeta } from "./table-layout-state"
 
 /** `table.options.meta`: what the UI needs from `useDataTable`'s options. */
 export interface DataTableMeta {
+  /** `false` when `useDataTable`'s `enableColumnOrdering` turns moving columns off. */
+  enableColumnOrdering?: boolean
   /** The page sizes the URL accepts, default included, for the rows-per-page picker. */
   pageSizes: readonly number[]
   /** Back to the columns' default layout, forgetting the saved one. */

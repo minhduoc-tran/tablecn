@@ -55,7 +55,13 @@ afterEach(() => vi.restoreAllMocks())
 describe.each(BASES)(
   "%s column header",
   (_, DataTable, createSelectionColumn) => {
-    function Orders({ search = "" }: { search?: string }) {
+    function Orders({
+      search = "",
+      locked = false,
+    }: {
+      search?: string
+      locked?: boolean
+    }) {
       const [adapter] = useState(() => createMemoryAdapter(search))
       const columns = useMemo(
         () => [
@@ -74,6 +80,11 @@ describe.each(BASES)(
         columns,
         getRowId: (row) => row.id,
         adapter,
+        ...(locked && {
+          enableSorting: false,
+          enableColumnResizing: false,
+          enableColumnOrdering: false,
+        }),
       })
       return (
         <>
@@ -116,6 +127,18 @@ describe.each(BASES)(
           name: /^Status(?! options)/,
         })
       ).toBeNull()
+    })
+
+    it("turns sorting, resizing and moving off for the whole table", () => {
+      render(<Orders locked />)
+      expect(header("Amount").getAttribute("aria-sort")).toBeNull()
+      expect(
+        within(header("Amount")).queryByRole("button", {
+          name: /^Amount(?! options)/,
+        })
+      ).toBeNull()
+      expect(screen.queryByRole("separator")).toBeNull()
+      expect(screen.queryByRole("button", { name: /^Move column/ })).toBeNull()
     })
 
     it("gives the selection column no menu over its select-all checkbox", async () => {

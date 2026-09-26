@@ -44,6 +44,17 @@ interface DataTableBaseOptions<TData extends RowData> {
   layoutStorage?: LayoutStorage
   layoutVersion?: number
   enableRowSelection?: boolean | ((row: { original: TData }) => boolean)
+  /**
+   * `false` turns sorting off for every column: no sort in the headers, and
+   * the URL's `sort` is ignored. Client mode shows `data` in its order; server
+   * mode still sends `url.defaultSorting` to the backend. Pass the same value
+   * to `useTableQuery`.
+   */
+  enableSorting?: boolean
+  /** `false` removes every resize handle and "Fit to content". */
+  enableColumnResizing?: boolean
+  /** `false` keeps columns in the order you define: users can't drag them. */
+  enableColumnOrdering?: boolean
   /** Reading direction, so resizing follows the pointer in right-to-left layouts. */
   dir?: "ltr" | "rtl"
 }
@@ -92,7 +103,9 @@ export function useDataTable<TData extends RowData>(
 
   const [memoryAdapter] = useState(() => createMemoryAdapter())
   const adapter = options.adapter ?? filterAdapter ?? memoryAdapter
-  const urlOptions = tableUrlOptions(columns, url)
+  const urlOptions = tableUrlOptions(columns, url, {
+    enableSorting: options.enableSorting,
+  })
   // Read once for the search and the URL state, so a pending write shows in both;
   // the search comes first because the URL state counts the searched rows.
   const adapterValue = useAdapterValue(adapter)
@@ -236,10 +249,13 @@ export function useDataTable<TData extends RowData>(
     // Ascending first for every type; a column opts out with `sortDescFirst: true`.
     sortDescFirst: false,
     enableRowSelection,
+    enableSorting: options.enableSorting,
+    enableColumnResizing: options.enableColumnResizing,
     // Saves the layout once per drag instead of on every pointer move.
     columnResizeMode: "onEnd",
     columnResizeDirection: options.dir ?? "ltr",
     meta: {
+      enableColumnOrdering: options.enableColumnOrdering ?? true,
       pageSizes,
       resetLayout: layout.reset,
       search: urlState.search,

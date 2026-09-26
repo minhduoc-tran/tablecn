@@ -60,6 +60,14 @@ describe("encodeTableParams", () => {
     expect(decodeTableParams("?sort", options).sorting).toEqual([])
   })
 
+  it("ignores sort when no column can sort", () => {
+    const defaultSorting = [{ id: "amount", desc: true }]
+    expect(
+      decodeTableParams("sort=name", { sortableColumns: [], defaultSorting })
+        .sorting
+    ).toEqual(defaultSorting)
+  })
+
   it("keeps at most maxSortColumns", () => {
     const sorting = ["a", "b", "c", "d"].map((id) => ({ id, desc: false }))
     expect(encodeTableParams(state(sorting)).sort).toBe("a,b,c")

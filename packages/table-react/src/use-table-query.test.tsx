@@ -132,6 +132,20 @@ describe("useTableQuery", () => {
     })
   })
 
+  it("leaves the URL's sort out with enableSorting: false", () => {
+    const adapter = createMemoryAdapter("?sort=-amount")
+    const { result } = renderHook(() =>
+      useTableQuery({
+        columns: COLUMNS,
+        serializer,
+        adapter,
+        enableSorting: false,
+        url: { defaultSorting: [{ id: "amount", desc: false }] },
+      })
+    )
+    expect(result.current.params.ordering).toBe("amount")
+  })
+
   it("needs an adapter it shares with the table", () => {
     expect(() =>
       renderHook(() => useTableQuery({ columns: COLUMNS, serializer }))

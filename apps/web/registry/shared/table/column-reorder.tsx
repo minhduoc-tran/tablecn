@@ -40,6 +40,20 @@ type Column<TData extends object> = ReturnType<
 const groupOf = (column: { getIsPinned: () => false | Group }): Group =>
   column.getIsPinned() || "center"
 
+/**
+ * Users can move columns: `useDataTable`'s `enableColumnOrdering` isn't
+ * `false`, and there are no group headers (moving a column out of its group
+ * would break the group).
+ */
+export function canReorderColumns<TData extends object>(
+  table: DataTableInstance<TData>
+) {
+  return (
+    table.options.meta?.enableColumnOrdering !== false &&
+    table.getHeaderGroups().length === 1
+  )
+}
+
 /** `meta.enableOrdering: false`, or pinned for good, keeps a column in place. */
 function isMovable<TData extends object>(column: Column<TData>) {
   if (column.columnDef.meta?.enableOrdering === false) return false

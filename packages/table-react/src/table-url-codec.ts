@@ -106,7 +106,8 @@ export function decodeTableParams(
 
   const rawSort = params.get(resolved.sortParam)
   let sorting: SortingState = resolved.defaultSorting
-  if (rawSort !== null) {
+  // With no sortable column, `sort` can't mean anything: the default stays.
+  if (rawSort !== null && resolved.sortableColumns?.length !== 0) {
     sorting = []
     const seen = new Set<string>()
     for (const token of rawSort.split(",")) {

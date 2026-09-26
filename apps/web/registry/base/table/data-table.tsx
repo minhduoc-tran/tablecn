@@ -18,7 +18,10 @@ import {
   getHeaderCellProps,
   getPinnedEdges,
 } from "@/registry/shared/table/data-table-pinning"
-import { ColumnReorder } from "@/registry/shared/table/column-reorder"
+import {
+  canReorderColumns,
+  ColumnReorder,
+} from "@/registry/shared/table/column-reorder"
 import { useTableContainer } from "@/registry/shared/table/column-layout-actions"
 import { useScrollEdges } from "@/registry/shared/table/use-scroll-edges"
 import { useScrollToTopOnChange } from "@/registry/shared/table/use-scroll-to-top-on-change"
@@ -77,6 +80,7 @@ export function DataTable<TData extends object>({
   ]
   const edges = getPinnedEdges(table)
   const headerGroups = table.getHeaderGroups()
+  const canReorder = canReorderColumns(table)
   const rows = table.getRowModel().rows
   const rowCount = rows.length
   const { sorting, pagination } = table.store.state
@@ -127,8 +131,7 @@ export function DataTable<TData extends object>({
                       header={header}
                       edges={edges}
                       messages={messages}
-                      // Moving a column out of its group would break the group.
-                      canReorder={headerGroups.length === 1}
+                      canReorder={canReorder}
                     />
                   ) : (
                     <TableHead

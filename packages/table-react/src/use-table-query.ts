@@ -17,6 +17,8 @@ export interface UseTableQueryOptions {
   /** The same columns and `url` as `useDataTable`, so both read the URL alike. */
   columns: readonly LayoutColumnDef[]
   url?: TableUrlOptions
+  /** The same as `useDataTable`'s: `false` leaves the URL's `sort` out. */
+  enableSorting?: boolean
   serializer: TableParamsSerializer
   /** Defaults to the nearest `FilterProvider`'s; without one, pass the table's (required). */
   adapter?: UrlStateAdapter
@@ -67,6 +69,7 @@ function warnOnClash(filter: QueryParams, table: QueryParams) {
 export function useTableQuery({
   columns,
   url,
+  enableSorting,
   serializer,
   adapter,
 }: UseTableQueryOptions): TableQuery {
@@ -81,7 +84,9 @@ export function useTableQuery({
   const [raw] = useAdapterValue(shared)
 
   const tableParams = useStableValue(
-    serializer(decodeTableParams(raw, tableUrlOptions(columns, url)))
+    serializer(
+      decodeTableParams(raw, tableUrlOptions(columns, url, { enableSorting }))
+    )
   )
   const params = useMemo(() => {
     const filter = asQueryParams(applied.query)

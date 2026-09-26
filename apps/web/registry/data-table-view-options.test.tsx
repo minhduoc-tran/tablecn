@@ -71,9 +71,11 @@ describe.each(BASES)(
     function Orders({
       vi: inVietnamese = false,
       showOptions = true,
+      locked = false,
     }: {
       vi?: boolean
       showOptions?: boolean
+      locked?: boolean
     }) {
       const [adapter] = useState(() => createMemoryAdapter())
       const columns = useMemo(
@@ -90,6 +92,8 @@ describe.each(BASES)(
         columns,
         getRowId: (row) => row.id,
         adapter,
+        enableColumnOrdering: !locked,
+        enableColumnResizing: !locked,
       })
       const messages = inVietnamese ? viTableMessages : undefined
       return (
@@ -231,6 +235,21 @@ describe.each(BASES)(
       await user.keyboard("{ArrowDown}")
       await act(() => new Promise((resolve) => setTimeout(resolve, 0)))
     }
+
+    it("lists no grips and fits nothing with moving and resizing off", async () => {
+      const user = userEvent.setup()
+      render(<Orders locked />)
+      const columns = await openColumns(user)
+      expect(within(columns).getAllByRole("listitem")).toHaveLength(3)
+      expect(
+        within(columns).queryByRole("button", { name: /^Move column/ })
+      ).toBeNull()
+      expect(
+        screen.getByRole<HTMLButtonElement>("button", {
+          name: "Fit all columns",
+        }).disabled
+      ).toBe(true)
+    })
 
     it("cancels a move with Escape and keeps the list open", async () => {
       const user = userEvent.setup()
