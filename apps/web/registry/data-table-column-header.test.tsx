@@ -118,6 +118,31 @@ describe.each(BASES)(
       ).toBeNull()
     })
 
+    it("gives the selection column no menu over its select-all checkbox", async () => {
+      const user = userEvent.setup()
+      render(<Orders />)
+      const select = document.querySelector<HTMLElement>(
+        'thead th[data-column-id="select"]'
+      )!
+      expect(
+        screen.queryByRole("button", { name: /^select options$/i })
+      ).toBeNull()
+      fireEvent.contextMenu(select)
+      expect(screen.queryByRole("menu")).toBeNull()
+      await user.click(within(select).getByRole("checkbox"))
+      const rows = within(
+        document.querySelector<HTMLElement>("tbody")!
+      ).getAllByRole("checkbox")
+      expect(rows).toHaveLength(ORDERS.length)
+      for (const row of rows) {
+        expect(
+          row instanceof HTMLInputElement
+            ? row.checked
+            : row.getAttribute("aria-checked") === "true"
+        ).toBe(true)
+      }
+    })
+
     it("marks required columns", () => {
       render(<Orders />)
       expect(header("Customer").textContent).toContain("*")

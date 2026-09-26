@@ -98,6 +98,25 @@ export function resetLayout<TData extends object>(
 }
 
 /**
+ * Whether a header gets the ⋯ menu: it has something to sort, pin, fit or
+ * hide. A selection column doesn't, and in its narrow cell the ⋯ button
+ * would cover the select-all checkbox.
+ */
+export function hasColumnMenu(column: {
+  getCanSort: () => boolean
+  getCanPin: () => boolean
+  getCanResize: () => boolean
+  getCanHide: () => boolean
+}) {
+  return (
+    column.getCanSort() ||
+    column.getCanPin() ||
+    column.getCanResize() ||
+    column.getCanHide()
+  )
+}
+
+/**
  * The columns a column list shows: every leaf, hidden ones too, in the order
  * the table shows them. Leaves out columns nothing can be done with, such as
  * a selection column.

@@ -20,6 +20,7 @@ import {
   type PinnedEdges,
 } from "@/registry/shared/table/data-table-pinning"
 import { getColumnLabel } from "@/registry/shared/table/column-label"
+import { hasColumnMenu } from "@/registry/shared/table/column-layout-actions"
 import { DataTableColumnMenu } from "@/registry/aria/table/data-table-column-menu"
 import { ColumnGuideLine } from "@/registry/shared/table/column-guide-line"
 import { useColumnDrag } from "@/registry/shared/table/column-reorder"
@@ -70,6 +71,7 @@ export function DataTableColumnHeader<TData extends object>({
   const cellProps = getHeaderCellProps(header, edges)
   const [menuOpen, setMenuOpen] = React.useState(false)
   const colorPicker = useColumnColorPicker()
+  const hasMenu = hasColumnMenu(column)
   const SortIcon =
     sorted === "asc"
       ? ArrowUpIcon
@@ -99,6 +101,7 @@ export function DataTableColumnHeader<TData extends object>({
       }
       data-dragging={isDragging || undefined}
       onContextMenu={(event) => {
+        if (!hasMenu) return
         event.preventDefault()
         setMenuOpen(true)
       }}
@@ -154,15 +157,17 @@ export function DataTableColumnHeader<TData extends object>({
           <GripVerticalIcon className="size-3.5" />
         </button>
       )}
-      <DataTableColumnMenu
-        table={table}
-        column={column}
-        messages={messages}
-        open={menuOpen}
-        onOpenChange={setMenuOpen}
-        onCustomColor={() => colorPicker.open(column)}
-        className="absolute end-1.5 top-1/2 z-10 -translate-y-1/2"
-      />
+      {hasMenu && (
+        <DataTableColumnMenu
+          table={table}
+          column={column}
+          messages={messages}
+          open={menuOpen}
+          onOpenChange={setMenuOpen}
+          onCustomColor={() => colorPicker.open(column)}
+          className="absolute end-1.5 top-1/2 z-10 -translate-y-1/2"
+        />
+      )}
       <input {...colorPicker.inputProps} />
       {dropSide && (
         <ColumnGuideLine
