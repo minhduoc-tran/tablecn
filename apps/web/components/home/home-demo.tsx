@@ -21,7 +21,9 @@ function AddressBar() {
     <div className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md bg-muted/70 px-3 text-xs">
       <LockIcon className="size-3 shrink-0 text-muted-foreground" aria-hidden />
       <div className="min-w-0 truncate">
-        <span className="text-muted-foreground">tablecn.dev/orders</span>
+        <span className="text-muted-foreground">
+          table-cn.vercel.app/orders
+        </span>
         <UrlTokens search={search} />
       </div>
     </div>

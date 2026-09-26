@@ -12,6 +12,7 @@ import {
   DocsPagerIconButtons,
 } from "@/components/docs/docs-pager"
 import { DocsTableOfContents } from "@/components/docs/docs-table-of-contents"
+import { siteConfig } from "@/lib/site-config"
 import { source } from "@/lib/source"
 import { getMDXComponents } from "@/mdx-components"
 
@@ -74,8 +75,24 @@ export async function generateMetadata(
   const page = source.getPage(params.slug)
   if (!page) notFound()
 
+  // Setting `openGraph` replaces the root one, so the shared image is kept here
   return {
     title: page.data.title,
     description: page.data.description,
+    alternates: { canonical: page.url },
+    openGraph: {
+      type: "article",
+      siteName: siteConfig.name,
+      title: page.data.title,
+      description: page.data.description,
+      url: page.url,
+      images: "/opengraph-image",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: page.data.title,
+      description: page.data.description,
+      images: "/opengraph-image",
+    },
   }
 }

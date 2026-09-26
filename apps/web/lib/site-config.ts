@@ -1,6 +1,9 @@
 /** Site-wide metadata and top navigation links */
 export const siteConfig = {
   name: "tablecn",
+  title: "tablecn: Filter. Sort. Share.",
+  description:
+    "A data table for shadcn/ui, with filters, sorting and pages synced to the URL. Built on TanStack Table, in Radix UI, Base UI or React Aria.",
   /** Origin of this site; the shadcn registry is served from `${url}/r/…` */
   url: getSiteUrl(),
   repository: "https://github.com/minhduoc-tran/tablecn",

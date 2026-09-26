@@ -1,3 +1,5 @@
+import type { Metadata } from "next"
+
 import { SiteHeader } from "@/components/docs/site-header"
 import { HomeBento } from "@/components/home/home-bento"
 import { HomeCode } from "@/components/home/home-code"
@@ -6,6 +8,10 @@ import { HomeDemo } from "@/components/home/home-demo"
 import { HomeHero } from "@/components/home/home-hero"
 import { HomeStack } from "@/components/home/home-stack"
 import { source } from "@/lib/source"
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+}
 
 export default function Page() {
   return (
