@@ -1,0 +1,97 @@
+---
+title: Sorting
+description: Sort by clicking a header, by several columns at once, and turn sorting off for a column or the whole table.
+---
+
+Users click a header to sort: ascending, descending, then off. The sort is written to the URL (`?sort=-amount,customer`), so a shared link or a reload shows the same order. See [URL state](/docs/table/url-state).
+
+## How users sort
+
+- **Click a header** to sort by that column only. Each click goes ascending, descending, then off.
+- <kbd>Shift</kbd>+**click** adds the column to the sort instead of replacing it. A small number after the title shows its place in the sort.
+- **The column menu** (the header's **⋯**, or a right-click) has **Ascending**, **Descending** and **Clear sort**.
+- **With the keyboard**, <kbd>Tab</kbd> to the header's title and press <kbd>Enter</kbd> or <kbd>Space</kbd>.
+
+Headers have `aria-sort`, so screen readers hear the order. A new sort goes back to page 1 and clears the selection.
+
+## In your column definitions
+
+```tsx title="Sorting options"
+column.accessor("amount", { header: "Amount", sortDescFirst: true })
+column.accessor("id", { header: "Order #", enableSorting: false })
+```
+
+<TypeTable
+  type={{
+    enableSorting: {
+      description: "false removes the sort button and the sort items from the column's menu, and the column can't be sorted from the URL either. Display columns (no accessor) never sort.",
+      type: "boolean",
+      default: "true",
+    },
+    sortDescFirst: {
+      description: "The first click sorts descending, e.g. for amounts or dates. Otherwise every column sorts ascending first.",
+      type: "boolean",
+      default: "false",
+    },
+    sortingFn: {
+      description: "How values compare. The default is a natural sort, so Item 2 comes before Item 10.",
+      type: "SortingFnOption",
+      default: '"auto"',
+    },
+  }}
+/>
+
+## In the URL options
+
+`url` in `useDataTable` sets the rest. See [URL state](/docs/table/url-state#table-options) for every option.
+
+<TypeTable
+  type={{
+    defaultSorting: {
+      description: "The sort when the URL has none, e.g. newest first. It isn't written to the URL.",
+      type: "SortingState",
+      default: "[]",
+    },
+    maxSortColumns: {
+      description: "How many columns sort at once with Shift+click. Extra ones in the URL are dropped.",
+      type: "number",
+      default: "3",
+    },
+    sortableColumns: {
+      description: "Column ids sort may name.",
+      type: "string[]",
+      default: "the columns that can sort",
+    },
+  }}
+/>
+
+Only sortable columns are read from `?sort=`, so a link like `?sort=secret_field` is ignored and never reaches your backend. The table works out the list from your columns. The server needs the same list when it reads the URL: see [Rendering on the server](/docs/table/server-data#rendering-on-the-server).
+
+## Turn sorting off
+
+For one column, `enableSorting: false` in its definition. For every column, `enableSorting: false` in `useDataTable`:
+
+```tsx title="A table users can't sort"
+const table = useDataTable({
+  data,
+  columns,
+  getRowId: (order) => order.id,
+  enableSorting: false,
+})
+```
+
+Headers then don't sort, the column menus have no sort items, and the URL's `sort` is ignored. In client mode the rows keep the order of `data`; in server mode `url.defaultSorting` still goes to your backend.
+
+In [server mode](/docs/table/server-data), pass `enableSorting: false` to `useTableQuery` too. When the page is [rendered on the server](/docs/table/server-data#rendering-on-the-server), put `sortableColumns: []` in the URL options `parseTableParams` reads. Both then ignore `sort` like the table does.
+
+## From code
+
+```ts title="Sorting from code"
+table.setSorting([{ id: "amount", desc: true }])
+column.toggleSorting(false) // ascending, replacing the sort
+column.toggleSorting(true, true) // descending, added to the sort
+column.getIsSorted() // "asc", "desc" or false
+table.resetSorting() // back to url.defaultSorting
+```
+
+The URL follows, and the page goes back to 1.

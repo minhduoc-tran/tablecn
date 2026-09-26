@@ -1,0 +1,37 @@
+---
+title: Pinning
+description: Keep columns in view at the start or end edge while the rest scroll sideways.
+---
+
+Pinned columns are part of the [layout](/docs/table/layout): each user keeps their own, saved in their browser.
+
+## How users pin
+
+Open the column's menu (the header's **⋯**, a right-click, or its row in the **Columns** menu) and pick **Pin to start** or **Pin to end**; **Unpin** puts it back among the scrolling columns. A pin icon marks pinned columns in the **Columns** list.
+
+Pinned columns stay in view while the rest scroll sideways. Once a column scrolls under them, the innermost pinned column shows a shadow on that side.
+
+- A newly pinned column goes next to the scrolling columns, so a column pinned for good (like the selection column) keeps the outer edge.
+- "Start" and "end" follow the reading direction: on a right-to-left page, start is the right side.
+- Pinned columns can be moved among themselves: see [Move columns](/docs/table/column-ordering).
+
+## In your column definitions
+
+`meta.defaultPinned: "start" | "end"` pins a column from the first visit, and `enablePinning: false` makes the choice final: users can't pin or unpin it.
+
+```tsx title="Pinned from the first visit, for good"
+column.accessor("id", {
+  header: "Order #",
+  enablePinning: false,
+  meta: { defaultPinned: "start" },
+})
+```
+
+## From code
+
+```ts title="Pinning from code"
+import { pinColumn } from "@/components/data-table/column-layout-actions"
+
+pinColumn(table, column, "start") // or "end", or false to unpin
+column.getIsPinned() // "start", "end" or false
+```

@@ -1,7 +1,5 @@
 import type { ParamKind } from "@/components/home/url-tokens"
 
-export type CalloutSide = "left" | "right" | "top"
-
 export interface Point {
   x: number
   y: number
@@ -10,29 +8,18 @@ export interface Point {
 export interface CalloutDef {
   id: string
   label: string
-  side: CalloutSide
+  hint: string
+  side: "left" | "right"
   /** Colors the dot like the URL param it writes, as in the legend. */
   kind?: ParamKind
   /** Where the line ends, in viewport coordinates; `null` hides the callout. */
   target: (demo: HTMLElement) => Point | null
 }
 
-const TOOLBAR = "[data-slot=data-table-toolbar]"
+const TABLE = "[data-slot=data-table]"
 
 function rectOf(demo: HTMLElement, selector: string) {
   return demo.querySelector(selector)?.getBoundingClientRect() ?? null
-}
-
-/** The table's scroll box: a point outside it is scrolled out of view. */
-function inView(demo: HTMLElement, point: Point) {
-  const box = rectOf(demo, "[data-slot=data-table]")
-  if (!box) return null
-  const inside =
-    point.x >= box.left - 1 &&
-    point.x <= box.right + 1 &&
-    point.y >= box.top - 1 &&
-    point.y <= box.bottom + 1
-  return inside ? point : null
 }
 
 /** Skips controls hidden at this width, like the last-page button. */
@@ -43,126 +30,91 @@ function lastVisible(demo: HTMLElement, selector: string) {
   return rects.reverse().find((r) => r.width > 0) ?? null
 }
 
-/** Header cells in screen order, without the selection column. */
-function dataHeader(demo: HTMLElement, index: number) {
-  const cells = demo.querySelectorAll(
-    "thead th[data-column-id]:not([data-column-id=select])"
-  )
-  return cells[index]?.getBoundingClientRect() ?? null
-}
+const middle = (r: DOMRect) => r.top + r.height / 2
 
-// Top targets sit on headers under the toolbar's empty middle, so their lines
-// come down without crossing the search box or the buttons.
+// Each target sits at the edge of the table or the toolbar, so a straight
+// line from the side reaches it without crossing any text.
 export const CALLOUTS: CalloutDef[] = [
   {
     id: "search",
-    label: "Search, accents ignored",
+    label: "Search",
+    hint: "ignores case and accents",
     side: "left",
     kind: "search",
     target: (demo) => {
       const r = rectOf(demo, "[data-slot=data-table-search]")
-      return r && { x: r.left, y: r.top + r.height / 2 }
+      return r && { x: r.left, y: middle(r) }
     },
   },
   {
     id: "select",
     label: "Select rows",
+    hint: "then act on them",
     side: "left",
+    // On the table's edge, level with the header checkbox: a dot on the
+    // checkbox itself would cover it.
     target: (demo) => {
-      const r = rectOf(demo, "thead [role=checkbox]")
-      return r && { x: r.left, y: r.top + r.height / 2 }
+      const table = rectOf(demo, TABLE)
+      const checkbox = rectOf(demo, "thead [role=checkbox]")
+      return table && checkbox ? { x: table.left, y: middle(checkbox) } : null
     },
   },
   {
     id: "pin",
     label: "Pinned column",
+    hint: "stays put as you scroll",
     side: "left",
-    // Along a row's bottom border, so the line runs over the grid, not text.
+    // On the bottom border of the second row in view, so the line runs along
+    // the grid, and follows when the rows scroll.
     target: (demo) => {
-      const cells = demo.querySelectorAll(
-        "tbody td[data-pinned=start]:not([data-column-id=select])"
-      )
-      const r = cells[1]?.getBoundingClientRect()
-      return r ? inView(demo, { x: r.left, y: r.bottom }) : null
-    },
-  },
-  {
-    id: "filter",
-    label: "Filter builder",
-    side: "top",
-    kind: "filter",
-    target: (demo) => {
-      const r = rectOf(demo, `${TOOLBAR} [aria-haspopup=dialog]`)
-      return r && { x: r.left + r.width / 2, y: r.top }
-    },
-  },
-  {
-    id: "reorder",
-    label: "Drag to reorder",
-    side: "top",
-    target: (demo) => {
-      const r = dataHeader(demo, 2)
-      return r ? inView(demo, { x: r.left + r.width / 2, y: r.top }) : null
-    },
-  },
-  {
-    id: "resize",
-    label: "Drag to resize",
-    side: "top",
-    target: (demo) => {
-      const r = dataHeader(demo, 2)
-      return r ? inView(demo, { x: r.right, y: r.top }) : null
-    },
-  },
-  {
-    id: "menu",
-    label: "Right-click: pin, color, hide",
-    side: "top",
-    // Where the header's ⋯ button shows on hover.
-    target: (demo) => {
-      const r = dataHeader(demo, 3)
-      return r ? inView(demo, { x: r.right - 14, y: r.top }) : null
+      const header = rectOf(demo, `${TABLE} thead`)
+      const table = rectOf(demo, TABLE)
+      if (!header || !table) return null
+      const cells = [
+        ...demo.querySelectorAll(
+          "tbody td[data-pinned=start]:not([data-column-id=select])"
+        ),
+      ].map((cell) => cell.getBoundingClientRect())
+      const r = cells.filter(
+        (cell) => cell.top >= header.bottom - 1 && cell.bottom < table.bottom
+      )[1]
+      return r ? { x: r.left, y: r.bottom } : null
     },
   },
   {
     id: "columns",
-    label: "Show and hide columns",
+    label: "Columns",
+    hint: "show, hide and reorder",
     side: "right",
     target: (demo) => {
-      const r = lastVisible(demo, `${TOOLBAR} [aria-haspopup]`)
-      return r && { x: r.right, y: r.top + r.height / 2 }
+      const r = lastVisible(
+        demo,
+        "[data-slot=data-table-toolbar] [aria-haspopup]"
+      )
+      return r && { x: r.right, y: middle(r) }
     },
   },
   {
-    id: "sort",
-    label: "Click to sort",
+    id: "headers",
+    label: "Headers",
+    hint: "click to sort, drag to move, right-click for more",
     side: "right",
     kind: "sort",
-    // The last header whose title is fully in view, so the line crosses no text.
     target: (demo) => {
-      const box = rectOf(demo, "[data-slot=data-table]")
-      const titles = [
-        ...demo.querySelectorAll(
-          "thead th:not([data-column-id=select]) div > button:first-child"
-        ),
-      ]
-      for (const title of titles.reverse()) {
-        const r = title.getBoundingClientRect()
-        if (box && r.width > 0 && r.right <= box.right - 24) {
-          return { x: r.right + 6, y: r.top + r.height / 2 }
-        }
-      }
-      return null
+      const table = rectOf(demo, TABLE)
+      const header = rectOf(demo, `${TABLE} thead tr`)
+      return table && header ? { x: table.right, y: middle(header) } : null
     },
   },
   {
     id: "pages",
-    label: "Pages in the URL",
+    label: "Pages",
+    hint: "kept in the URL",
     side: "right",
     kind: "page",
     target: (demo) => {
       const r = lastVisible(demo, "[data-slot=data-table-pagination] button")
-      return r && { x: r.right, y: r.top + r.height / 2 }
+      return r && { x: r.right, y: middle(r) }
     },
   },
 ]

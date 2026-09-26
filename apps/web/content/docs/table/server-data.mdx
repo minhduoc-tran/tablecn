@@ -112,7 +112,7 @@ Good to know:
 
 - `NO_ORDERS` is a module constant: `?? []` inline would be a new array on every render.
 - `keepPreviousData` keeps the old page on screen while the next one loads. `isLoading` shows skeleton rows when there are none yet, and dims the old rows otherwise.
-- Pass `useTableQuery` the same `columns` and `url` as `useDataTable`, so both read the URL the same way.
+- Pass `useTableQuery` the same `columns`, `url` and `enableSorting` as `useDataTable`, so both read the URL the same way.
 - The provider's serializer must return query params (`djangoSerializer`, `jsonApiSerializer`, `postgrestSerializer` all do). `useTableQuery` throws if it gets something else, such as a request body.
 - Without a `FilterProvider`, pass the table's `adapter` to both hooks.
 - The filter's params and the table's are merged into one object. When both write the same key (a filter field named `search` with `djangoTableParams()`, say), the table's wins and `useTableQuery` warns in the console. Rename the field or the table param (`searchParam`, `orderingParam`…).

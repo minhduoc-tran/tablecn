@@ -1,0 +1,26 @@
+---
+title: Hiding columns
+description: Show and hide columns from the column menu or the Columns menu.
+---
+
+Which columns show is part of the [layout](/docs/table/layout): each user keeps their own, saved in their browser.
+
+## How users hide columns
+
+Pick **Hide column** in the column's menu, or untick it in the **Columns** menu. To show it again, tick it in the **Columns** menu: a hidden column has no header to open a menu from. Hidden columns stay in the list, in their place, so you can still move, pin or color them.
+
+## In your column definitions
+
+`meta.defaultHidden: true` hides a column until the user shows it, and `enableHiding: false` keeps it shown (its checkbox is disabled).
+
+```tsx title="Hidden at first, and one that can't be hidden"
+column.accessor("createdAt", { header: "Created", meta: { defaultHidden: true } })
+column.accessor("id", { header: "Order #", enableHiding: false })
+```
+
+## From code
+
+```ts title="Visibility from code"
+column.toggleVisibility(false)
+column.getIsVisible()
+```

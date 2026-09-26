@@ -34,7 +34,7 @@ export function HomeDemo() {
   return (
     <section
       id="demo"
-      className="relative mx-auto w-full max-w-4xl scroll-mt-20 px-4 xl:pt-10"
+      className="relative mx-auto w-full max-w-4xl scroll-mt-20 px-4"
     >
       {/* Outside the Suspense boundary, so the callouts have it from the start. */}
       <div ref={windowRef}>

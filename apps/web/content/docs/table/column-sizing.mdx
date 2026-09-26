@@ -1,0 +1,70 @@
+---
+title: Resizing
+description: Drag a header's edge to resize a column, fit it to its content, or turn resizing off.
+---
+
+Widths are part of the [layout](/docs/table/layout): each user keeps their own, saved in their browser.
+
+## How users resize
+
+**With the pointer.** Hover the end edge of a header: a thin line shows where to grab. Drag it:
+
+- a line from the header down through the rows shows where the edge will be;
+- the width applies when you release, so the rows don't reflow on every pixel;
+- the width stops at the column's `minSize` and `maxSize`, and the line stops with it.
+
+**With the keyboard.** <kbd>Tab</kbd> to the edge (a focusable separator) and press <kbd>→</kbd> to widen or <kbd>←</kbd> to narrow, by 10px, or 50px with <kbd>Shift</kbd>. On a right-to-left page the arrow pointing away from the column still widens it.
+
+## Fit to content
+
+A column can take exactly the width its content needs:
+
+- **Double-click** the edge of its header;
+- or pick **Fit to content** in its menu (the header's **⋯**, a right-click, or its row in the **Columns** menu);
+- or pick **Fit all columns** under the list, for every visible, resizable column.
+
+Fitting measures the header and the cells on screen: the current page, or the rendered rows when the table is [virtualized](/docs/table/virtualization). The width stays within `minSize` and `maxSize`, and never goes over 800px, so one long value can't take the whole screen. Cells should keep their text on one line (`whitespace-nowrap`) to be measured right.
+
+Hidden columns can't be fitted: there's nothing on screen to measure.
+
+To fit from code, use the helper the block copies into `components/data-table/`:
+
+```ts title="Fit from code"
+import { fitColumns } from "@/components/data-table/column-layout-actions"
+
+fitColumns(table) // every visible, resizable column
+fitColumns(table, [table.getColumn("customer_name")!])
+```
+
+## In your column definitions
+
+<TypeTable
+  type={{
+    size: { description: "Starting width in pixels.", type: "number", default: "150" },
+    minSize: { description: "Resizing and fitting stop here.", type: "number", default: "20" },
+    maxSize: { description: "Resizing stops here. Fitting stops here too, and at 800px at most.", type: "number" },
+    enableResizing: { description: "false removes the resize handle, and fitting skips the column.", type: "boolean", default: "true" },
+  }}
+/>
+
+## Turn it off
+
+For one column, `enableResizing: false` in its definition. For every column, `enableColumnResizing: false` in `useDataTable`:
+
+```tsx title="A table users can't resize"
+const table = useDataTable({
+  data,
+  columns,
+  getRowId: (order) => order.id,
+  enableColumnResizing: false,
+})
+```
+
+Every resize handle goes away, **Fit to content** and **Fit all columns** are disabled, and columns keep the `size` you give them. The table-wide option wins over a column's `enableResizing: true`.
+
+## From code
+
+```ts title="Widths from code"
+table.setColumnSizing((sizes) => ({ ...sizes, amount: 160 }))
+column.getSize() // the current width
+```

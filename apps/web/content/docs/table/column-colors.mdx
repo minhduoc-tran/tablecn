@@ -1,0 +1,30 @@
+---
+title: Column colors
+description: Tint a column with a preset or any color, to make it easy to spot.
+---
+
+Colors are part of the [layout](/docs/table/layout): each user keeps their own, saved in their browser.
+
+## How users color columns
+
+Open the column's menu (the header's **⋯**, a right-click, or its row in the **Columns** menu) and pick **Color**:
+
+- **No color** removes it;
+- eight presets: red, orange, amber, green, teal, blue, violet, pink;
+- **Custom color…** opens the browser's color picker. A custom color is then listed with its value, next to the presets.
+
+A swatch next to the column's name in the list shows its color.
+
+The column's body cells get a light tint of the color, layered over their own background, so hover, selection and pinned cells still look right. Presets are mid-tones tuned to read in light and dark themes; change them in `column-color-palette.ts`.
+
+## From code
+
+```ts title="Column colors"
+column.getColor() // "blue", "#ff8800", or undefined
+column.setColor("blue")
+column.setColor(undefined) // removes it
+table.setColumnColors({ amount: "green" })
+table.resetColumnColors(true) // removes every color
+```
+
+A color is a preset name or any CSS color. Colors come back from storage, so only plain color values (hex, names, `rgb()`, `hsl()`, `oklch()`…) are used; anything else is ignored.

@@ -104,78 +104,32 @@ Once users change the layout, their saved layout wins. See [Layout](/docs/table/
 
 ## What users can do
 
-By default, users can sort, hide, pin and resize every column. Turn things off per column with TanStack's options:
+By default, users can sort, move, resize, hide, pin and color every column. Each has its own page; here are the switches in one place. Turn a feature off for the whole table in `useDataTable`, or for one column in its definition:
 
-```tsx title="A locked column"
-column.accessor("id", {
-  header: "Order #",
-  enableSorting: false,
-  enableHiding: false,
-  enableResizing: false,
+| Feature | Whole table (`useDataTable`) | One column | See |
+| --- | --- | --- | --- |
+| Sort | `enableSorting: false` | `enableSorting: false` | [Sorting](/docs/table/sorting) |
+| Move (drag and drop) | `enableColumnOrdering: false` | `meta.enableOrdering: false` | [Moving columns](/docs/table/column-ordering) |
+| Resize and fit | `enableColumnResizing: false` | `enableResizing: false` | [Resizing](/docs/table/column-sizing) |
+| Hide | — | `enableHiding: false` | [Hiding columns](/docs/table/column-visibility) |
+| Pin | — | `enablePinning: false` | [Pinning](/docs/table/column-pinning) |
+| Color | — | — | [Column colors](/docs/table/column-colors) |
+
+```tsx title="A table users can sort but not rearrange or resize"
+const table = useDataTable({
+  data,
+  columns,
+  getRowId: (order) => order.id,
+  enableColumnOrdering: false,
+  enableColumnResizing: false,
 })
 ```
 
-<TypeTable
-  type={{
-    enableSorting: {
-      description: "false removes the sort button, and the column can't be sorted from the URL either. Display columns (no accessor) never sort.",
-      type: "boolean",
-      default: "true",
-    },
-    sortDescFirst: {
-      description: "The first click sorts descending, e.g. for amounts or dates. Otherwise every column sorts ascending first.",
-      type: "boolean",
-      default: "false",
-    },
-    sortingFn: {
-      description: "How values compare. The default is a natural sort, so Item 2 comes before Item 10.",
-      type: "SortingFnOption",
-      default: '"auto"',
-    },
-    enableHiding: {
-      description: "false keeps the column visible: its checkbox in the Columns menu is disabled.",
-      type: "boolean",
-      default: "true",
-    },
-    enablePinning: {
-      description: "false disables pinning from the Columns menu. With defaultPinned, the column stays pinned for good.",
-      type: "boolean",
-      default: "true",
-    },
-    enableResizing: {
-      description: "false removes the resize handle, and Fit to content skips the column.",
-      type: "boolean",
-      default: "true",
-    },
-    size: { description: "Starting width in pixels.", type: "number", default: "150" },
-    minSize: { description: "Resizing and fitting stop here.", type: "number", default: "20" },
-    maxSize: { description: "Resizing stops here. Fitting to content also stops at 800px.", type: "number" },
-  }}
-/>
+A table-wide `false` wins over a column's `true`. Any other TanStack column option works too.
 
-Any other TanStack column option works too.
+## Sorting and selection
 
-## Sorting
-
-Users click a header to sort: ascending, descending, then off. <kbd>Shift</kbd>+click adds a column to the sort instead of replacing it, up to three columns (change it with `maxSortColumns` in [URL state](/docs/table/url-state#table-options)).
-
-Only sortable columns are read from `?sort=`, so a link like `?sort=secret_field` is ignored and never reaches your backend. The table works out the list from your columns. To set it yourself, pass `url.sortableColumns`. The server needs the same list when it reads the URL: see [Rendering on the server](/docs/table/server-data#rendering-on-the-server).
-
-## The selection column
-
-`createSelectionColumn` comes with the table UI. It adds a checkbox to each row, and one in the header that selects the whole page:
-
-```tsx title="Selection"
-import { createSelectionColumn } from "@/components/data-table/data-table-selection-column"
-
-const columns = [createSelectionColumn<Order>(), ...otherColumns]
-```
-
-- It's pinned to the start. It can't be hidden, sorted, resized, moved or unpinned, and it isn't listed in the **Columns** menu.
-- Pass table messages to translate its labels: `createSelectionColumn<Order>(viTableMessages)`.
-- Choose which rows can be selected with `useDataTable({ enableRowSelection })`: `true`, or a function of the row. Other rows show a disabled checkbox.
-
-Read the selected rows with `table.getSelectedRowModel().rows`, or act on them from the toolbar's [selection bar](/docs/components/table#datatableselectionbar). The selection only covers the current page, and clears when the page, sort or filter changes.
+Sorting has its own page, [Sorting](/docs/table/sorting), and so does the checkbox column, [Row selection](/docs/table/selection).
 
 ## Grouped headers
 

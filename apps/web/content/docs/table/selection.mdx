@@ -1,0 +1,65 @@
+---
+title: Row selection
+description: A checkbox on each row, select all for the page, and actions for the selected rows.
+---
+
+## The selection column
+
+`createSelectionColumn` comes with the table UI. It adds a checkbox to each row, and one in the header that selects the whole page:
+
+```tsx title="Selection"
+import { createSelectionColumn } from "@/components/data-table/data-table-selection-column"
+
+const columns = [createSelectionColumn<Order>(), ...otherColumns]
+```
+
+- It's pinned to the start. It can't be hidden, sorted, resized, moved or unpinned, and it has no **⋯** menu, so nothing covers the select-all checkbox.
+- It isn't listed in the **Columns** menu.
+- Pass table messages to translate its labels: `createSelectionColumn<Order>(viTableMessages)`.
+
+The pagination shows how many rows are selected ("2 of 20 selected").
+
+## Which rows can be selected
+
+Choose with `useDataTable({ enableRowSelection })`: `true`, or a function of the row. Other rows show a disabled checkbox.
+
+```tsx title="Only unpaid orders"
+const table = useDataTable({
+  data,
+  columns,
+  getRowId: (order) => order.id,
+  enableRowSelection: (row) => row.original.status !== "paid",
+})
+```
+
+The selection only covers the current page, and clears when the page, sort, search or filter changes. `getRowId` keeps it across refetches of the same page.
+
+## Act on the selected rows
+
+Pass `selectionActions` to the toolbar. While rows are selected, a bar under the toolbar shows their count, your actions and **Clear selection**:
+
+```tsx title="A delete action"
+<DataTableToolbar
+  table={table}
+  selectionActions={(rows) => <DeleteOrders ids={rows.map((row) => row.id)} />}
+>
+  <DataTableSearch table={table} />
+</DataTableToolbar>
+```
+
+Without `selectionActions`, there's no bar: the pagination already counts the selection, and the header checkbox clears it.
+
+- `row.original` is the row's data, `row.id` its id from `getRowId`.
+- Actions only get the selected rows the page shows, never one the user can't see.
+- When an action removes the rows (and the focused button with them), focus moves to the toolbar.
+
+To put the bar somewhere else, render [`DataTableSelectionBar`](/docs/components/table#datatableselectionbar) yourself.
+
+## From code
+
+```ts title="Selection from code"
+table.getSelectedRowModel().rows // the selected rows
+row.getIsSelected()
+row.toggleSelected(true)
+table.resetRowSelection(true) // clears it
+```

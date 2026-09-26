@@ -157,7 +157,7 @@ Above the table: your controls on the left; **Clear filters**, reload and **Colu
       default: "false",
     },
     selectionActions: {
-      description: "Actions for the selected rows, shown in the selection bar.",
+      description: "Actions for the selected rows, shown in a bar under the toolbar while rows are selected. Without it, there's no bar.",
       type: "(rows: DataTableRow<TData>[]) => React.ReactNode",
     },
     messages: { description: "See Customization.", type: "TableMessages", default: "enTableMessages" },
@@ -192,7 +192,7 @@ The search goes back to page 1 by itself. For the filter, pass `onApply={() => r
 
 ## DataTableSelectionBar
 
-The selected rows' count, your actions, and **Clear selection**. It renders nothing while no row is selected. It only counts the selected rows of the page, so actions never receive a row the user can't see.
+The selected rows' count, your actions, and **Clear selection**. `DataTableToolbar` renders it when you pass `selectionActions`; render it yourself to put it elsewhere. It renders nothing while no row is selected. See [Row selection](/docs/table/selection). It only counts the selected rows of the page, so actions never receive a row the user can't see.
 
 <TypeTable
   type={{

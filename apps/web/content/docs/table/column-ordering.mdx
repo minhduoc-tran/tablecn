@@ -1,0 +1,72 @@
+---
+title: Moving columns
+description: Drag a header or a grip in the Columns menu to reorder columns, or turn it off.
+---
+
+Users can put the columns in the order they like. The order is part of the [layout](/docs/table/layout): each user keeps their own, saved in their browser.
+
+## How users move columns
+
+**With the pointer.** Press anywhere on a header and drag it sideways. A click that doesn't move (less than 4px) still sorts, so sorting and moving share the header.
+
+While the column moves:
+
+- its header and every cell below it follow the pointer, on a muted background;
+- the other columns stay where they are;
+- a vertical line down the table marks where it will land: after the column under the pointer when moving right, before it when moving left;
+- near the edge of the table, the table scrolls sideways so you can reach columns out of view.
+
+Drop to move it there. Press <kbd>Esc</kbd> while dragging to cancel.
+
+**From the Columns menu.** Each row has a grip. Drag it up or down; the rows make room as it moves. Hidden columns are listed too, so you can place a column before showing it.
+
+**With the keyboard.** <kbd>Tab</kbd> to a header's grip (it appears on focus) or a grip in the **Columns** menu, press <kbd>Space</kbd> to pick the column up, use the arrow keys to move it, and <kbd>Space</kbd> again to drop (<kbd>Esc</kbd> cancels). Screen readers hear the column's name and its position as it moves.
+
+## Rules
+
+- A pinned column moves only among the columns pinned on the same side; an unpinned one only among the unpinned ones. To move a column across, pin or unpin it.
+- With [grouped headers](/docs/table/columns) (more than one header row), moving is off, since a column moved out of its group would break the group.
+
+## Turn it off
+
+Some people like to drag columns around, others find it gets in the way. Turn moving off for the whole table in `useDataTable`:
+
+```tsx title="A table users can't rearrange"
+const table = useDataTable({
+  data,
+  columns,
+  getRowId: (order) => order.id,
+  enableColumnOrdering: false,
+})
+```
+
+Headers then don't drag, the **Columns** menu has no grips, and the keyboard can't move columns either. Columns can still be hidden, pinned, resized and colored.
+
+To keep just one column in place, set `meta.enableOrdering: false` in its definition. It gets no grip, and other columns can't take its place:
+
+```tsx title="A column that stays put"
+column.accessor("id", { header: "Order #", meta: { enableOrdering: false } })
+```
+
+<TypeTable
+  type={{
+    enableColumnOrdering: {
+      description: "useDataTable option. false turns moving off for every column.",
+      type: "boolean",
+      default: "true",
+    },
+    "meta.enableOrdering": {
+      description: "Column option. false keeps this column in place.",
+      type: "boolean",
+      default: "true",
+    },
+  }}
+/>
+
+## From code
+
+The order of unpinned columns is TanStack's column order; pinned columns keep theirs in the pinning state:
+
+```ts title="Column order from code"
+table.setColumnOrder(["id", "customer_name", "amount", "status"])
+```

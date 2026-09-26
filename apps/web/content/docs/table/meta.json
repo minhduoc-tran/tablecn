@@ -1,4 +1,19 @@
 {
   "title": "Table",
-  "pages": ["columns", "filtering", "server-data", "url-state", "layout", "virtualization", "customization"]
+  "pages": [
+    "columns",
+    "sorting",
+    "selection",
+    "filtering",
+    "server-data",
+    "url-state",
+    "layout",
+    "column-ordering",
+    "column-sizing",
+    "column-pinning",
+    "column-visibility",
+    "column-colors",
+    "virtualization",
+    "customization"
+  ]
 }

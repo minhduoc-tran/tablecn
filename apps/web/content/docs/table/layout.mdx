@@ -43,170 +43,36 @@ Use one key per table. Without a `storageKey`, the layout resets when the table 
 
 ## What users can change
 
-| To… | Users… | Details |
+| To… | Users… | See |
 | --- | --- | --- |
-| Reorder | drag a header, or the grip in the **Columns** menu | [Move columns](#move-columns) |
-| Resize | drag the edge of a header | [Resize columns](#resize-columns) |
-| Fit a column to its content | double-click the edge of a header, or pick **Fit to content** in the column's menu | [Fit to content](#fit-to-content) |
-| Fit every column | pick **Fit all columns** in the **Columns** menu | [Fit to content](#fit-to-content) |
-| Pin to the start or end | pick **Pin to start** or **Pin to end** in the column's menu | [Pin columns](#pin-columns) |
-| Show or hide a column | pick **Hide column** in the column's menu, or tick its checkbox in the **Columns** menu | [Hide columns](#hide-columns) |
-| Color a column | pick **Color** in the column's menu | [Color columns](#color-columns) |
+| Reorder | drag a header, or the grip in the **Columns** menu | [Moving columns](/docs/table/column-ordering) |
+| Resize | drag the edge of a header | [Resizing](/docs/table/column-sizing) |
+| Fit a column to its content | double-click the edge of a header, or pick **Fit to content** in the column's menu | [Fit to content](/docs/table/column-sizing#fit-to-content) |
+| Fit every column | pick **Fit all columns** in the **Columns** menu | [Fit to content](/docs/table/column-sizing#fit-to-content) |
+| Pin to the start or end | pick **Pin to start** or **Pin to end** in the column's menu | [Pinning](/docs/table/column-pinning) |
+| Show or hide a column | pick **Hide column** in the column's menu, or tick its checkbox in the **Columns** menu | [Hiding columns](/docs/table/column-visibility) |
+| Color a column | pick **Color** in the column's menu | [Column colors](/docs/table/column-colors) |
 | Go back to your defaults | pick **Reset layout** in the **Columns** menu | [Reset from code](#reset-from-code) |
+
+Each page covers how users do it, the options to limit or turn it off, and how to do it from code. For all the switches in one place, see [What users can do](/docs/table/columns#what-users-can-do).
 
 ### The column menu
 
-Every header has a **⋯** button. It shows when you hover the header or tab to it, and stays visible on touch screens. Right-clicking a header opens the same menu. It holds everything you can do to that one column:
+Every header has a **⋯** button, unless the column has nothing to sort, pin, fit or hide, like the selection column. It shows when you hover the header or tab to it, and stays visible on touch screens. Right-clicking a header opens the same menu. It holds everything you can do to that one column:
 
 | Item | Does |
 | --- | --- |
 | **Ascending**, **Descending**, **Clear sort** | sorts by this column only (<kbd>Shift</kbd>+click the header to sort by several) |
-| **Pin to start**, **Pin to end**, **Unpin** | see [Pin columns](#pin-columns) |
-| **Fit to content** | see [Fit to content](#fit-to-content) |
-| **Color** | see [Color columns](#color-columns) |
-| **Hide column** | see [Hide columns](#hide-columns) |
+| **Pin to start**, **Pin to end**, **Unpin** | see [Pinning](/docs/table/column-pinning) |
+| **Fit to content** | see [Fit to content](/docs/table/column-sizing#fit-to-content) |
+| **Color** | see [Column colors](/docs/table/column-colors) |
+| **Hide column** | see [Hiding columns](/docs/table/column-visibility) |
 
 Items a column doesn't allow are left out (sorting, hiding) or disabled (pinning, fitting). The same pin, fit and color items are in each row's **⋯** menu in the **Columns** menu, which also lists hidden columns.
 
 The header itself shows a grab cursor when it can be dragged, and a thin line on its end edge when you hover where it resizes.
 
 Your column definitions decide what's allowed, and what the layout starts from: see [Columns](/docs/table/columns#starting-layout). A column that can't be hidden, pinned or moved, like the selection column, isn't listed in the **Columns** menu.
-
-## Move columns
-
-**With the pointer.** Press anywhere on a header and drag it sideways. A click that doesn't move (less than 4px) still sorts, so sorting and moving share the header.
-
-While the column moves:
-
-- its header and every cell below it follow the pointer, on a muted background;
-- the other columns stay where they are;
-- a vertical line down the table marks where it will land: after the column under the pointer when moving right, before it when moving left;
-- near the edge of the table, the table scrolls sideways so you can reach columns out of view.
-
-Drop to move it there. Press <kbd>Esc</kbd> while dragging to cancel.
-
-**From the Columns menu.** Each row has a grip. Drag it up or down; the rows make room as it moves. Hidden columns are listed too, so you can place a column before showing it.
-
-**With the keyboard.** <kbd>Tab</kbd> to a header's grip (it appears on focus) or a grip in the **Columns** menu, press <kbd>Space</kbd> to pick the column up, use the arrow keys to move it, and <kbd>Space</kbd> again to drop (<kbd>Esc</kbd> cancels). Screen readers hear the column's name and its position as it moves.
-
-**Rules**
-
-- A pinned column moves only among the columns pinned on the same side; an unpinned one only among the unpinned ones. To move a column across, pin or unpin it.
-- `meta.enableOrdering: false` keeps a column in place: no grip in the header or the menu, and other columns can't take its place.
-- With [grouped headers](/docs/table/columns) (more than one header row), moving is off, since a column moved out of its group would break the group.
-
-**From code.** The order of unpinned columns is TanStack's column order; pinned columns keep theirs in the pinning state:
-
-```ts title="Column order from code"
-table.setColumnOrder(["id", "customer_name", "amount", "status"])
-```
-
-## Resize columns
-
-**With the pointer.** Hover the end edge of a header: a thin line shows where to grab. Drag it:
-
-- a line from the header down through the rows shows where the edge will be;
-- the width applies when you release, so the rows don't reflow on every pixel;
-- the width stops at the column's `minSize` and `maxSize`, and the line stops with it.
-
-**With the keyboard.** <kbd>Tab</kbd> to the edge (a focusable separator) and press <kbd>→</kbd> to widen or <kbd>←</kbd> to narrow, by 10px, or 50px with <kbd>Shift</kbd>. On a right-to-left page the arrow pointing away from the column still widens it.
-
-**In your column definitions:**
-
-<TypeTable
-  type={{
-    size: { description: "Starting width in pixels.", type: "number", default: "150" },
-    minSize: { description: "Resizing and fitting stop here.", type: "number", default: "20" },
-    maxSize: { description: "Resizing stops here. Fitting stops here too, and at 800px at most.", type: "number" },
-    enableResizing: { description: "false removes the resize handle, and fitting skips the column.", type: "boolean", default: "true" },
-  }}
-/>
-
-**From code:**
-
-```ts title="Widths from code"
-table.setColumnSizing((sizes) => ({ ...sizes, amount: 160 }))
-column.getSize() // the current width
-```
-
-## Fit to content
-
-A column can take exactly the width its content needs:
-
-- **Double-click** the edge of its header;
-- or pick **Fit to content** in its menu (the header's **⋯**, a right-click, or its row in the **Columns** menu);
-- or pick **Fit all columns** under the list, for every visible, resizable column.
-
-Fitting measures the header and the cells on screen: the current page, or the rendered rows when the table is [virtualized](/docs/table/virtualization). The width stays within `minSize` and `maxSize`, and never goes over 800px, so one long value can't take the whole screen. Cells should keep their text on one line (`whitespace-nowrap`) to be measured right.
-
-Hidden columns can't be fitted: there's nothing on screen to measure.
-
-**From code**, with the helper the block copies into `components/data-table/`:
-
-```ts title="Fit from code"
-import { fitColumns } from "@/components/data-table/column-layout-actions"
-
-fitColumns(table) // every visible, resizable column
-fitColumns(table, [table.getColumn("customer_name")!])
-```
-
-## Pin columns
-
-Open the column's menu (the header's **⋯**, a right-click, or its row in the **Columns** menu) and pick **Pin to start** or **Pin to end**; **Unpin** puts it back among the scrolling columns. A pin icon marks pinned columns in the **Columns** list.
-
-Pinned columns stay in view while the rest scroll sideways. Once a column scrolls under them, the innermost pinned column shows a shadow on that side.
-
-- A newly pinned column goes next to the scrolling columns, so a column pinned for good (like the selection column) keeps the outer edge.
-- "Start" and "end" follow the reading direction: on a right-to-left page, start is the right side.
-- Pinned columns can be moved among themselves: see [Move columns](#move-columns).
-
-**In your column definitions**, `meta.defaultPinned: "start" | "end"` pins a column from the first visit, and `enablePinning: false` makes the choice final: users can't pin or unpin it.
-
-**From code:**
-
-```ts title="Pinning from code"
-import { pinColumn } from "@/components/data-table/column-layout-actions"
-
-pinColumn(table, column, "start") // or "end", or false to unpin
-column.getIsPinned() // "start", "end" or false
-```
-
-## Hide columns
-
-Pick **Hide column** in the column's menu, or untick it in the **Columns** menu. To show it again, tick it in the **Columns** menu: a hidden column has no header to open a menu from. Hidden columns stay in the list, in their place, so you can still move, pin or color them.
-
-**In your column definitions**, `meta.defaultHidden: true` hides a column until the user shows it, and `enableHiding: false` keeps it shown (its checkbox is disabled).
-
-**From code:**
-
-```ts title="Visibility from code"
-column.toggleVisibility(false)
-column.getIsVisible()
-```
-
-## Color columns
-
-Open the column's menu (the header's **⋯**, a right-click, or its row in the **Columns** menu) and pick **Color**:
-
-- **No color** removes it;
-- eight presets: red, orange, amber, green, teal, blue, violet, pink;
-- **Custom color…** opens the browser's color picker. A custom color is then listed with its value, next to the presets.
-
-A swatch next to the column's name in the list shows its color.
-
-The column's body cells get a light tint of the color, layered over their own background, so hover, selection and pinned cells still look right. Presets are mid-tones tuned to read in light and dark themes; change them in `column-color-palette.ts`.
-
-**From code:**
-
-```ts title="Column colors"
-column.getColor() // "blue", "#ff8800", or undefined
-column.setColor("blue")
-column.setColor(undefined) // removes it
-table.setColumnColors({ amount: "green" })
-table.resetColumnColors(true) // removes every color
-```
-
-A color is a preset name or any CSS color. Colors come back from storage, so only plain color values (hex, names, `rgb()`, `hsl()`, `oklch()`…) are used; anything else is ignored.
 
 ## When your columns change
 
