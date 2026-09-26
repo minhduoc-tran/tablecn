@@ -10,7 +10,6 @@ import {
 } from "@querycn/table-react"
 
 import { Badge } from "@/registry/radix/ui/badge"
-import { Button } from "@/registry/radix/ui/button"
 import { FilterBuilder } from "@/registry/radix/filter/filter-builder"
 import { FilterChips } from "@/registry/radix/filter/filter-chips"
 import { DataTable } from "@/registry/radix/table/data-table"
@@ -113,10 +112,9 @@ const columns = [
 
 /** Toolbar, table and pagination over made-up orders, filtered and sorted in the browser. */
 export function OrdersDemo() {
-  const [orders, setOrders] = React.useState(ORDERS)
   const [isRefreshing, setIsRefreshing] = React.useState(false)
   const table = useDataTable({
-    data: orders,
+    data: ORDERS,
     columns,
     getRowId: (order) => order.id,
     storageKey: "tablecn-docs-orders",
@@ -131,18 +129,6 @@ export function OrdersDemo() {
           setTimeout(() => setIsRefreshing(false), 800)
         }}
         isRefreshing={isRefreshing}
-        selectionActions={(rows) => (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              const ids = new Set(rows.map((row) => row.id))
-              setOrders((all) => all.filter((order) => !ids.has(order.id)))
-            }}
-          >
-            Delete
-          </Button>
-        )}
       >
         <DataTableSearch table={table} placeholder="Search orders…" />
         <FilterBuilder />

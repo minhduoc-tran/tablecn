@@ -26,13 +26,14 @@ export interface DataTableToolbarProps<TData extends object> extends Omit<
   /** Shows a reload button. */
   onRefresh?: () => void
   isRefreshing?: boolean
-  /** Actions for the selected rows, shown in a bar while some are. */
+  /** Actions for the selected rows, shown in a bar while some are. Without them, no bar. */
   selectionActions?: (rows: DataTableRow<TData>[]) => React.ReactNode
 }
 
 /**
  * Above a `DataTable`: the app's controls, then clear filters, reload and the
- * column menu; under them, the selection bar while rows are selected.
+ * column menu; under them, with `selectionActions`, the selection bar while
+ * rows are selected.
  */
 export function DataTableToolbar<TData extends object>({
   table,
@@ -79,11 +80,15 @@ export function DataTableToolbar<TData extends object>({
           <DataTableViewOptions table={table} messages={messages} />
         </div>
       </div>
-      <DataTableSelectionBar
-        table={table}
-        messages={messages}
-        actions={selectionActions}
-      />
+      {/* Without actions the bar adds nothing: the pagination already counts
+          the selection, and the header checkbox clears it. */}
+      {selectionActions && (
+        <DataTableSelectionBar
+          table={table}
+          messages={messages}
+          actions={selectionActions}
+        />
+      )}
     </div>
   )
 }

@@ -305,6 +305,14 @@ describe.each(BASES)(
       expect(document.activeElement).toBe(toolbar())
     })
 
+    it("shows no selection bar without selectionActions", async () => {
+      const user = userEvent.setup()
+      render(<Orders adapter={createMemoryAdapter()} />)
+      await user.click(rowCheckboxes()[0]!)
+      expect(isChecked(rowCheckboxes()[0]!)).toBe(true)
+      expect(selectionBar()).toBeNull()
+    })
+
     it("marks reload as pending while it runs", async () => {
       const user = userEvent.setup()
       const onRefresh = vi.fn()
@@ -324,7 +332,11 @@ describe.each(BASES)(
     it("clears filters from the keyboard, and the selection with them", async () => {
       const user = userEvent.setup()
       render(
-        <Orders adapter={createMemoryAdapter("status__eq=paid")} withFilter />
+        <Orders
+          adapter={createMemoryAdapter("status__eq=paid")}
+          withFilter
+          selectionActions={() => null}
+        />
       )
       await user.click(rowCheckboxes()[0]!)
       expect(selectionBar()).not.toBeNull()
@@ -377,6 +389,7 @@ describe.each(BASES)(
           withFilter
           inVietnamese
           onRefresh={() => {}}
+          selectionActions={() => null}
         />
       )
       expect(screen.getByRole("button", { name: "Xoá bộ lọc" }))
