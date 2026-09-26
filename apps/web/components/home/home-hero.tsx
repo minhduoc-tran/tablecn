@@ -4,7 +4,7 @@ import { ArrowRightIcon } from "lucide-react"
 import { Button } from "@workspace/ui/components/button"
 
 import { GitHubIcon } from "@/components/docs/github-icon"
-import { CopyCommand } from "@/components/home/copy-command"
+import { InstallCommandTabs } from "@/components/home/install-command-tabs"
 import { siteConfig } from "@/lib/site-config"
 
 export function HomeHero() {
@@ -54,11 +54,12 @@ export function HomeHero() {
             </a>
           </Button>
         </div>
-        <CopyCommand
-          // Registers `@tablecn` first, since it isn't in the shadcn registry
-          // directory yet (shadcn-ui/ui#12020); a second run just skips it.
-          command={`npx shadcn@latest registry add @tablecn=${siteConfig.url}/r/{style}/{name}.json && npx shadcn@latest add @tablecn/data-table`}
-          className="animate-in delay-300 duration-700 fill-mode-both fade-in"
+        <InstallCommandTabs
+          // A direct URL (Radix UI) until `@tablecn` is in the shadcn registry
+          // directory (shadcn-ui/ui#12020); then `add @tablecn/data-table`,
+          // which picks the user's style.
+          command={`npx shadcn@latest add ${siteConfig.url}/r/radix/data-table.json`}
+          className="w-full max-w-3xl animate-in text-left delay-300 duration-700 fill-mode-both fade-in"
         />
       </div>
     </section>

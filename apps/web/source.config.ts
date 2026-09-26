@@ -3,22 +3,14 @@ import {
   remarkMdxMermaid,
 } from "fumadocs-core/mdx-plugins"
 import { defineConfig, defineDocs } from "fumadocs-mdx/config"
-import convert from "npm-to-yarn"
 
+import { convertLines } from "./lib/package-manager-commands"
 import { siteConfig } from "./lib/site-config"
 
 // MDX docs collection, read from `content/docs`
 export const docs = defineDocs({
   dir: "content/docs",
 })
-
-/** Converts every line of an npm command to the target package manager */
-function convertLines(command: string, to: "pnpm" | "yarn" | "bun") {
-  return command
-    .split("\n")
-    .map((line) => convert(line, to))
-    .join("\n")
-}
 
 /** `%SITE_URL%` in code becomes the deployed origin, so install commands work as copied */
 function remarkSiteUrl() {
