@@ -52,6 +52,15 @@ npx shadcn@latest add @tablecn/data-table @tablecn/filter-builder
 
 This copies the table into `components/data-table/` and the filter into `components/filter/`, installs the packages they need (`@querycn/*`, TanStack Table…), and adds any shadcn components you don't have yet.
 
+To put them in other folders, pass `--path`, one block per command:
+
+```npm
+npx shadcn@latest add @tablecn/data-table --path src/shared/data-table
+npx shadcn@latest add @tablecn/filter-builder --path src/shared/filter
+```
+
+Then import from there (`@/shared/data-table/data-table`), and read [the notes on `--path`](#notes-on---path) first.
+
 Or install via npm, to build your own UI:
 
 ```npm
@@ -285,6 +294,8 @@ Via the shadcn registry (recommended):
 npx shadcn@latest add @tablecn/filter-builder
 ```
 
+Add `--path src/shared/filter` to put it in another folder than `components/filter/` (see [the notes on `--path`](#notes-on---path)).
+
 Or via npm:
 
 ```npm
@@ -292,6 +303,18 @@ npm install @querycn/filter-react
 ```
 
 Next.js apps also add `@querycn/filter-next` for the URL adapter. See [Use without the table](/docs/filter/standalone) for the rest.
+
+## Notes on `--path`
+
+`--path` puts every file of the block in the folder you pass, with the imports between them rewritten to match.
+
+<Callout title="Delete the UI copies">
+  `--path` also applies to the shadcn components the block needs, so the CLI writes `button.tsx`, `table.tsx`, `tooltip.tsx`… into your folder, even when you already have them. For those you have, the block imports the one in `components/ui/` and the copy is unused: delete every file in the folder that shares a name with one in `components/ui/`. Keep the others, the block imports them from the folder.
+</Callout>
+
+To skip that cleanup, point the `components` alias in `components.json` at the parent folder instead (`"components": "@/shared"`), add the blocks without `--path`, then set it back. The shadcn components then stay in `components/ui/`.
+
+`--dry-run` lists the default folders even with `--path`; the real run uses it.
 
 ## Peer dependencies
 

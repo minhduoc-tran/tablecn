@@ -56,6 +56,8 @@ npx shadcn@latest add @tablecn/data-table
 npx shadcn@latest add @tablecn/filter-builder
 ```
 
+They go to `components/data-table/` and `components/filter/`. Pass `--path src/shared/data-table` to pick another folder ([details](https://table-cn.vercel.app/docs/installation#notes-on---path)).
+
 The logic comes along as npm packages:
 
 | Package | Version | What it is |
