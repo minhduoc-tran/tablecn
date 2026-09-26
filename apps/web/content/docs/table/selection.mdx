@@ -21,14 +21,14 @@ The pagination shows how many rows are selected ("2 of 20 selected").
 
 ## Which rows can be selected
 
-Choose with `useDataTable({ enableRowSelection })`: `true`, or a function of the row. Other rows show a disabled checkbox.
+Choose with `useDataTable({ enableRowSelection }){:ts}`: `true`, or a function of the row. Other rows show a disabled checkbox.
 
 ```tsx title="Only unpaid orders"
 const table = useDataTable({
   data,
   columns,
   getRowId: (order) => order.id,
-  enableRowSelection: (row) => row.original.status !== "paid",
+  enableRowSelection: (row) => row.original.status !== "paid", // [!code highlight]
 })
 ```
 

@@ -63,7 +63,7 @@ Change the operator picked when users choose the field with `defaultOperator`:
 { name: "amount", label: "Amount", type: "number", defaultOperator: "gte" }
 ```
 
-Operators the type doesn't have are ignored: `operators: ["eq", "between"]` on a `text` field only offers `eq`.
+Operators the type doesn't have are ignored: `operators: ["eq", "between"]{:ts}` on a `text` field only offers `eq`.
 
 ## Options for select fields
 
@@ -106,7 +106,7 @@ The UI takes care of the rest:
 - The first list loads when the dropdown opens. After that, it waits until the user stops typing for 300 ms.
 - A new search cancels the previous request (that's what `signal` is for).
 - The old list stays on screen while the next one loads. A failed request shows a **Retry** button.
-- Results are cached for the page session. Call `clearFieldOptionsCache(field)` when the data changes (after creating a customer, on logout), or `clearFieldOptionsCache()` to clear everything.
+- Results are cached for the page session. Call `clearFieldOptionsCache(field){:ts}` when the data changes (after creating a customer, on logout), or `clearFieldOptionsCache(){:ts}` to clear everything.
 
 Define the function outside your components: the cache belongs to the function, so a new function on every render means a new request every time.
 

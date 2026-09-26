@@ -17,7 +17,7 @@ Pinned columns stay in view while the rest scroll sideways. Once a column scroll
 
 ## In your column definitions
 
-`meta.defaultPinned: "start" | "end"` pins a column from the first visit, and `enablePinning: false` makes the choice final: users can't pin or unpin it.
+`meta.defaultPinned: "start" | "end"{:ts}` pins a column from the first visit, and `enablePinning: false{:ts}` makes the choice final: users can't pin or unpin it.
 
 ```tsx title="Pinned from the first visit, for good"
 column.accessor("id", {

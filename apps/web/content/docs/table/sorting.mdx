@@ -69,20 +69,20 @@ Only sortable columns are read from `?sort=`, so a link like `?sort=secret_field
 
 ## Turn sorting off
 
-For one column, `enableSorting: false` in its definition. For every column, `enableSorting: false` in `useDataTable`:
+For one column, `enableSorting: false{:ts}` in its definition. For every column, `enableSorting: false{:ts}` in `useDataTable`:
 
 ```tsx title="A table users can't sort"
 const table = useDataTable({
   data,
   columns,
   getRowId: (order) => order.id,
-  enableSorting: false,
+  enableSorting: false, // [!code highlight]
 })
 ```
 
 Headers then don't sort, the column menus have no sort items, and the URL's `sort` is ignored. In client mode the rows keep the order of `data`; in server mode `url.defaultSorting` still goes to your backend.
 
-In [server mode](/docs/table/server-data), pass `enableSorting: false` to `useTableQuery` too. When the page is [rendered on the server](/docs/table/server-data#rendering-on-the-server), put `sortableColumns: []` in the URL options `parseTableParams` reads. Both then ignore `sort` like the table does.
+In [server mode](/docs/table/server-data), pass `enableSorting: false{:ts}` to `useTableQuery` too. When the page is [rendered on the server](/docs/table/server-data#rendering-on-the-server), put `sortableColumns: []{:ts}` in the URL options `parseTableParams` reads. Both then ignore `sort` like the table does.
 
 ## From code
 

@@ -166,7 +166,7 @@ The slot receives:
 | `rule` | The draft rule. `rule.value` is whatever was last set, possibly partial. |
 | `field` | The field definition. |
 | `arity` | `"single"`, `"range"` or `"multi"`. Render one input, two, or a multi-select. |
-| `setValue(value)` | Updates the draft. Raw text is fine; it's parsed on apply. |
+| `setValue(value){:ts}` | Updates the draft. Raw text is fine; it's parsed on apply. |
 
 Field types without an entry get a text input, which handles `single` and `range` values.
 

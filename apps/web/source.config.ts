@@ -1,4 +1,7 @@
-import { remarkMdxMermaid } from "fumadocs-core/mdx-plugins"
+import {
+  rehypeCodeDefaultOptions,
+  remarkMdxMermaid,
+} from "fumadocs-core/mdx-plugins"
 import { defineConfig, defineDocs } from "fumadocs-mdx/config"
 import convert from "npm-to-yarn"
 
@@ -31,6 +34,11 @@ function remarkSiteUrl() {
 
 export default defineConfig({
   mdxOptions: {
+    // `code{:ts}` in text is highlighted like a code block
+    rehypeCodeOptions: {
+      ...rehypeCodeDefaultOptions,
+      inline: "tailing-curly-colon",
+    },
     // First, so the npm tabs below are generated from the replaced command
     // ```mermaid code blocks become <Mermaid chart="…" />
     remarkPlugins: (plugins) => [remarkSiteUrl, remarkMdxMermaid, ...plugins],

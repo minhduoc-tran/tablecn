@@ -108,11 +108,11 @@ By default, users can sort, move, resize, hide, pin and color every column. Each
 
 | Feature | Whole table (`useDataTable`) | One column | See |
 | --- | --- | --- | --- |
-| Sort | `enableSorting: false` | `enableSorting: false` | [Sorting](/docs/table/sorting) |
-| Move (drag and drop) | `enableColumnOrdering: false` | `meta.enableOrdering: false` | [Moving columns](/docs/table/column-ordering) |
-| Resize and fit | `enableColumnResizing: false` | `enableResizing: false` | [Resizing](/docs/table/column-sizing) |
-| Hide | — | `enableHiding: false` | [Hiding columns](/docs/table/column-visibility) |
-| Pin | — | `enablePinning: false` | [Pinning](/docs/table/column-pinning) |
+| Sort | `enableSorting: false{:ts}` | `enableSorting: false{:ts}` | [Sorting](/docs/table/sorting) |
+| Move (drag and drop) | `enableColumnOrdering: false{:ts}` | `meta.enableOrdering: false{:ts}` | [Moving columns](/docs/table/column-ordering) |
+| Resize and fit | `enableColumnResizing: false{:ts}` | `enableResizing: false{:ts}` | [Resizing](/docs/table/column-sizing) |
+| Hide | — | `enableHiding: false{:ts}` | [Hiding columns](/docs/table/column-visibility) |
+| Pin | — | `enablePinning: false{:ts}` | [Pinning](/docs/table/column-pinning) |
 | Color | — | — | [Column colors](/docs/table/column-colors) |
 
 ```tsx title="A table users can sort but not rearrange or resize"
@@ -120,8 +120,8 @@ const table = useDataTable({
   data,
   columns,
   getRowId: (order) => order.id,
-  enableColumnOrdering: false,
-  enableColumnResizing: false,
+  enableColumnOrdering: false, // [!code highlight]
+  enableColumnResizing: false, // [!code highlight]
 })
 ```
 
@@ -133,4 +133,4 @@ Sorting has its own page, [Sorting](/docs/table/sorting), and so does the checkb
 
 ## Grouped headers
 
-Group columns under a shared header with `column.group({ header, columns })`. Sorting, resizing, pinning and hiding work on the inner columns. Dragging columns is turned off while there's more than one header row, since moving a column out of its group would break the group.
+Group columns under a shared header with `column.group({ header, columns }){:ts}`. Sorting, resizing, pinning and hiding work on the inner columns. Dragging columns is turned off while there's more than one header row, since moving a column out of its group would break the group.

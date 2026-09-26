@@ -35,13 +35,13 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
 
 ## Server mode
 
-With `mode: "server"`, `data` is the current page and `rowCount` is the total across pages. `rowCount` is `undefined` while it's unknown, such as during the first fetch. The pagination then shows the page without a total, and a full page means another one may follow.
+With `mode: "server"{:ts}`, `data` is the current page and `rowCount` is the total across pages. `rowCount` is `undefined` while it's unknown, such as during the first fetch. The pagination then shows the page without a total, and a full page means another one may follow.
 
 It takes three steps:
 
 1. **Choose the filter's format** with a `serializer` on the provider.
 2. **Build the request** with `useTableQuery`: it reads the filter, search, sort and page from the URL and returns your backend's params.
-3. **Fetch, then pass the page** to `useDataTable` with `mode: "server"`.
+3. **Fetch, then pass the page** to `useDataTable` with `mode: "server"{:ts}`.
 
 ```tsx title="app/orders/orders-page.tsx"
 "use client"
@@ -115,7 +115,7 @@ Good to know:
 - Pass `useTableQuery` the same `columns`, `url` and `enableSorting` as `useDataTable`, so both read the URL the same way.
 - The provider's serializer must return query params (`djangoSerializer`, `jsonApiSerializer`, `postgrestSerializer` all do). `useTableQuery` throws if it gets something else, such as a request body.
 - Without a `FilterProvider`, pass the table's `adapter` to both hooks.
-- The filter's params and the table's are merged into one object. When both write the same key (a filter field named `search` with `djangoTableParams()`, say), the table's wins and `useTableQuery` warns in the console. Rename the field or the table param (`searchParam`, `orderingParam`…).
+- The filter's params and the table's are merged into one object. When both write the same key (a filter field named `search` with `djangoTableParams(){:ts}`, say), the table's wins and `useTableQuery` warns in the console. Rename the field or the table param (`searchParam`, `orderingParam`…).
 
 `queryKey` is a string that changes only when the filter, search, sort or page does. Use it as the react-query or SWR key.
 
@@ -125,9 +125,9 @@ The table's part of the request comes from a `TableParamsSerializer`. Three pres
 
 | Preset | Output for sort `-amount,name`, page 2 of 20, search `ann` |
 | --- | --- |
-| `jsonApiTableParams()` | `sort=-amount,name&page[number]=2&page[size]=20&filter[search]=ann` |
-| `djangoTableParams()` | `ordering=-amount,name&page=2&page_size=20&search=ann` |
-| `postgrestTableParams({ searchColumns: ["name", "email"] })` | `order=amount.desc,name.asc&limit=20&offset=20&and=(or(name.ilike.*ann*,email.ilike.*ann*))` |
+| `jsonApiTableParams(){:ts}` | `sort=-amount,name&page[number]=2&page[size]=20&filter[search]=ann` |
+| `djangoTableParams(){:ts}` | `ordering=-amount,name&page=2&page_size=20&search=ann` |
+| `postgrestTableParams({ searchColumns: ["name", "email"] }){:ts}` | `order=amount.desc,name.asc&limit=20&offset=20&and=(or(name.ilike.*ann*,email.ilike.*ann*))` |
 
 `djangoTableParams` takes `orderingParam`, `pageParam`, `pageSizeParam` and `searchParam`, to match your DRF `OrderingFilter`, pagination class and `SearchFilter`. PostgREST returns the total in `Content-Range` when you send the `Prefer: count=exact` header.
 
@@ -171,7 +171,7 @@ Create it once, outside the component.
 
 In a Next.js server component, read the same URL with the server entry points and fetch before the page renders.
 
-Column definitions usually live in a client module (cells render JSX, and `createSelectionColumn` is a client component), so the server can't call `tableUrlOptions(columns)`. Put the URL options in a plain module instead, with the ids users may sort by, and give the same object to both sides:
+Column definitions usually live in a client module (cells render JSX, and `createSelectionColumn` is a client component), so the server can't call `tableUrlOptions(columns){:ts}`. Put the URL options in a plain module instead, with the ids users may sort by, and give the same object to both sides:
 
 ```ts title="lib/order-table-url.ts"
 import type { TableUrlOptions } from "@querycn/table-react/server"

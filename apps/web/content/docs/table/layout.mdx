@@ -16,7 +16,7 @@ const table = useDataTable({
   data,
   columns,
   getRowId: (order) => order.id,
-  storageKey: "orders-table",
+  storageKey: "orders-table", // [!code highlight]
 })
 ```
 
@@ -80,14 +80,14 @@ You can ship new columns without breaking anyone's saved layout. A saved layout 
 
 - **New columns** start from their defaults, at the end of the order.
 - **Removed columns** are dropped from the saved layout.
-- **Locked options** (`enableHiding: false`, `enablePinning: false`) follow your definitions, whatever was saved.
+- **Locked options** (`enableHiding: false{:ts}`, `enablePinning: false{:ts}`) follow your definitions, whatever was saved.
 - **Anything unreadable** (hand-edited, a wrong shape) falls back to the defaults.
 
 If old layouts would be *wrong* rather than just outdated, for example after renaming column ids, bump `layoutVersion`. Layouts saved under another version are ignored.
 
 ## Reset from code
 
-**Reset layout** calls `table.options.meta.resetLayout()`. It goes back to your column definitions and deletes the saved layout. Call it from your own button the same way:
+**Reset layout** calls `table.options.meta.resetLayout(){:ts}`. It goes back to your column definitions and deletes the saved layout. Call it from your own button the same way:
 
 ```tsx title="Your own reset button"
 <Button variant="ghost" onClick={() => table.options.meta?.resetLayout()}>
@@ -96,12 +96,12 @@ If old layouts would be *wrong* rather than just outdated, for example after ren
 ```
 
 <Callout title="Use resetLayout, not TanStack's reset methods" type="warn">
-  `table.resetColumnOrder()`, `resetColumnVisibility()` and the like go back to the columns of the *first* render, and they don't delete the saved layout. `meta.resetLayout()` always uses your current definitions.
+  `table.resetColumnOrder(){:ts}`, `resetColumnVisibility(){:ts}` and the like go back to the columns of the *first* render, and they don't delete the saved layout. `meta.resetLayout(){:ts}` always uses your current definitions.
 </Callout>
 
 ## Good to know
 
 - **Server rendering.** The server has no `localStorage`, so the first render uses your column definitions, and the saved layout applies right after. If that brief switch bothers you, render the table on the client only.
 - **Storage can fail.** If the browser refuses to store (full, private mode), changes still apply until the page is closed.
-- **Right-to-left pages.** Pass `dir: "rtl"` to `useDataTable`. Resizing follows the pointer, and pinned columns and their shadows flip with the page.
-- **Your own table setup.** `useTableLayout({ columns, storageKey, version })` is the hook `useDataTable` uses. It returns `state`, `handlers` and `reset()` to spread into your own TanStack table. Add `columnColorFeature` to its features for colors.
+- **Right-to-left pages.** Pass `dir: "rtl"{:ts}` to `useDataTable`. Resizing follows the pointer, and pinned columns and their shadows flip with the page.
+- **Your own table setup.** `useTableLayout({ columns, storageKey, version }){:ts}` is the hook `useDataTable` uses. It returns `state`, `handlers` and `reset(){:ts}` to spread into your own TanStack table. Add `columnColorFeature` to its features for colors.

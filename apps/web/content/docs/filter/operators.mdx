@@ -85,7 +85,7 @@ Some rules are valid but probably not what the user meant. They're still applied
 | `conflict` | The request sends the same key twice, and most backends only read one. Shown after applying. |
 | `unsupported` | The request can't express the rule, so your backend never sees it. Shown after applying. |
 
-`conflict` and `unsupported` come from the serializer: see [Warnings in the UI](/docs/filter/serializers#warnings-in-the-ui). In your own UI, `useRuleWarnings(rule)` returns all three.
+`conflict` and `unsupported` come from the serializer: see [Warnings in the UI](/docs/filter/serializers#warnings-in-the-ui). In your own UI, `useRuleWarnings(rule){:ts}` returns all three.
 
 ## Your own operators
 

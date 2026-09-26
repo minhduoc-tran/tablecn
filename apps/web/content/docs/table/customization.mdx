@@ -49,10 +49,10 @@ Define it outside your components, and pass it to every component.
 | `search` | the search box: `label` (for screen readers), `placeholder`, `clear` |
 | `pagination` | `rowsPerPage`, `first`, `previous`, `next`, `last`, `morePages`, and `label` for the nav |
 | `selection` | `selectAll`, `selectRow`, `clear` |
-| `columns` | the **Columns** menu: `menu`, `pinStart`, `pinEnd`, `unpin`, `color`, `noColor`, `customColor`, `fitContent`, `fitAll`, `resetLayout`, `options(column)` |
+| `columns` | the **Columns** menu: `menu`, `pinStart`, `pinEnd`, `unpin`, `color`, `noColor`, `customColor`, `fitContent`, `fitAll`, `resetLayout`, `options(column){:ts}` |
 | `colors` | the preset color names: `red`, `orange`, `amber`, `green`, `teal`, `blue`, `violet`, `pink` |
-| `header` | header controls, `move(column)` and `resize(column)`, and what screen readers hear while a column moves |
-| `counts` | functions: `number(value)`, `page(page, pageCount)`, `selected(selected, total)`, `rows(count)` |
+| `header` | header controls, `move(column){:ts}` and `resize(column){:ts}`, and what screen readers hear while a column moves |
+| `counts` | functions: `number(value){:ts}`, `page(page, pageCount){:ts}`, `selected(selected, total){:ts}`, `rows(count){:ts}` |
 | `sorting` | `asc`, `desc`, `clear`, for your own sort controls (the built-in headers don't use them) |
 
 ### Numbers
@@ -70,7 +70,7 @@ mergeTableMessages(enTableMessages, {
 })
 ```
 
-In server mode, `page(page, pageCount)` gets `pageCount` as `undefined` until the total is known: write "Page 3" rather than "Page 3 of 12".
+In server mode, `page(page, pageCount){:ts}` gets `pageCount` as `undefined` until the total is known: write "Page 3" rather than "Page 3 of 12".
 
 ### Another language
 

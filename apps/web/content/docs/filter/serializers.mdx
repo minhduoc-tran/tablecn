@@ -227,7 +227,7 @@ jsonApiSerializer({
 ```
 
 - **Don't change the operator.** To rename operators, use the serializer's `operators` or `lookups` option.
-- **Keep it pure.** It can run more than once per apply, so don't read `Date.now()` or other changing state.
+- **Keep it pure.** It can run more than once per apply, so don't read `Date.now(){:ts}` or other changing state.
 - Skipped rules get a warning in the UI.
 
 ## Write your own

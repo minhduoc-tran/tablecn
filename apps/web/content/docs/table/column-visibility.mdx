@@ -11,7 +11,7 @@ Pick **Hide column** in the column's menu, or untick it in the **Columns** menu.
 
 ## In your column definitions
 
-`meta.defaultHidden: true` hides a column until the user shows it, and `enableHiding: false` keeps it shown (its checkbox is disabled).
+`meta.defaultHidden: true{:ts}` hides a column until the user shows it, and `enableHiding: false{:ts}` keeps it shown (its checkbox is disabled).
 
 ```tsx title="Hidden at first, and one that can't be hidden"
 column.accessor("createdAt", { header: "Created", meta: { defaultHidden: true } })

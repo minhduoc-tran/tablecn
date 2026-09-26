@@ -33,13 +33,13 @@ All the groups you can override:
 
 | Group | Contains |
 | --- | --- |
-| `operators` | A label per operator id: `eq: "is"`, `between: "is between"`. Add custom operators here. |
+| `operators` | A label per operator id: `eq: "is"{:ts}`, `between: "is between"{:ts}`. Add custom operators here. |
 | `operatorsByType` | Labels that read better for one field type, e.g. `{ date: { gt: "is after" } }`. |
 | `join` | `where` (before the first rule), `and`, `or`, `toggle` (accessible name of the AND/OR switch). |
 | `actions` | `open`, `addRule`, `removeRule`, `clearAll`, `apply`, `cancel`, `retry`. |
 | `placeholders` | `field`, `operator`, `value`, `search`, `from`, `to`, `date`, `datetime`. |
 | `rangeSeparator` | Between the two values of a range, `"–"`. |
-| `counts` | Functions: `selected(n)`, `more(n)`, `activeFilters(n)`, e.g. `activeFilters: (n) => n + " filters"`. |
+| `counts` | Functions: `selected(n){:ts}`, `more(n){:ts}`, `activeFilters(n){:ts}`, e.g. `activeFilters: (n) => n + " filters"{:ts}`. |
 | `empty` | `rules`, `fields`, `options`: empty-state texts. |
 | `loading`, `errors.loadOptions` | Async option states. |
 | `boolean` | `true` / `false` labels, `"Yes"` / `"No"`. |
@@ -47,7 +47,7 @@ All the groups you can override:
 
 An operator's label is looked up in `operatorsByType[fieldType]`, then `operators`, then falls back to the id itself.
 
-Outside React, `mergeMessages(enMessages, overrides)` gives the same merged object, and `getOperatorLabel(messages, operator, fieldType)` a label.
+Outside React, `mergeMessages(enMessages, overrides){:ts}` gives the same merged object, and `getOperatorLabel(messages, operator, fieldType){:ts}` a label.
 
 ## Add a field type
 
@@ -153,9 +153,9 @@ Then:
 
 1. **Give it a label**: `messages={{ operators: { notBetween: "is not between" } }}`. Without a label, the UI shows the id.
 2. **Tell your serializer how to send it**:
-   - `jsonApiSerializer` sends the id as is: `filter[amount][notBetween]=10&filter[amount][notBetween]=50`. Rename it with `operators: { notBetween: "not_between" }`.
-   - `djangoSerializer` needs a lookup: `lookups: { notBetween: "not_range" }`, backed by a filter on your side.
-   - `postgrestSerializer` needs an entry: `operators: { notBetween: (rule, quote) => … }`.
+   - `jsonApiSerializer` sends the id as is: `filter[amount][notBetween]=10&filter[amount][notBetween]=50`. Rename it with `operators: { notBetween: "not_between" }{:ts}`.
+   - `djangoSerializer` needs a lookup: `lookups: { notBetween: "not_range" }{:ts}`, backed by a filter on your side.
+   - `postgrestSerializer` needs an entry: `operators: { notBetween: (rule, quote) => … }{:ts}`.
 
    Until you add them, the django and PostgREST serializers' `supports` returns `false`, and the UI doesn't offer the operator.
 

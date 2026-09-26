@@ -25,13 +25,13 @@ An **adapter** reads and writes the URL through your router. You pass it to the 
 
 | Adapter | Import | Use it for |
 | --- | --- | --- |
-| `<NextFilterProvider>` or `useNextAdapter()` | `@querycn/filter-next` | Next.js App Router |
-| `useReactRouterAdapter()` | `@querycn/filter-react/react-router` | react-router 6.4+ and 7 |
-| `useBrowserUrlAdapter()` | `@querycn/filter-react` | Vite and other apps without a client router |
+| `<NextFilterProvider>` or `useNextAdapter(){:ts}` | `@querycn/filter-next` | Next.js App Router |
+| `useReactRouterAdapter(){:ts}` | `@querycn/filter-react/react-router` | react-router 6.4+ and 7 |
+| `useBrowserUrlAdapter(){:ts}` | `@querycn/filter-react` | Vite and other apps without a client router |
 | none | | State stays in memory, the URL is left alone. Good for dialogs and tests. |
-| `createMemoryAdapter("status__eq=paid")` | `@querycn/filter-react` | In memory, with a starting query string |
+| `createMemoryAdapter("status__eq=paid"){:ts}` | `@querycn/filter-react` | In memory, with a starting query string |
 
-Without a `FilterProvider`, pass the adapter to `useDataTable({ adapter })` instead.
+Without a `FilterProvider`, pass the adapter to `useDataTable({ adapter }){:ts}` instead.
 
 All URL adapters **replace** the current history entry instead of adding one, so ten sorts don't add ten Back steps. They keep the path, the hash and your other query params.
 
@@ -46,7 +46,7 @@ Page 4 of the old results means nothing for new ones, so every change that resha
 <FilterProvider fields={orderFields} adapter={adapter} onApply={() => resetPagePatch()}>
 ```
 
-`onApply` returns params to write together with the filter, so the filter and `page` change in one URL update. `resetPagePatch()` returns `{ page: null }` (`null` removes a param), using your page param name if you renamed it. It also covers **Clear filters** and the chips' ×.
+`onApply` returns params to write together with the filter, so the filter and `page` change in one URL update. `resetPagePatch(){:ts}` returns `{ page: null }` (`null` removes a param), using your page param name if you renamed it. It also covers **Clear filters** and the chips' ×.
 
 ## Table options
 
@@ -103,7 +103,7 @@ Define it outside your component, like `columns`. In server mode, pass the same 
 />
 
 <Callout title="Already using ?q=?">
-  If your app puts something else in `q` (a site-wide search box, say), the table would read it as its search. Rename the table's param: `url: { params: { search: "search" } }`.
+  If your app puts something else in `q` (a site-wide search box, say), the table would read it as its search. Rename the table's param: `url: { params: { search: "search" } }{:ts}`.
 </Callout>
 
 ## Broken links
@@ -171,7 +171,7 @@ encodeTableParams({ sorting: [{ id: "amount", desc: true }], pagination: { pageI
 // → { sort: "-amount", page: "2", per_page: null, q: null }  (null removes the param)
 ```
 
-With your own TanStack table instead of `useDataTable`, `useTableUrlState({ adapter, …options })` gives the URL state as controlled props: `sorting`, `pagination`, `search` and their `on…Change` handlers.
+With your own TanStack table instead of `useDataTable`, `useTableUrlState({ adapter, …options }){:ts}` gives the URL state as controlled props: `sorting`, `pagination`, `search` and their `on…Change` handlers.
 
 ## Advanced
 
@@ -244,7 +244,7 @@ export function createStorageAdapter(key: string): UrlStateAdapter {
 }
 ```
 
-Create it once (module scope or `useState(() => …)`), not on every render. Its methods are called without `this`.
+Create it once (module scope or `useState(() => …){:ts}`), not on every render. Its methods are called without `this`.
 
 <TypeTable
   type={{

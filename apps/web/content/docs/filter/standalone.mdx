@@ -112,7 +112,7 @@ Pick the case that fits:
 
 ### From your API, in the browser
 
-Anywhere inside the provider, `useAppliedFilter()` gives you the request params for the applied filter:
+Anywhere inside the provider, `useAppliedFilter(){:ts}` gives you the request params for the applied filter:
 
 ```tsx title="components/order-list.tsx"
 import { toSearchParams } from "@querycn/filter-core"
@@ -203,7 +203,7 @@ With Next.js, add `shallow` to the provider (`<NextFilterProvider fields={orderF
   Filtering one page of a paginated API in the browser gives wrong results: matching rows on other pages are never seen. Send the filter to your backend instead.
 </Callout>
 
-`applyFilter(rows, state, context)` takes these options in `context`. `useAppliedFilter().context` already has `fields` and `registry`:
+`applyFilter(rows, state, context){:ts}` takes these options in `context`. `useAppliedFilter().context` already has `fields` and `registry`:
 
 <TypeTable
   type={{
@@ -222,7 +222,7 @@ With Next.js, add `shallow` to the provider (`<NextFilterProvider fields={orderF
   }}
 />
 
-`createRowMatcher(state, context)` returns a `(row) => boolean` instead of a filtered array, for when you need a predicate.
+`createRowMatcher(state, context){:ts}` returns a `(row) => boolean` instead of a filtered array, for when you need a predicate.
 
 ### Anywhere else
 
@@ -233,5 +233,5 @@ With Next.js, add `shallow` to the provider (`<NextFilterProvider fields={orderF
 - **Keep fields in a shared module**, without `"use client"`, and import it on both sides. You can't pass `fields` as a prop from a server component to a client component if a field has `loadOptions` or `resolveLabels`: functions can't cross that boundary. The same goes for serializers.
 - **`shallow` or not?** Leave it off when a server component reads `searchParams`, so each filter change fetches the page again. Turn it on when rows are filtered in the browser.
 - **Static routes need `<Suspense>`.** The provider reads the URL with `useSearchParams`, so on a prerendered route `next build` fails unless the provider is inside a `<Suspense>` boundary. Pages that await `searchParams` are dynamic already.
-- **Next.js 14**: `searchParams` is a plain object, not a Promise: `parseFilters(props.searchParams, { fields })`. The examples use Next.js 15.5+ types like `PageProps<"/orders">`.
-- `NextFilterProvider` takes every [`FilterProvider` prop](/docs/filter/react#filterprovider) except `adapter`, plus `shallow`. To use the adapter with your own provider, call `useNextAdapter({ shallow })`. Both keep the path, hash and other params, don't scroll, and handle `basePath`.
+- **Next.js 14**: `searchParams` is a plain object, not a Promise: `parseFilters(props.searchParams, { fields }){:ts}`. The examples use Next.js 15.5+ types like `PageProps<"/orders">`.
+- `NextFilterProvider` takes every [`FilterProvider` prop](/docs/filter/react#filterprovider) except `adapter`, plus `shallow`. To use the adapter with your own provider, call `useNextAdapter({ shallow }){:ts}`. Both keep the path, hash and other params, don't scroll, and handle `basePath`.

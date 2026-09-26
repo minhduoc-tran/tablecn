@@ -71,7 +71,7 @@ The provider keeps two versions of the filter:
 - **The draft** is what users are editing. Rules can be incomplete. `useFilter` and `useFilterRule` work on it.
 - **The applied filter** is what's in the URL, and what your data follows. `useAppliedFilter` reads it.
 
-`apply()` copies the complete draft rules to the applied filter. `discard()` throws the draft away and starts again from the applied filter; the ready-made popover calls it when closed without applying. The applied filter also changes on `reset()`, on a chip's ×, and when the URL changes (Back / Forward, a shared link).
+`apply(){:ts}` copies the complete draft rules to the applied filter. `discard(){:ts}` throws the draft away and starts again from the applied filter; the ready-made popover calls it when closed without applying. The applied filter also changes on `reset(){:ts}`, on a chip's ×, and when the URL changes (Back / Forward, a shared link).
 
 ## FilterProvider
 
@@ -141,7 +141,7 @@ const { query, queryKey, activeCount } = useAppliedFilter()
 | `queryKey` | A short string of the filter's URL params (`status__eq=paid`, `""` when empty). Use it as a cache key. |
 | `activeCount` | How many rules are applied, e.g. for a badge. |
 | `state` | The applied `FilterState`: complete rules only. |
-| `removeRule(id)` | Removes one applied rule right away, like a chip's ×. |
+| `removeRule(id){:ts}` | Removes one applied rule right away, like a chip's ×. |
 | `ruleIssues` | Warnings per rule id: `"conflict"` or `"unsupported"`. |
 | `context` | `{ fields, registry }`, ready for core functions like `applyFilter`. |
 | `messages` | The UI text. |
@@ -159,20 +159,20 @@ The draft and every editing action. It re-renders on each keystroke, so only use
 | `state` | The draft `FilterState`, incomplete rules included. |
 | `isDirty` | Applying would change the applied filter. |
 | `canAddRule` | `false` once `maxRules` is reached. |
-| `addRule(field?)` | Adds a rule, optionally with a field already picked. |
-| `removeRule(id)` | Removes a draft rule. |
-| `setField(id, field)` | Changes the field. The operator goes back to the field's default, and the value is cleared. |
-| `setOperator(id, operator)` | Changes the operator. The value is kept if its shape stays the same. |
-| `setValue(id, value)` | Sets the value. Raw text is fine, like `"1."`: it's checked on apply. |
-| `setJoin(join)` | `"and"` or `"or"`. |
-| `apply()` | Applies the complete rules and writes them to the URL. |
-| `reset()` | Clears the filter and applies at once. |
-| `discard()` | Drops the edits that weren't applied. |
-| `supportsOperator(id)` | Whether the serializer can send this operator. |
+| `addRule(field?){:ts}` | Adds a rule, optionally with a field already picked. |
+| `removeRule(id){:ts}` | Removes a draft rule. |
+| `setField(id, field){:ts}` | Changes the field. The operator goes back to the field's default, and the value is cleared. |
+| `setOperator(id, operator){:ts}` | Changes the operator. The value is kept if its shape stays the same. |
+| `setValue(id, value){:ts}` | Sets the value. Raw text is fine, like `"1."`: it's checked on apply. |
+| `setJoin(join){:ts}` | `"and"` or `"or"`. |
+| `apply(){:ts}` | Applies the complete rules and writes them to the URL. |
+| `reset(){:ts}` | Clears the filter and applies at once. |
+| `discard(){:ts}` | Drops the edits that weren't applied. |
+| `supportsOperator(id){:ts}` | Whether the serializer can send this operator. |
 
-Actions always read the latest draft, so `setValue(…)` followed by `apply()` in the same handler applies the new value.
+Actions always read the latest draft, so `setValue(…){:ts}` followed by `apply(){:ts}` in the same handler applies the new value.
 
-`useFilterActions()` returns the same actions without `state`, `isDirty` and `canAddRule`. It doesn't change while users type, so memoized components that only need actions don't re-render.
+`useFilterActions(){:ts}` returns the same actions without `state`, `isDirty` and `canAddRule`. It doesn't change while users type, so memoized components that only need actions don't re-render.
 
 ## useFilterRule
 
@@ -182,13 +182,13 @@ Everything one rule row needs, bound to that rule:
 | --- | --- |
 | `field` | The rule's field definition, or `undefined` before one is picked. |
 | `fields` | The fields to offer: those with at least one operator the serializer can send. |
-| `operators` | `{ id, label, supported }[]` for the field. An operator from the URL that the serializer can't send is listed last, with `supported: false`. |
+| `operators` | `{ id, label, supported }[]` for the field. An operator from the URL that the serializer can't send is listed last, with `supported: false{:ts}`. |
 | `arity` | The operator's value shape (`"none"`, `"single"`, `"range"`, `"multi"`), or `null` before one is picked. Pick the value input from it. |
 | `setField`, `setOperator`, `setValue`, `remove` | Actions for this rule. |
 
 ## useRuleWarnings
 
-`useRuleWarnings(rule)` returns the [warnings](/docs/filter/operators#warnings) for one draft rule, like `["reversedRange"]`. Get the text from `messages.warnings[key]`. It reads the draft, so use it in a small component of its own rather than in a memoized row.
+`useRuleWarnings(rule){:ts}` returns the [warnings](/docs/filter/operators#warnings) for one draft rule, like `["reversedRange"]`. Get the text from `messages.warnings[key]`. It reads the draft, so use it in a small component of its own rather than in a memoized row.
 
 ## useFieldOptions
 
@@ -211,6 +211,6 @@ const { options, loading, error, query, search, retry, getLabel } = useFieldOpti
 | --- | --- |
 | `options` | Options for the current search. The previous list stays while the next one loads. |
 | `loading`, `error` | The current request's state. |
-| `query`, `search(text)` | The search text and its setter. |
-| `retry()` | Loads the current search again after an error. |
-| `getLabel(value)` | A value's label, or the value itself until it's known. |
+| `query`, `search(text){:ts}` | The search text and its setter. |
+| `retry(){:ts}` | Loads the current search again after an error. |
+| `getLabel(value){:ts}` | A value's label, or the value itself until it's known. |

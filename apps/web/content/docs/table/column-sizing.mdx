@@ -49,18 +49,18 @@ fitColumns(table, [table.getColumn("customer_name")!])
 
 ## Turn it off
 
-For one column, `enableResizing: false` in its definition. For every column, `enableColumnResizing: false` in `useDataTable`:
+For one column, `enableResizing: false{:ts}` in its definition. For every column, `enableColumnResizing: false{:ts}` in `useDataTable`:
 
 ```tsx title="A table users can't resize"
 const table = useDataTable({
   data,
   columns,
   getRowId: (order) => order.id,
-  enableColumnResizing: false,
+  enableColumnResizing: false, // [!code highlight]
 })
 ```
 
-Every resize handle goes away, **Fit to content** and **Fit all columns** are disabled, and columns keep the `size` you give them. The table-wide option wins over a column's `enableResizing: true`.
+Every resize handle goes away, **Fit to content** and **Fit all columns** are disabled, and columns keep the `size` you give them. The table-wide option wins over a column's `enableResizing: true{:ts}`.
 
 ## From code
 
