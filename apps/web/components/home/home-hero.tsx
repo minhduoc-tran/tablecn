@@ -5,7 +5,17 @@ import { Button } from "@workspace/ui/components/button"
 
 import { GitHubIcon } from "@/components/docs/github-icon"
 import { InstallCommandTabs } from "@/components/home/install-command-tabs"
+import { InstallStylePicker } from "@/components/home/install-style-picker"
 import { siteConfig } from "@/lib/site-config"
+
+// A direct URL per primitive library until `@tablecn` is in the shadcn
+// registry directory (shadcn-ui/ui#12020); then one `add @tablecn/data-table`,
+// which picks the user's style by itself.
+const STYLES = [
+  { value: "radix", label: "Radix UI" },
+  { value: "base", label: "Base UI" },
+  { value: "aria", label: "React Aria" },
+]
 
 export function HomeHero() {
   return (
@@ -54,11 +64,16 @@ export function HomeHero() {
             </a>
           </Button>
         </div>
-        <InstallCommandTabs
-          // A direct URL (Radix UI) until `@tablecn` is in the shadcn registry
-          // directory (shadcn-ui/ui#12020); then `add @tablecn/data-table`,
-          // which picks the user's style.
-          command={`npx shadcn@latest add ${siteConfig.url}/r/radix/data-table.json`}
+        <InstallStylePicker
+          styles={STYLES.map(({ value, label }) => ({
+            value,
+            label,
+            command: (
+              <InstallCommandTabs
+                command={`npx shadcn@latest add ${siteConfig.url}/r/${value}/data-table.json`}
+              />
+            ),
+          }))}
           className="w-full max-w-3xl animate-in text-left delay-300 duration-700 fill-mode-both fade-in"
         />
       </div>
