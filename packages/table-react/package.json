@@ -1,6 +1,6 @@
 {
   "name": "@querycn/table-react",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Headless data table for React on TanStack Table v9: URL-synced sorting and pagination, persisted column layout, and @querycn/filter integration.",
   "license": "MIT",
   "author": "minhduoc-tran",
