@@ -6,6 +6,7 @@ import { Button } from "@workspace/ui/components/button"
 
 import { DocsMobileNav } from "@/components/docs/docs-mobile-nav"
 import { DocsSearchButton } from "@/components/docs/docs-search-button"
+import { GitHubStarsLink } from "@/components/docs/github-stars-link"
 import { ThemeToggleButton } from "@/components/docs/theme-toggle-button"
 import { siteConfig } from "@/lib/site-config"
 
@@ -29,6 +30,7 @@ export function SiteHeader({ tree }: { tree: PageTree.Root }) {
         </nav>
         <div className="ms-auto flex items-center gap-2">
           <DocsSearchButton />
+          <GitHubStarsLink />
           <ThemeToggleButton />
         </div>
       </div>
