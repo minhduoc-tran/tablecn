@@ -3,24 +3,105 @@ title: Virtualization
 description: Keep the table fast with thousands of rows on a page.
 ---
 
-A page of 20 or 50 rows is fast as it is. When one page holds thousands of rows (usually in client mode, with every row loaded), turn on `virtualize`. The table then only renders the rows in view, and swaps them as users scroll.
+import { VirtualizationPreview } from "@/components/docs/virtualization-preview"
+
+A table normally puts **every row of the page** in the DOM. With 20 or 50 rows that's fine. With 10,000 rows of 5 columns, that's 50,000 cells: the page takes seconds to open, and scrolling, sorting and typing in the search box all stutter.
+
+`virtualize` fixes that by rendering **only the rows you can see**, plus 10 above and below. As you scroll, rows leaving the view are removed and the next ones are added. Two empty spacer rows fill the height of the rest, so the scrollbar still looks and behaves like all the rows are there.
+
+<VirtualizationPreview />
+
+**Try it:** scroll the table and watch *in the DOM* stay at a few dozen, whatever the page holds. Switch the page size to **10000**: still a few dozen. Now untick `virtualize` and do the same: the count jumps to 10,000, and the table takes a moment to catch up.
+
+## Turn it on
+
+Two things: the `virtualize` prop, and a **height** on the table.
 
 ```tsx title="components/orders-table.tsx"
-const table = useDataTable({
-  data: orders, // 10,000 rows
-  columns,
-  getRowId: (order) => order.id,
-  url: { pageSizes: [1000, 5000, 10000], defaultPageSize: 1000 },
-})
+"use client"
 
-return <DataTable table={table} virtualize className="h-[600px]" />
+import { useDataTable } from "@querycn/table-react"
+
+import { DataTable } from "@/components/data-table/data-table"
+import { DataTablePagination } from "@/components/data-table/data-table-pagination"
+
+export function OrdersTable({ orders }: { orders: Order[] }) {
+  const table = useDataTable({
+    data: orders, // 10,000 rows, all loaded in the browser
+    columns,
+    getRowId: (order) => order.id,
+    url: { pageSizes: [100, 1000, 10000], defaultPageSize: 1000 }, // [!code highlight]
+  })
+
+  return (
+    <>
+      <DataTable table={table} virtualize className="h-[600px]" /> {/* [!code highlight] */}
+      <DataTablePagination table={table} />
+    </>
+  )
+}
 ```
 
-Pages still work: virtualization only changes how one page is drawn. Offer large `pageSizes` so a page can hold that many rows.
+Pages still work: virtualization only changes how **one page** is drawn, not how many rows it holds. That's why the example offers large `pageSizes`: with the default sizes (up to 100 rows) there's nothing to virtualize.
 
 <Callout title="Give the table a height">
-  Rows are virtualized inside the table's own scroll area. Without a height (`h-[600px]`, `max-h-[70vh]`, or a flex layout that limits it), the table grows to fit every row, and every row renders.
+  Rows are virtualized inside the table's own scroll area. Without a height, the table grows to fit every row, nothing is ever out of view, and every row renders: `virtualize` then does nothing.
 </Callout>
+
+## Give it a height
+
+Any way of limiting the height works. Pick the one that fits your layout.
+
+<Tabs items={["Fixed", "Max height", "Fill the page"]}>
+  <Tab value="Fixed">
+    Always 600px tall, even with a few rows.
+
+    ```tsx
+    <DataTable table={table} virtualize className="h-[600px]" />
+    ```
+  </Tab>
+  <Tab value="Max height">
+    Grows with the rows, up to 70% of the window, then scrolls.
+
+    ```tsx
+    <DataTable table={table} virtualize className="max-h-[70vh]" />
+    ```
+  </Tab>
+  <Tab value="Fill the page">
+    Takes whatever the toolbar and pagination leave. `min-h-0` lets the table shrink below its content, which a flex child doesn't do by default.
+
+    ```tsx
+    <div className="flex h-dvh flex-col gap-3 p-4">
+      <DataTableToolbar table={table} />
+      <DataTable table={table} virtualize className="min-h-0 flex-1" /> {/* [!code highlight] */}
+      <DataTablePagination table={table} />
+    </div>
+    ```
+  </Tab>
+</Tabs>
+
+## Taller rows
+
+The table guesses each row is 37px (one line of text) until it's rendered, then measures it. If your rows are taller, say a name with an email under it, set `estimateRowHeight` close to the real height. Otherwise the scrollbar thumb jumps and resizes while you scroll, as guesses get replaced by real heights.
+
+```tsx title="Rows with two lines"
+const columns = [
+  helper.accessor("customer", {
+    header: "Customer",
+    cell: ({ row }) => (
+      <div className="flex flex-col">
+        <span>{row.original.customer}</span>
+        <span className="text-muted-foreground text-xs">{row.original.email}</span>
+      </div>
+    ),
+  }),
+  // …
+]
+
+<DataTable table={table} virtualize estimateRowHeight={57} className="h-[600px]" /> {/* [!code highlight] */}
+```
+
+Rows don't need to be the same height: each one is measured once rendered. The estimate only has to be close on average.
 
 ## Props
 
@@ -47,6 +128,8 @@ Pages still work: virtualization only changes how one page is drawn. Offer large
 | A table with a fixed height | A table that should grow with the page |
 | | Tables printed or exported from the page: only rendered rows exist |
 
+A rough rule: if a page can hold more than a few hundred rows, turn it on. Below that, the browser handles every row without trouble, and you avoid the limitations below.
+
 ## Limitations
 
 Rows that aren't rendered aren't on the page, so:
@@ -54,7 +137,7 @@ Rows that aren't rendered aren't on the page, so:
 - **Fit to content** only measures the rendered rows. A wider value further down stays cut off until you fit again from there.
 - **Rows scrolled out of view are removed.** Focus, an open menu or a text selection inside them is lost. Open row details in a dialog rather than inline.
 - **The browser's find** (<kbd>Ctrl</kbd>+<kbd>F</kbd>) only finds rendered rows. Use the [search box or the filter](/docs/table/filtering) instead.
-- **Striping with `nth-child`** (`even:bg-muted`) shifts while scrolling. Stripe by the row's position instead:
+- **Striping with `nth-child`** (`even:bg-muted`) shifts while scrolling: the spacer row counts as a child, and which rows are "even" changes as rows come and go. Stripe by the row's position instead:
 
 ```tsx title="Striped rows"
 const rows = table.getRowModel().rows
@@ -71,7 +154,6 @@ const position = useMemo(() => new Map(rows.map((row, index) => [row.id, index])
 ## Good to know
 
 - It's built on [TanStack Virtual](https://tanstack.com/virtual), installed with the table UI.
-- Rows are measured once rendered, so rows of different heights scroll correctly.
 - The table stays a real `<table>`: the sticky header, pinned columns and widths work as usual. Screen readers still hear the full row count.
 - It has no effect while the table shows its error state. The first load's skeleton rows render as usual.
 - **Every** table, virtualized or not, scrolls back to the top when the sort, page or filter changes. If you build a "load more" pattern, where the page size grows as users reach the end, edit `use-scroll-to-top-on-change.ts` in your copy so it doesn't jump on every load.
