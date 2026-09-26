@@ -54,7 +54,9 @@ export function HomeHero() {
           </Button>
         </div>
         <CopyCommand
-          command="npx shadcn@latest add @tablecn/data-table"
+          // Registers `@tablecn` first, since it isn't in the shadcn registry
+          // directory yet (shadcn-ui/ui#12020); a second run just skips it.
+          command={`npx shadcn@latest registry add @tablecn=${siteConfig.url}/r/{style}/{name}.json && npx shadcn@latest add @tablecn/data-table`}
           className="animate-in delay-300 duration-700 fill-mode-both fade-in"
         />
       </div>
