@@ -2,12 +2,15 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { getBreadcrumbItems } from "fumadocs-core/breadcrumb"
 import { findNeighbour } from "fumadocs-core/page-tree"
-import { AnchorProvider } from "fumadocs-core/toc"
+import { TOCProvider } from "fumadocs-ui/components/toc"
 import { DocsBody } from "fumadocs-ui/layouts/docs/page"
 import { createRelativeLink } from "fumadocs-ui/mdx"
 
 import { DocsBreadcrumb } from "@/components/docs/docs-breadcrumb"
-import { DocsPagerFooter, DocsPagerIconButtons } from "@/components/docs/docs-pager"
+import {
+  DocsPagerFooter,
+  DocsPagerIconButtons,
+} from "@/components/docs/docs-pager"
 import { DocsTableOfContents } from "@/components/docs/docs-table-of-contents"
 import { source } from "@/lib/source"
 import { getMDXComponents } from "@/mdx-components"
@@ -26,7 +29,7 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
   ]
 
   return (
-    <AnchorProvider toc={page.data.toc}>
+    <TOCProvider toc={page.data.toc}>
       <div className="flex">
         <article className="min-w-0 flex-1 px-4 py-6 lg:px-8 lg:py-10">
           <div className="mx-auto flex w-full max-w-[42rem] flex-col gap-2">
@@ -38,7 +41,9 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
               <DocsPagerIconButtons neighbours={neighbours} />
             </div>
             {page.data.description && (
-              <p className="text-muted-foreground text-base">{page.data.description}</p>
+              <p className="text-base text-muted-foreground">
+                {page.data.description}
+              </p>
             )}
             <DocsBody className="mt-6">
               <MDX
@@ -51,10 +56,10 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
           </div>
         </article>
         <aside className="sticky top-14 hidden h-[calc(100svh-3.5rem)] w-64 shrink-0 overflow-y-auto py-10 xl:block">
-          <DocsTableOfContents toc={page.data.toc} />
+          <DocsTableOfContents />
         </aside>
       </div>
-    </AnchorProvider>
+    </TOCProvider>
   )
 }
 
