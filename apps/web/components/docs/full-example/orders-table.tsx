@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { parseDateOnly } from "@querycn/filter-core"
 import { NextFilterProvider } from "@querycn/filter-next"
 import {
   createDataTableColumnHelper,
@@ -31,6 +32,19 @@ const money = new Intl.NumberFormat("en-US", {
   style: "currency",
   currency: "USD",
 })
+
+// A fixed locale, so the server and the browser print the same text.
+const dayFormat = new Intl.DateTimeFormat("en-US", {
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+})
+
+// `parseDateOnly` reads the day in local time; `new Date("2026-03-05")` would be UTC.
+const formatDay = (day: string) => {
+  const date = parseDateOnly(day)
+  return date ? dayFormat.format(date) : day
+}
 
 const helper = createDataTableColumnHelper<Order>()
 
@@ -70,15 +84,24 @@ const columns = [
         <span className="text-muted-foreground">No</span>
       ),
   }),
-  helper.accessor("deliveryDate", { header: "Delivery", size: 120 }),
+  helper.accessor("deliveryDate", {
+    header: "Delivery",
+    size: 120,
+    cell: ({ getValue }) => (
+      <span className="tabular-nums">{formatDay(getValue<string>())}</span>
+    ),
+  }),
   helper.accessor("createdAt", {
     header: "Created at",
     size: 160,
-    cell: ({ getValue }) => (
-      <span className="tabular-nums">
-        {getValue<string>().replace("T", " ")}
-      </span>
-    ),
+    cell: ({ getValue }) => {
+      const [day, time] = getValue<string>().split("T")
+      return (
+        <span className="tabular-nums">
+          {formatDay(day!)} {time}
+        </span>
+      )
+    },
   }),
   helper.accessor("amount", {
     header: "Amount",

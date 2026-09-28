@@ -12,7 +12,7 @@ export const siteConfig = {
     { href: "/docs/table/columns", label: "Table" },
     { href: "/docs/filter/fields", label: "Filter" },
     { href: "/docs/components/table", label: "Components" },
-    { href: "/docs/examples/full", label: "Examples" },
+    { href: "/docs/full-example", label: "Examples" },
   ],
 } as const
 
