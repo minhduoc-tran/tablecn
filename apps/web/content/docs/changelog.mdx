@@ -30,6 +30,7 @@ The full list of package changes is in each package's `CHANGELOG.md` on [GitHub]
 
 - While dragging a column's edge, the resize cursor stays on, even when the pointer leaves the header.
 - On right-to-left pages, headers and cells align to the right, the selection checkbox keeps its space from the table's edge, the resize line is centered on the edge, and the filter's range arrow points from the start to the end.
+- Popovers (the filter panel, pickers, the **Columns** menu, the API select editor) and the filter's calendars follow the direction of your primitive library's provider, even when only part of the page is right-to-left. The Radix UI and Base UI blocks now list `radix-ui` / `@base-ui/react` as dependencies for it.
 - The blocks ask for the package versions they use. `data-table` asked for `@querycn/table-react@^0.1.0`, so a new install could get an older version than the block needs.
 
 ### Updating

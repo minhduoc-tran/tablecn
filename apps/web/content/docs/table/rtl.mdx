@@ -7,7 +7,7 @@ import { RtlTablePreview } from "@/components/docs/rtl-table-preview"
 
 <RtlTablePreview />
 
-**Try it:** the first column is on the right. Scroll the table sideways, drag a column's left edge to widen it, drag a header to move it, or open a column's **⋯** menu and its **Color** submenu.
+**Try it:** the first column is on the right. Scroll the table sideways, drag a column's left edge to widen it, drag a header to move it, open a column's **⋯** menu and its **Color** submenu, or add a *Date* filter and open its calendar.
 
 ## Set it up
 
@@ -47,7 +47,7 @@ const table = useDataTable({
 
 ### Your primitive library
 
-Menus, selects and popovers read the direction from their library, not from the page. Wrap your app with its provider:
+Menus, selects, popovers and the filter's calendars read the direction from their library, not from the page. They open outside the table, at the end of `<body>`, so they take it from this provider even when only part of the page is right-to-left. Wrap your app with it:
 
 <Tabs items={["Radix UI", "Base UI", "React Aria"]}>
 <Tab value="Radix UI">
@@ -81,7 +81,7 @@ import { I18nProvider } from "react-aria-components"
 </Tab>
 </Tabs>
 
-Without it, a column's **Color** submenu opens on the wrong side, and the arrow keys move the wrong way in menus.
+Without it, a column's **Color** submenu opens on the wrong side, the filter panel reads left-to-right, and the arrow keys move the wrong way in menus.
 
 </Step>
 </Steps>
@@ -98,6 +98,8 @@ If your app switches direction with the language, derive all three from the same
 | Moving a column | <kbd>←</kbd> / <kbd>→</kbd> move it the way the arrow points | the same: the arrow is the direction it moves on screen |
 | Pagination | ‹ previous, › next | the arrows flip |
 | Menus and submenus | open to the right | open to the left (with the provider above) |
+| Filter panel and pickers | "Where" on the left, lined up with the **Filter** button's left edge | "Where" on the right, lined up with its right edge |
+| Calendars | weekdays from the left, previous on the left | weekdays from the right, previous on the right |
 | Header and cell text | aligned left | aligned right |
 
 Everything is laid out with logical properties (`start` / `end`), so your own `meta` and classes should use them too: `ps-2` rather than `pl-2`, `text-start` rather than `text-left`.
