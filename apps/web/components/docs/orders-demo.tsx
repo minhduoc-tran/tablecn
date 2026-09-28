@@ -24,6 +24,7 @@ interface Order {
   status: "paid" | "pending" | "refunded"
   amount: number
   date: string
+  pickup: string
   city: string
 }
 
@@ -41,6 +42,7 @@ const fields: FieldDefinition[] = [
   },
   { name: "amount", label: "Amount", type: "number" },
   { name: "date", label: "Date", type: "date" },
+  { name: "pickup", label: "Pickup", type: "time" },
 ]
 
 const FIRST =
@@ -52,6 +54,8 @@ const LAST =
 const CITIES = ["Hà Nội", "Hồ Chí Minh", "Đà Nẵng", "Singapore", "Bangkok"]
 const STATUSES = ["paid", "pending", "paid", "refunded", "paid"] as const
 
+const pad = (part: number) => String(part).padStart(2, "0")
+
 // Made-up but stable orders, so the server and the browser render the same rows.
 const ORDERS: Order[] = Array.from({ length: 240 }, (_, index) => {
   const day = new Date(Date.UTC(2026, 0, 1 + ((index * 37) % 270)))
@@ -61,6 +65,8 @@ const ORDERS: Order[] = Array.from({ length: 240 }, (_, index) => {
     status: STATUSES[(index * 3) % 5]!,
     amount: ((index * 7919) % 99000) / 100 + 5,
     date: day.toISOString().slice(0, 10),
+    // Every quarter hour from 08:00 to 20:45.
+    pickup: `${pad(8 + ((index * 5) % 13))}:${pad(((index * 7) % 4) * 15)}`,
     city: CITIES[(index * 11) % 5]!,
   }
 })
@@ -107,6 +113,13 @@ const columns = [
     ),
   }),
   helper.accessor("date", { header: "Date", size: 120 }),
+  helper.accessor("pickup", {
+    header: "Pickup",
+    size: 100,
+    cell: ({ getValue }) => (
+      <span className="tabular-nums">{getValue<string>()}</span>
+    ),
+  }),
   helper.accessor("city", { header: "City", size: 150 }),
 ]
 
