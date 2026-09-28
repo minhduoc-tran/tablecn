@@ -1,5 +1,12 @@
 # @querycn/filter-react
 
+## 0.3.0
+
+### Patch Changes
+
+- Updated dependencies [87b1840]
+  - @querycn/filter-core@0.3.0
+
 ## 0.2.0
 
 ### Patch Changes
