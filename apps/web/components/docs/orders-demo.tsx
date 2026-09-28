@@ -9,6 +9,7 @@ import {
   useDataTable,
 } from "@querycn/table-react"
 
+import { usePreviewView } from "@/components/docs/preview-device-toggle"
 import { Badge } from "@/registry/radix/ui/badge"
 import { FilterBuilder } from "@/registry/radix/filter/filter-builder"
 import { FilterChips } from "@/registry/radix/filter/filter-chips"
@@ -89,9 +90,13 @@ const columns = [
   helper.accessor("id", {
     header: "Order",
     size: 110,
-    meta: { defaultPinned: "start" },
+    meta: { defaultPinned: "start", card: "subtitle" },
   }),
-  helper.accessor("customer", { header: "Customer", size: 200 }),
+  helper.accessor("customer", {
+    header: "Customer",
+    size: 200,
+    meta: { card: "title" },
+  }),
   helper.accessor("status", {
     header: "Status",
     size: 110,
@@ -131,6 +136,7 @@ export function OrdersDemo() {
     columns,
     getRowId: (order) => order.id,
     storageKey: "tablecn-docs-orders",
+    view: usePreviewView(),
   })
 
   return (

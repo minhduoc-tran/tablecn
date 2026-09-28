@@ -4,6 +4,7 @@ import * as React from "react"
 import { useSearchParams } from "next/navigation"
 
 import { OrdersDemo, OrdersDemoProvider } from "@/components/docs/orders-demo"
+import { PreviewDevice } from "@/components/docs/preview-device-toggle"
 
 export function PageUrl() {
   const search = useSearchParams().toString()
@@ -22,7 +23,9 @@ export function TablePreview() {
       {/* `useSearchParams` on a prerendered page needs a Suspense boundary */}
       <React.Suspense fallback={<div className="h-[560px]" />}>
         <OrdersDemoProvider>
-          <OrdersDemo />
+          <PreviewDevice>
+            <OrdersDemo />
+          </PreviewDevice>
           <PageUrl />
         </OrdersDemoProvider>
       </React.Suspense>
