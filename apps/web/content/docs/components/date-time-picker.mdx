@@ -1,0 +1,111 @@
+---
+title: Date time picker
+description: A day and a time in one popover, alone or as a range. Copy it into your project.
+---
+
+import { DateTimePickerPreview } from "@/components/docs/pickers/pickers-preview"
+
+<DateTimePickerPreview />
+
+The picker the filter uses for `datetime` fields, as a component of its own: a calendar next to the hour and minute columns of the [time picker](/docs/components/time-picker).
+
+- Picking a day keeps the time (`00:00` if there's none yet). Picking a time before a day uses today.
+- **Now** picks the current moment, **OK** closes.
+- The field shows the day in the user's locale and the time on a 24-hour clock: `09/28/2026 14:05` in the US, `28/09/2026 14:05` in Vietnam.
+
+## Installation
+
+<Steps>
+<Step>
+
+Add the shadcn/ui components it uses:
+
+```npm
+npx shadcn@latest add button popover calendar
+```
+
+</Step>
+<Step>
+
+Copy the [time picker](/docs/components/time-picker#installation) into `components/ui/time-picker.tsx`: the date time picker is built from its parts.
+
+</Step>
+<Step>
+
+Copy the code into `components/ui/date-time-picker.tsx`, next to it:
+
+<include meta='title="components/ui/date-time-picker.tsx"'>../../../components/docs/pickers/date-time-picker.tsx</include>
+
+</Step>
+</Steps>
+
+## Usage
+
+The value is the local date and time without a zone, `"2026-09-28T14:05"`, or `""`:
+
+```tsx title="A moment"
+import { DateTimePicker } from "@/components/ui/date-time-picker"
+
+const [startsAt, setStartsAt] = React.useState("")
+
+<DateTimePicker aria-label="Starts at" value={startsAt} onValueChange={setStartsAt} />
+```
+
+```tsx title="A range"
+import { DateTimeRangePicker } from "@/components/ui/date-time-picker"
+
+const [created, setCreated] = React.useState<[string, string]>(["", ""])
+
+<DateTimeRangePicker aria-label="Created" value={created} onValueChange={setCreated} />
+```
+
+## Time zones
+
+The picker works in the user's local time and returns it without a zone, like `<input type="datetime-local">`. To store an instant, convert it: `new Date("2026-09-28T14:05").toISOString(){:ts}` reads the value in the browser's time zone.
+
+A zoned value (`"2026-09-28T07:05:00Z"`) is accepted and shows in local time. The next pick returns a local value.
+
+The field only formats the value once the page has hydrated, since the locale and time zone are only known in the browser. Before that it shows `2026-09-28 14:05`.
+
+## Translate
+
+The same `labels` as the time picker, plus `placeholder`:
+
+```tsx title="Vietnamese"
+<DateTimePicker
+  value={startsAt}
+  onValueChange={setStartsAt}
+  placeholder="Chọn ngày giờ"
+  labels={{ hour: "Giờ", minute: "Phút", now: "Bây giờ", from: "Từ", to: "Đến" }}
+/>
+```
+
+The calendar's month and day names follow the `locale` of your `Calendar` component.
+
+## Props
+
+### DateTimePicker
+
+<TypeTable
+  type={{
+    value: { description: 'Local date and time as "YYYY-MM-DDTHH:mm", or "" for none.', type: "string", required: true },
+    onValueChange: { description: "Called on every pick.", type: "(value: string) => void", required: true },
+    placeholder: { description: "Shown while there's no value.", type: "string", default: '"Pick date and time"' },
+    labels: { description: "Texts of the picker.", type: "Partial<TimePickerLabels>" },
+    "aria-label": { description: "Accessible name of the field.", type: "string" },
+    id: { description: "For a <label htmlFor>.", type: "string" },
+    className: { description: "On the button, e.g. to change its width (w-52).", type: "string" },
+  }}
+/>
+
+### DateTimeRangePicker
+
+The same props, except `placeholder`, and:
+
+<TypeTable
+  type={{
+    value: { description: "[from, to], each \"YYYY-MM-DDTHH:mm\" or \"\".", type: "[string, string]", required: true },
+    onValueChange: { description: "Called with both ends on every pick.", type: "(value: [string, string]) => void", required: true },
+    className: { description: "On the field around both ends.", type: "string" },
+  }}
+/>

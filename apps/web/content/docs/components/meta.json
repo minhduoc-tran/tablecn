@@ -1,4 +1,4 @@
 {
   "title": "Components",
-  "pages": ["table", "filter"]
+  "pages": ["table", "filter", "time-picker", "date-time-picker"]
 }

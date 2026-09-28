@@ -1,0 +1,108 @@
+---
+title: Time picker
+description: A time of day from hour and minute columns, alone or as a range. Copy it into your project.
+---
+
+import { TimePickerPreview } from "@/components/docs/pickers/pickers-preview"
+
+<TimePickerPreview />
+
+The picker the filter uses for `time` fields, as a component of its own. It has no dependency on tablecn: copy one file and use it in any shadcn/ui project.
+
+- Scroll or click the hour and minute columns; the picked value opens at the top.
+- **Now** picks the current time, **OK** closes.
+- The range field holds both ends. **OK** on the start moves on to the end, and a range with one end picked flags the empty one.
+
+## Installation
+
+<Steps>
+<Step>
+
+Add the shadcn/ui components it uses:
+
+```npm
+npx shadcn@latest add button popover
+```
+
+</Step>
+<Step>
+
+Copy the code into `components/ui/time-picker.tsx`:
+
+<include meta='title="components/ui/time-picker.tsx"'>../../../components/docs/pickers/time-picker.tsx</include>
+
+</Step>
+</Steps>
+
+## Usage
+
+The value is a string on a 24-hour clock, `"09:30"`, or `""` when nothing is picked:
+
+```tsx title="A time"
+import { TimePicker } from "@/components/ui/time-picker"
+
+const [time, setTime] = React.useState("")
+
+<TimePicker aria-label="Pickup" value={time} onValueChange={setTime} />
+```
+
+A range is a pair, each end `""` until picked:
+
+```tsx title="A range"
+import { TimeRangePicker } from "@/components/ui/time-picker"
+
+const [hours, setHours] = React.useState<[string, string]>(["", ""])
+
+<TimeRangePicker aria-label="Opening hours" value={hours} onValueChange={setHours} />
+```
+
+`aria-label` names the field for screen readers ("Opening hours From", "Opening hours To"). Leave it out when a `<label htmlFor>` points at `id`.
+
+## Translate
+
+Every text is a prop. `labels` takes any of `hour`, `minute`, `now`, `ok`, `from` and `to`:
+
+```tsx title="Vietnamese"
+<TimePicker
+  value={time}
+  onValueChange={setTime}
+  placeholder="Chọn giờ"
+  labels={{ hour: "Giờ", minute: "Phút", now: "Bây giờ" }}
+/>
+```
+
+## Keyboard
+
+- The hour column takes focus when the picker opens. <kbd>↑</kbd> / <kbd>↓</kbd> move the pick, <kbd>Home</kbd> / <kbd>End</kbd> jump to the ends.
+- <kbd>Tab</kbd> goes to the minute column, then **Now** and **OK**.
+- <kbd>Enter</kbd> in a column does what **OK** does. <kbd>Esc</kbd> closes without moving on.
+
+## Props
+
+### TimePicker
+
+<TypeTable
+  type={{
+    value: { description: 'The time as "HH:mm", or "" for none.', type: "string", required: true },
+    onValueChange: { description: "Called on every pick.", type: "(value: string) => void", required: true },
+    placeholder: { description: "Shown while there's no value.", type: "string", default: '"Pick a time"' },
+    labels: { description: "Texts of the picker.", type: "Partial<TimePickerLabels>" },
+    "aria-label": { description: "Accessible name of the field.", type: "string" },
+    id: { description: "For a <label htmlFor>.", type: "string" },
+    className: { description: "On the button, e.g. to change its width (w-36).", type: "string" },
+  }}
+/>
+
+### TimeRangePicker
+
+The same props, except `placeholder` (each end shows `labels.from` or `labels.to`), and:
+
+<TypeTable
+  type={{
+    value: { description: "[from, to], each \"HH:mm\" or \"\".", type: "[string, string]", required: true },
+    onValueChange: { description: "Called with both ends on every pick.", type: "(value: [string, string]) => void", required: true },
+    className: { description: "On the field around both ends.", type: "string" },
+  }}
+/>
+
+The file also exports `TimeColumns`, `PickerField`, `RangePickerField` and `PickerFooter`, the parts the [date time picker](/docs/components/date-time-picker) is built from.

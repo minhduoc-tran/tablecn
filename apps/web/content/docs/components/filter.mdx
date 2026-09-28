@@ -104,14 +104,19 @@ React Aria's popover is modal: clicking outside, for example on a chip's ×, onl
 | `filter-operator-select.tsx` | `FilterOperatorSelect` | Operator picker |
 | `filter-join-select.tsx` | `FilterJoinSelect` | AND / OR |
 | `filter-value-input.tsx` | `FilterValueInput`, `filterValueInputs` | Picks the value input by field type |
-| `filter-text-value-input.tsx` | `TextValueInput`, `NumberValueInput`, `DateTimeValueInput` | Text-like inputs, single or range |
+| `filter-text-value-input.tsx` | `TextValueInput`, `NumberValueInput` | Text inputs, single or range |
 | `filter-boolean-value-input.tsx` | `BooleanValueInput` | Yes / No |
 | `filter-select-value-input.tsx` | `SelectValueInput` | Options, single or multiple, static or async |
 | `filter-date-value-input.tsx` | `DateValueInput` | Calendar, single day or range |
+| `filter-datetime-value-input.tsx` | `DateTimeValueInput` | Calendar with hour and minute columns, single or range |
+| `filter-time-value-input.tsx` | `TimeValueInput` | Hour and minute columns, single or range |
+| `filter-picker-field.tsx` | `PickerField`, `RangePickerField`, `PickerFooter` | The button, the From → To field and Now / OK around those pickers |
+| `filter-time-panel.tsx` | `TimeColumns` | Scrolling hour and minute columns, from the keyboard too |
 | `filter-combobox.tsx` | `FilterCombobox` | Searchable list used by the selects |
 | `filter-rule-warnings.tsx` | `FilterRuleWarnings`, `FilterDraftRuleWarnings` | Warning icon and popover |
 | `filter-rule-summary.ts` | `useRuleSummary` | A rule in words, for chips |
-| `filter-date-format.ts` | `formatDateOnly`, `toDateTimeLocal`… | Locale-aware date display, hydration-safe |
+| `filter-date-format.ts` | `formatDateOnly`, `formatDateTime`… | Locale-aware date display, hydration-safe |
+| `filter-time-parts.ts`, `filter-picker-field-parts.ts` | Helpers | Hours and minutes, range values, shared class names |
 
 ## Custom value inputs
 
