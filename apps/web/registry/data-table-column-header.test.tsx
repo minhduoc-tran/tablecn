@@ -218,6 +218,22 @@ describe.each(BASES)(
       ).toBeNull()
     })
 
+    it("keeps the resize cursor on the whole page while dragging", () => {
+      render(<Orders />)
+      const handle = screen.getByRole("separator", {
+        name: "Resize column Amount",
+      })
+      const pageStyle = () =>
+        [...document.querySelectorAll("style")].find((style) =>
+          style.textContent?.includes("col-resize")
+        )
+      expect(pageStyle()).toBeUndefined()
+      fireEvent.mouseDown(handle, { clientX: 300 })
+      expect(pageStyle()).toBeDefined()
+      fireEvent.mouseUp(document, { clientX: 300 })
+      expect(pageStyle()).toBeUndefined()
+    })
+
     it("moves a column with the keyboard and announces it", async () => {
       const user = userEvent.setup()
       render(<Orders />)

@@ -16,6 +16,8 @@ type Header<TData extends object> = ReturnType<
 
 const STEP = 10
 const LARGE_STEP = 50
+const RESIZING_PAGE_STYLE =
+  "*{cursor:col-resize!important;user-select:none!important}"
 
 /**
  * The drag handle on a header's end edge: drag to resize, double-click to fit
@@ -85,7 +87,13 @@ export function ColumnResizeHandle<TData extends object>({
         "after:absolute after:inset-y-1.5 after:start-1/2 after:w-px after:-translate-x-1/2 after:bg-border after:opacity-0 after:transition-opacity hover:after:opacity-100 focus-visible:after:w-0.5 focus-visible:after:bg-ring focus-visible:after:opacity-100"
       )}
     >
-      {isResizing && <ColumnGuideLine className="start-1/2 -translate-x-1/2" />}
+      {isResizing && (
+        <>
+          <ColumnGuideLine className="start-1/2 -translate-x-1/2" />
+          {/* The handle stops at the min/max width and lags fast drags, so the pointer leaves it. */}
+          <style>{RESIZING_PAGE_STYLE}</style>
+        </>
+      )}
     </div>
   )
 }
