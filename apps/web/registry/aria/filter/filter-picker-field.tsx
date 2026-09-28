@@ -154,7 +154,7 @@ export function RangePickerField({
       {side("from", from, to)}
       <ArrowRightIcon
         aria-hidden
-        className="size-3.5 shrink-0 text-muted-foreground"
+        className="size-3.5 shrink-0 text-muted-foreground rtl:rotate-180"
       />
       {side("to", to, from)}
       <Icon aria-hidden className="size-4 shrink-0 text-muted-foreground" />

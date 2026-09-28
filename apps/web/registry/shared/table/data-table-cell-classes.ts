@@ -2,6 +2,8 @@
 // colors are mixed in. Edge columns fade a shadow over the cells scrolled under them.
 // Any cell tints with its column's `--column-color` (none when it isn't set).
 export const pinnedCellClassName = [
+  // shadcn's cells are physical (`text-left`, and `pr-0` beside a checkbox): follow the reading direction.
+  "text-start rtl:[&:has([role=checkbox])]:pr-2 rtl:[&:has([role=checkbox])]:pl-0",
   // A column being moved stands out from the ones it passes.
   "data-dragging:bg-muted!",
   "bg-[linear-gradient(color-mix(in_oklab,var(--column-color)_14%,transparent),color-mix(in_oklab,var(--column-color)_14%,transparent))]",
