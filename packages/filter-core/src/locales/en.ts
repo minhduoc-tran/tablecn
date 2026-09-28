@@ -8,6 +8,14 @@ const dateOperators = {
   lte: "is on or before",
 }
 
+const timeOperators = {
+  eq: "is at",
+  gt: "is after",
+  gte: "is at or after",
+  lt: "is before",
+  lte: "is at or before",
+}
+
 export const enMessages: FilterMessages = {
   operators: {
     eq: "is",
@@ -26,7 +34,11 @@ export const enMessages: FilterMessages = {
     isEmpty: "is empty",
     isNotEmpty: "is not empty",
   },
-  operatorsByType: { date: dateOperators, datetime: dateOperators },
+  operatorsByType: {
+    date: dateOperators,
+    datetime: dateOperators,
+    time: timeOperators,
+  },
   join: {
     where: "Where",
     and: "and",
@@ -51,6 +63,8 @@ export const enMessages: FilterMessages = {
     to: "To",
     date: "Pick a date",
     datetime: "Pick date and time",
+    hour: "Hour",
+    minute: "Minute",
   },
   rangeSeparator: "–",
   counts: {

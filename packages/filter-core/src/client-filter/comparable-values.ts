@@ -82,6 +82,14 @@ export function toTimestamp(value: unknown): number | null {
   return Number.isFinite(time) ? time : null
 }
 
+const TIME = /^([01]\d|2[0-3]):([0-5]\d)(?::[0-5]\d(?:\.\d+)?)?$/
+
+// Minutes since midnight. Seconds are dropped: the filter picks whole minutes.
+export function toMinutes(value: unknown): number | null {
+  const match = typeof value === "string" ? TIME.exec(value) : null
+  return match ? Number(match[1]) * 60 + Number(match[2]) : null
+}
+
 export function toPrimitive(value: unknown): Primitive | null {
   return isPrimitive(value) && value !== "" ? value : null
 }

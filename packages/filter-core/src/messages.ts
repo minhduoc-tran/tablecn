@@ -30,6 +30,8 @@ export interface FilterMessages {
     | "to"
     | "date"
     | "datetime"
+    | "hour"
+    | "minute"
   >
   /** Between the two values of a range, e.g. "1 – 5". */
   rangeSeparator: string

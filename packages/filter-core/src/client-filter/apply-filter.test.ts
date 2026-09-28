@@ -13,6 +13,7 @@ interface Row {
   active?: unknown
   day?: unknown
   at?: unknown
+  pickup?: unknown
 }
 
 const fields: FieldDefinition[] = [
@@ -23,6 +24,7 @@ const fields: FieldDefinition[] = [
   { name: "active", label: "Active", type: "boolean" },
   { name: "day", label: "Day", type: "date" },
   { name: "at", label: "At", type: "datetime" },
+  { name: "pickup", label: "Pickup", type: "time" },
 ]
 
 let seq = 0
@@ -251,6 +253,29 @@ describe("dates", () => {
     expect(ids(rows, [rule("at", "gte", "2026-09-24T03:00:00Z")])).toEqual([
       1, 2,
     ])
+  })
+})
+
+describe("time fields", () => {
+  const rows: Row[] = [
+    { id: 1, pickup: "08:15" },
+    { id: 2, pickup: "09:30:45" },
+    { id: 3, pickup: "12:00" },
+    { id: 4, pickup: "" },
+    { id: 5, pickup: "9:30" },
+  ]
+
+  it("compares whole minutes, ignoring seconds", () => {
+    expect(ids(rows, [rule("pickup", "eq", "09:30")])).toEqual([2])
+    expect(ids(rows, [rule("pickup", "between", ["09:00", "12:00"])])).toEqual([
+      2, 3,
+    ])
+    expect(ids(rows, [rule("pickup", "lt", "09:30")])).toEqual([1])
+  })
+
+  it("never matches malformed times, empty or not", () => {
+    expect(ids(rows, [rule("pickup", "isEmpty", null)])).toEqual([4])
+    expect(ids(rows, [rule("pickup", "isNotEmpty", null)])).toEqual([1, 2, 3])
   })
 })
 

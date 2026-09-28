@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { BUILTIN_FIELD_TYPES, createValueParser } from "./field-types"
 
-const { text, number, date, datetime, boolean } = BUILTIN_FIELD_TYPES
+const { text, number, date, datetime, time, boolean } = BUILTIN_FIELD_TYPES
 
 describe("createValueParser", () => {
   const parse = createValueParser((raw) =>
@@ -46,6 +46,12 @@ describe("built-in parsers (single)", () => {
     [datetime, "2026-09-24T10:00:00Z", "2026-09-24T10:00:00Z"],
     [datetime, "2026-09-24", undefined],
     [datetime, "2026-13-24T10:00", undefined],
+    [time, "09:30", "09:30"],
+    [time, "23:59", "23:59"],
+    [time, "24:00", undefined],
+    [time, "9:30", undefined],
+    [time, "09:30:15", undefined],
+    [time, 930, undefined],
     [boolean, true, true],
     [boolean, "false", false],
     [boolean, "yes", undefined],
@@ -59,6 +65,11 @@ describe("built-in parsers (single)", () => {
 })
 
 describe("BUILTIN_FIELD_TYPES", () => {
+  it("starts datetime and time fields with a range", () => {
+    expect(datetime.defaultOperator).toBe("between")
+    expect(time.defaultOperator).toBe("between")
+  })
+
   it.each(Object.entries(BUILTIN_FIELD_TYPES))(
     "%s: key matches id and default operator is offered",
     (key, type) => {

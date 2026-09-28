@@ -46,6 +46,8 @@ describe("mergeMessages", () => {
     expect(getOperatorLabel(merged, "gt", "date")).toBe("after")
     expect(getOperatorLabel(merged, "gte", "date")).toBe("is on or after")
     expect(getOperatorLabel(merged, "eq", "money")).toBe("costs")
+    expect(getOperatorLabel(enMessages, "lte", "time")).toBe("is at or before")
+    expect(getOperatorLabel(viMessages, "eq", "time")).toBe("lúc")
   })
 
   it("never replaces a label with undefined", () => {

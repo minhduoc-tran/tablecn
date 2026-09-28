@@ -1,5 +1,6 @@
 import {
   toDateOnly,
+  toMinutes,
   toOptionValue,
   toSearchText,
   toTimestamp,
@@ -106,6 +107,12 @@ const parseDateTime: ParsePrimitive = (raw) =>
     ? raw
     : undefined
 
+// A time of day on a 24-hour clock, e.g. `09:30`, with no date or zone.
+const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/
+
+const parseTime: ParsePrimitive = (raw) =>
+  typeof raw === "string" && TIME_PATTERN.test(raw) ? raw : undefined
+
 const parseBoolean: ParsePrimitive = (raw) => {
   if (typeof raw === "boolean") return raw
   if (raw === "true") return true
@@ -155,6 +162,13 @@ export const BUILTIN_FIELD_TYPES: Readonly<
     defaultOperator: "between",
     parseValue: createValueParser(parseDateTime),
     toComparable: toTimestamp,
+  },
+  time: {
+    id: "time",
+    operators: ["eq", ...RANGE_OPERATORS, ...EMPTY_OPERATORS],
+    defaultOperator: "between",
+    parseValue: createValueParser(parseTime),
+    toComparable: toMinutes,
   },
   boolean: {
     id: "boolean",

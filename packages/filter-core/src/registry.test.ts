@@ -33,7 +33,7 @@ const ratingType: FieldTypeDefinition = {
 
 describe("createRegistry", () => {
   it("contains the built-ins by default", () => {
-    expect(Object.keys(DEFAULT_REGISTRY.fieldTypes)).toHaveLength(7)
+    expect(Object.keys(DEFAULT_REGISTRY.fieldTypes)).toHaveLength(8)
     expect(Object.keys(DEFAULT_REGISTRY.operators)).toHaveLength(15)
   })
 

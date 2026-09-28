@@ -58,7 +58,14 @@ export interface FilterState {
 }
 
 export type BuiltinFieldTypeId =
-  "text" | "number" | "date" | "datetime" | "boolean" | "select" | "multiSelect"
+  | "text"
+  | "number"
+  | "date"
+  | "datetime"
+  | "time"
+  | "boolean"
+  | "select"
+  | "multiSelect"
 
 export type FieldTypeId = BuiltinFieldTypeId | (string & {})
 

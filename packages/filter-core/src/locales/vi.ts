@@ -8,6 +8,8 @@ const dateOperators = {
   lte: "đến",
 }
 
+const timeOperators = { ...dateOperators, eq: "lúc" }
+
 export const viMessages: FilterMessages = {
   operators: {
     eq: "là",
@@ -30,6 +32,7 @@ export const viMessages: FilterMessages = {
     number: { eq: "bằng", ne: "khác" },
     date: dateOperators,
     datetime: dateOperators,
+    time: timeOperators,
   },
   join: {
     where: "Khi",
@@ -55,6 +58,8 @@ export const viMessages: FilterMessages = {
     to: "Đến",
     date: "Chọn ngày",
     datetime: "Chọn ngày giờ",
+    hour: "Giờ",
+    minute: "Phút",
   },
   rangeSeparator: "–",
   counts: {
