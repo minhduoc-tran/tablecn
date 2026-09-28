@@ -48,6 +48,8 @@ export const viMessages: FilterMessages = {
     apply: "Áp dụng",
     cancel: "Hủy",
     retry: "Thử lại",
+    now: "Bây giờ",
+    ok: "OK",
   },
   placeholders: {
     field: "Chọn trường",
@@ -58,6 +60,7 @@ export const viMessages: FilterMessages = {
     to: "Đến",
     date: "Chọn ngày",
     datetime: "Chọn ngày giờ",
+    time: "Chọn giờ",
     hour: "Giờ",
     minute: "Phút",
   },

@@ -20,6 +20,8 @@ export interface FilterMessages {
     | "apply"
     | "cancel"
     | "retry"
+    | "now"
+    | "ok"
   >
   placeholders: Labels<
     | "field"
@@ -30,6 +32,7 @@ export interface FilterMessages {
     | "to"
     | "date"
     | "datetime"
+    | "time"
     | "hour"
     | "minute"
   >

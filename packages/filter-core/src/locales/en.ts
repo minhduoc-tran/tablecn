@@ -53,6 +53,8 @@ export const enMessages: FilterMessages = {
     apply: "Apply",
     cancel: "Cancel",
     retry: "Retry",
+    now: "Now",
+    ok: "OK",
   },
   placeholders: {
     field: "Select field",
@@ -63,6 +65,7 @@ export const enMessages: FilterMessages = {
     to: "To",
     date: "Pick a date",
     datetime: "Pick date and time",
+    time: "Pick a time",
     hour: "Hour",
     minute: "Minute",
   },
