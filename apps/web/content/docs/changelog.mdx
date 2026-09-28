@@ -24,10 +24,12 @@ The full list of package changes is in each package's `CHANGELOG.md` on [GitHub]
 - **A `time` field type** for a time of day with no date, like `09:30`, with *is at*, *is after*, *is between* and the other time operators. See [Fields](/docs/filter/fields#choose-a-type).
 - **Time and date-time pickers.** The filter picks times and date-times from scrolling hour and minute columns, with **Now** and **OK**. Both pickers are also standalone components you can copy: [Time picker](/docs/components/time-picker) and [Date time picker](/docs/components/date-time-picker).
 - **A [Full example](/docs/full-example)** page: one orders table with every feature on, and all of its code.
+- **A [Right-to-left](/docs/table/rtl)** page, with a live Arabic-direction table and the setup for Radix UI, Base UI and React Aria.
 
 ### Fixed
 
 - While dragging a column's edge, the resize cursor stays on, even when the pointer leaves the header.
+- On right-to-left pages, headers and cells align to the right, the selection checkbox keeps its space from the table's edge, the resize line is centered on the edge, and the filter's range arrow points from the start to the end.
 - The blocks ask for the package versions they use. `data-table` asked for `@querycn/table-react@^0.1.0`, so a new install could get an older version than the block needs.
 
 ### Updating

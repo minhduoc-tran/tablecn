@@ -136,7 +136,7 @@ const columns = [
 ]
 
 /** Toolbar, table and pagination over made-up orders, filtered and sorted in the browser. */
-export function OrdersDemo() {
+export function OrdersDemo({ dir }: { dir?: "ltr" | "rtl" }) {
   const [isRefreshing, setIsRefreshing] = React.useState(false)
   const [orders, setOrders] = React.useState(ORDERS)
   const table = useDataTable({
@@ -144,6 +144,7 @@ export function OrdersDemo() {
     columns,
     getRowId: (order) => order.id,
     storageKey: "tablecn-docs-orders",
+    dir,
     onCellEdit: ({ rowId, columnId, value }) =>
       setOrders((current) =>
         current.map((order) =>

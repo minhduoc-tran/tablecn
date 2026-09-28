@@ -103,5 +103,5 @@ If old layouts would be *wrong* rather than just outdated, for example after ren
 
 - **Server rendering.** The server has no `localStorage`, so the first render uses your column definitions, and the saved layout applies right after. If that brief switch bothers you, render the table on the client only.
 - **Storage can fail.** If the browser refuses to store (full, private mode), changes still apply until the page is closed.
-- **Right-to-left pages.** Pass `dir: "rtl"{:ts}` to `useDataTable`. Resizing follows the pointer, and pinned columns and their shadows flip with the page.
+- **Right-to-left pages.** Pass `dir: "rtl"{:ts}` to `useDataTable`. Resizing follows the pointer, and pinned columns and their shadows flip with the page. See [Right-to-left](/docs/table/rtl).
 - **Your own table setup.** `useTableLayout({ columns, storageKey, version }){:ts}` is the hook `useDataTable` uses. It returns `state`, `handlers` and `reset(){:ts}` to spread into your own TanStack table. Add `columnColorFeature` to its features for colors.
