@@ -28,7 +28,7 @@
 
 ## Features
 
-- **Filter builder** — "Where *Status* is *Paid* and *Amount* is between *10* and *50*", with seven field types, fifteen operators and AND / OR
+- **Filter builder** — "Where *Status* is *Paid* and *Amount* is between *10* and *50*", with eight field types, fifteen operators and AND / OR
 - **Search** — Across columns, ignoring case and accents: `nguyen ha noi` finds "Nguyễn Văn An" in "Hà Nội"
 - **Everything in the URL** — `?q=nguyen&status__eq=paid&sort=-amount&page=2`: shareable links, back/forward, a new filter goes back to page 1
 - **Client or server data** — Filter, sort and page in the browser, or send the URL to JSON:API, Django REST framework, PostgREST or your own backend

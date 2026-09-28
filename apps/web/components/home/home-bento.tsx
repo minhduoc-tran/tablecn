@@ -259,7 +259,7 @@ export function HomeBento() {
         <Cell
           className="md:col-span-4"
           title="A filter builder people understand"
-          text="Where Status is Paid and Amount is between 10 and 50. Seven field types, fifteen operators, AND / OR, and options loaded as you type."
+          text="Where Status is Paid and Amount is between 10 and 50. Eight field types, fifteen operators, AND / OR, and options loaded as you type."
         >
           <FilterIllustration />
         </Cell>

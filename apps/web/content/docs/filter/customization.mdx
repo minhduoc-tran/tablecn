@@ -36,8 +36,8 @@ All the groups you can override:
 | `operators` | A label per operator id: `eq: "is"{:ts}`, `between: "is between"{:ts}`. Add custom operators here. |
 | `operatorsByType` | Labels that read better for one field type, e.g. `{ date: { gt: "is after" } }`. |
 | `join` | `where` (before the first rule), `and`, `or`, `toggle` (accessible name of the AND/OR switch). |
-| `actions` | `open`, `addRule`, `removeRule`, `clearAll`, `apply`, `cancel`, `retry`. |
-| `placeholders` | `field`, `operator`, `value`, `search`, `from`, `to`, `date`, `datetime`. |
+| `actions` | `open`, `addRule`, `removeRule`, `clearAll`, `apply`, `cancel`, `retry`, and `now`, `ok` for the time and date-time pickers. |
+| `placeholders` | `field`, `operator`, `value`, `search`, `from`, `to`, `date`, `datetime`, `time`, and `hour`, `minute` (names of the picker columns). |
 | `rangeSeparator` | Between the two values of a range, `"–"`. |
 | `counts` | Functions: `selected(n){:ts}`, `more(n){:ts}`, `activeFilters(n){:ts}`, e.g. `activeFilters: (n) => n + " filters"{:ts}`. |
 | `empty` | `rules`, `fields`, `options`: empty-state texts. |
@@ -51,7 +51,7 @@ Outside React, `mergeMessages(enMessages, overrides){:ts}` gives the same merged
 
 ## Add a field type
 
-The 7 built-in types cover most data. For something else, like a 1–5 star rating, register a new type. A type decides which operators are offered, which values are valid, and how rows compare in the browser:
+The 8 built-in types cover most data. For something else, like a 1–5 star rating, register a new type. A type decides which operators are offered, which values are valid, and how rows compare in the browser:
 
 ```ts title="lib/filter-registry.ts"
 import { createRegistry, createValueParser } from "@querycn/filter-core"

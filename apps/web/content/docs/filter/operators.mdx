@@ -9,17 +9,17 @@ An operator is the middle part of a rule: the *is* in "Status **is** Paid". Each
 
 | Label | Id | Value | Offered on |
 | --- | --- | --- | --- |
-| is | `eq` | one | text, number, date, boolean, select |
+| is | `eq` | one | text, number, date, time, boolean, select |
 | is not | `ne` | one | text, number, select |
 | contains | `contains` | one | text |
 | does not contain | `notContains` | one | text |
 | starts with | `startsWith` | one | text |
 | ends with | `endsWith` | one | text |
-| is greater than | `gt` | one | number, date, datetime |
-| is greater than or equal to | `gte` | one | number, date, datetime |
-| is less than | `lt` | one | number, date, datetime |
-| is less than or equal to | `lte` | one | number, date, datetime |
-| is between | `between` | two (from, to) | number, date, datetime |
+| is greater than | `gt` | one | number, date, datetime, time |
+| is greater than or equal to | `gte` | one | number, date, datetime, time |
+| is less than | `lt` | one | number, date, datetime, time |
+| is less than or equal to | `lte` | one | number, date, datetime, time |
+| is between | `between` | two (from, to) | number, date, datetime, time |
 | is any of | `in` | a list | multiSelect |
 | is none of | `notIn` | a list | multiSelect |
 | is empty | `isEmpty` | none | every type except boolean |
@@ -27,7 +27,7 @@ An operator is the middle part of a rule: the *is* in "Status **is** Paid". Each
 
 The **id** is what the URL and your code use: `status__eq=paid`.
 
-On `date` and `datetime` fields, the labels read like dates: *is on*, *is after*, *is on or after*, *is before*, *is on or before*. You can change any label with [messages](/docs/filter/customization#translate-the-ui).
+On `date` and `datetime` fields, the labels read like dates: *is on*, *is after*, *is on or after*, *is before*, *is on or before*. On `time` fields they read like times: *is at*, *is at or after*, *is at or before*. You can change any label with [messages](/docs/filter/customization#translate-the-ui).
 
 **is between** includes both ends. On a `date` field in the browser, *between Sep 1 and Sep 30* means all of September. Your backend may see it differently: `2026-09-30` compared with a timestamp column usually means midnight at the start of that day. [`mapRule`](/docs/filter/serializers#adjust-rules-with-maprule) can fix that.
 

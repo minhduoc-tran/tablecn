@@ -41,11 +41,12 @@ The type decides which operators users get and which input they see:
 | `number` | amounts, quantities | is, is not, greater than, less than (or equal to), is between, is empty, is not empty |
 | `date` | calendar days | is on, is after, is on or after, is before, is on or before, is between, is empty, is not empty |
 | `datetime` | exact moments | is after, is on or after, is before, is on or before, is between, is empty, is not empty |
+| `time` | a time of day, no date | is at, is after, is at or after, is before, is at or before, is between, is empty, is not empty |
 | `boolean` | yes / no | is |
 | `select` | one choice from a list | is, is not, is empty, is not empty |
 | `multiSelect` | tags, categories | is any of, is none of, is empty, is not empty |
 
-The first operator in each list is picked by default, except `datetime`, which starts with *is between*. The ids behind each label are listed in [Operators](/docs/filter/operators).
+The first operator in each list is picked by default, except `datetime` and `time`, which start with *is between*. The ids behind each label are listed in [Operators](/docs/filter/operators).
 
 Need something else, like a star rating? [Add your own type](/docs/filter/customization#add-a-field-type).
 
@@ -164,6 +165,7 @@ export const fields = orderFields as FieldDefinition[]
 - **Number fields can hold text.** If a user types `12,5` (a decimal comma), the URL and the request get `"12,5"` instead of dropping the rule. Don't assume the value is always a `number` on your backend.
 - **Dates are plain days.** `date` values are strings like `"2026-09-25"`, never `Date` objects, so they don't shift across time zones. Invalid days like `2026-02-30` are rejected.
 - **`datetime` has no "is".** Matching one exact moment is almost never what users want. The built-in input sends local time without a zone (`2026-09-25T14:30`); values with a zone (`…Z`, `+07:00`) are accepted too.
+- **Times are `HH:mm` on a 24-hour clock.** `time` values are strings like `"09:30"`. Rows may hold `"09:30:45"` too: seconds are ignored, so it matches *is at 09:30*. A range doesn't wrap past midnight: *between 22:00 and 06:00* is flagged as reversed and matches nothing.
 - **Select values aren't checked against `options`.** A URL can contain anything, so treat values as user input on the server.
 
 ## All options
@@ -182,7 +184,7 @@ export const fields = orderFields as FieldDefinition[]
     },
     type: {
       description: "A built-in field type, or the id of one you registered.",
-      type: '"text" | "number" | "date" | "datetime" | "boolean" | "select" | "multiSelect" | string',
+      type: '"text" | "number" | "date" | "datetime" | "time" | "boolean" | "select" | "multiSelect" | string',
       required: true,
     },
     operators: {

@@ -9,12 +9,13 @@ export interface Order {
   amount: number
   shipped: boolean
   deliveryDate: string
+  pickup: string
   createdAt: string
 }
 
 const CITIES = ["Hà Nội", "Hồ Chí Minh", "Đà Nẵng", "Singapore", "Bangkok"]
 
-// One field per filter type: text, select, multiSelect, number, boolean, date, datetime.
+// One field per filter type: text, select, multiSelect, number, boolean, date, time, datetime.
 export const orderFields: FieldDefinition[] = [
   { name: "customer", label: "Customer", type: "text" },
   {
@@ -36,6 +37,7 @@ export const orderFields: FieldDefinition[] = [
   { name: "amount", label: "Amount", type: "number", defaultOperator: "gte" },
   { name: "shipped", label: "Shipped", type: "boolean" },
   { name: "deliveryDate", label: "Delivery", type: "date" },
+  { name: "pickup", label: "Pickup", type: "time" },
   { name: "createdAt", label: "Created at", type: "datetime" },
 ]
 
@@ -65,6 +67,7 @@ export const ORDERS: Order[] = Array.from({ length: 500 }, (_, index) => {
     amount: ((index * 7919) % 99000) / 100 + 5,
     shipped: status === "paid" && index % 3 !== 0,
     deliveryDate: day(created + 2 + (index % 5)),
+    pickup: `${pad(8 + ((index * 5) % 13))}:${pad(((index * 7) % 4) * 15)}`,
     createdAt: `${day(created)}T${pad((index * 5) % 24)}:${pad((index * 17) % 60)}`,
   }
 })

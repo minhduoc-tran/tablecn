@@ -91,6 +91,13 @@ const columns = [
       <span className="tabular-nums">{formatDay(getValue<string>())}</span>
     ),
   }),
+  helper.accessor("pickup", {
+    header: "Pickup",
+    size: 100,
+    cell: ({ getValue }) => (
+      <span className="tabular-nums">{getValue<string>()}</span>
+    ),
+  }),
   helper.accessor("createdAt", {
     header: "Created at",
     size: 160,
