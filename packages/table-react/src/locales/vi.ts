@@ -27,12 +27,7 @@ export const viTableMessages: TableMessages = {
     violet: "Tím",
     pink: "Hồng",
   },
-  sorting: {
-    label: "Sắp xếp theo",
-    asc: "Tăng dần",
-    desc: "Giảm dần",
-    clear: "Bỏ sắp xếp",
-  },
+  sorting: { asc: "Tăng dần", desc: "Giảm dần", clear: "Bỏ sắp xếp" },
   pagination: {
     label: "Phân trang",
     rowsPerPage: "Số dòng mỗi trang",
@@ -52,17 +47,11 @@ export const viTableMessages: TableMessages = {
     placeholder: "Tìm kiếm…",
     clear: "Xoá tìm kiếm",
   },
-  actions: {
-    reload: "Tải lại",
-    clearFilters: "Xoá bộ lọc",
-    retry: "Thử lại",
-    loadMore: "Tải thêm",
-  },
+  actions: { reload: "Tải lại", clearFilters: "Xoá bộ lọc", retry: "Thử lại" },
   states: {
     empty: "Không có dữ liệu.",
     error: "Đã có lỗi xảy ra.",
     loading: "Đang tải…",
-    loadingMore: "Đang tải thêm…",
   },
   header: {
     move: (column) => `Di chuyển cột ${column}`,

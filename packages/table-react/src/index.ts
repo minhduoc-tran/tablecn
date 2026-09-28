@@ -48,14 +48,10 @@ export {
   dataTableFeatures,
 } from "./data-table-features"
 export type {
-  DataTableCardMode,
   DataTableColumnDef,
   DataTableFeatures,
   DataTableMeta,
-  DataTableView,
 } from "./data-table-features"
-export { useCardView } from "./use-card-view"
-export type { UseCardViewOptions } from "./use-card-view"
 export { mergeTableMessages } from "./table-messages"
 export type { TableMessages, TableMessagesOverrides } from "./table-messages"
 export { enTableMessages } from "./locales/en"

@@ -25,11 +25,6 @@ export interface DataTableColumnMeta {
   defaultPinned?: "start" | "end"
   /** `false` keeps the column where it is, e.g. a selection column. */
   enableOrdering?: boolean
-  /**
-   * Its place in the card view: the card's `title`, the `subtitle` under it,
-   * or `hidden`. Other visible columns are listed as label and value.
-   */
-  card?: "title" | "subtitle" | "hidden"
 }
 
 /** The parts of a column definition the layout reads; TanStack column defs fit. */

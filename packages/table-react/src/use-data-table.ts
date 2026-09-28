@@ -15,11 +15,8 @@ import { useEffect, useMemo, useState } from "react"
 
 import {
   dataTableFeatures,
-  type DataTableCardMode,
   type DataTableColumnDef,
-  type DataTableView,
 } from "./data-table-features"
-import { DEFAULT_CARD_BREAKPOINT } from "./use-card-view"
 import {
   decodeTableParams,
   DEFAULT_PAGE_SIZE,
@@ -60,18 +57,6 @@ interface DataTableBaseOptions<TData extends RowData> {
   enableColumnOrdering?: boolean
   /** Reading direction, so resizing follows the pointer in right-to-left layouts. */
   dir?: "ltr" | "rtl"
-  /**
-   * `auto` (default) shows cards instead of rows below `cardBreakpoint`. The
-   * server renders the table; pass `cards` when you know it's a phone.
-   */
-  view?: DataTableView
-  /**
-   * `pages` (default) keeps the pagination under the cards. `infinite` loads
-   * more as the user scrolls and leaves `page` out of the URL.
-   */
-  cardMode?: DataTableCardMode
-  /** In pixels; defaults to 768. */
-  cardBreakpoint?: number
 }
 
 /** `data` is one page, already filtered and sorted by the backend. */
@@ -275,9 +260,6 @@ export function useDataTable<TData extends RowData>(
       resetLayout: layout.reset,
       search: urlState.search,
       setSearch: urlState.onSearchChange,
-      view: options.view ?? "auto",
-      cardMode: options.cardMode ?? "pages",
-      cardBreakpoint: options.cardBreakpoint ?? DEFAULT_CARD_BREAKPOINT,
     },
   })
 }

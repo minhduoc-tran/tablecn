@@ -7,7 +7,6 @@ import {
   createDataTableColumnHelper,
   resetPagePatch,
   useDataTable,
-  type DataTableView,
 } from "@querycn/table-react"
 import { CheckIcon, Trash2Icon, TruckIcon } from "lucide-react"
 
@@ -54,13 +53,9 @@ const columns = [
   helper.accessor("id", {
     header: "Order",
     size: 110,
-    meta: { defaultPinned: "start", card: "subtitle" },
+    meta: { defaultPinned: "start" },
   }),
-  helper.accessor("customer", {
-    header: "Customer",
-    size: 180,
-    meta: { card: "title" },
-  }),
+  helper.accessor("customer", { header: "Customer", size: 180 }),
   helper.accessor("email", {
     header: "Email",
     size: 230,
@@ -128,7 +123,7 @@ const columns = [
 
 const searchColumns = ["id", "customer", "email", "city"]
 
-function OrdersTable({ view }: { view?: DataTableView }) {
+function OrdersTable() {
   const [orders, setOrders] = React.useState(ORDERS)
   const [isRefreshing, setIsRefreshing] = React.useState(false)
   const table = useDataTable({
@@ -142,7 +137,6 @@ function OrdersTable({ view }: { view?: DataTableView }) {
       defaultSorting: [{ id: "createdAt", desc: true }],
     },
     enableRowSelection: (row) => row.original.status !== "refunded",
-    view,
   })
 
   const update = (ids: string[], change: (order: Order) => Order | null) => {
@@ -207,18 +201,15 @@ function OrdersTable({ view }: { view?: DataTableView }) {
   )
 }
 
-/**
- * Search, filter, sort and page in the URL; needs a Suspense boundary above it.
- * Cards on small screens, unless `view` says otherwise.
- */
-export function OrdersPage({ view }: { view?: DataTableView }) {
+/** Search, filter, sort and page in the URL; needs a Suspense boundary above it. */
+export function OrdersPage() {
   return (
     <NextFilterProvider
       fields={orderFields}
       shallow
       onApply={() => resetPagePatch()}
     >
-      <OrdersTable view={view} />
+      <OrdersTable />
     </NextFilterProvider>
   )
 }

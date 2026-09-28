@@ -5,7 +5,7 @@ import {
   useFilterAdapter,
   type UrlStateAdapter,
 } from "@querycn/filter-react"
-import { useCallback, useMemo } from "react"
+import { useMemo } from "react"
 
 import type { TableParamsSerializer } from "./table-params-serializers"
 import { decodeTableParams, type TableUrlOptions } from "./table-url-codec"
@@ -22,11 +22,6 @@ export interface UseTableQueryOptions {
   serializer: TableParamsSerializer
   /** Defaults to the nearest `FilterProvider`'s; without one, pass the table's (required). */
   adapter?: UrlStateAdapter
-  /**
-   * For the card view's infinite scroll: the URL's `page` is ignored, so
-   * `params` and `queryKey` are page 1's. Fetch the next pages with `getPageParams`.
-   */
-  infinite?: boolean
 }
 
 export interface TableQuery {
@@ -34,8 +29,6 @@ export interface TableQuery {
   params: QueryParams
   /** Changes only when the filter, sort or page does: for react-query or SWR keys. */
   queryKey: string
-  /** `params` for another page (0-based), e.g. `useInfiniteQuery`'s `pageParam`. */
-  getPageParams: (pageIndex: number) => QueryParams
 }
 
 function asQueryParams(query: unknown): QueryParams {
@@ -79,7 +72,6 @@ export function useTableQuery({
   enableSorting,
   serializer,
   adapter,
-  infinite = false,
 }: UseTableQueryOptions): TableQuery {
   const applied = useAppliedFilter()
   const filterAdapter = useFilterAdapter()
@@ -91,35 +83,19 @@ export function useTableQuery({
   }
   const [raw] = useAdapterValue(shared)
 
-  const decoded = decodeTableParams(
-    raw,
-    tableUrlOptions(columns, url, { enableSorting })
+  const tableParams = useStableValue(
+    serializer(
+      decodeTableParams(raw, tableUrlOptions(columns, url, { enableSorting }))
+    )
   )
-  const state = useStableValue(
-    infinite
-      ? { ...decoded, pagination: { ...decoded.pagination, pageIndex: 0 } }
-      : decoded
-  )
-  const tableParams = useStableValue(serializer(state))
-  const filter = useMemo(() => asQueryParams(applied.query), [applied.query])
   const params = useMemo(() => {
+    const filter = asQueryParams(applied.query)
     warnOnClash(filter, tableParams)
     return { ...filter, ...tableParams }
-  }, [filter, tableParams])
-  const getPageParams = useCallback(
-    (pageIndex: number) => ({
-      ...filter,
-      ...serializer({
-        ...state,
-        pagination: { ...state.pagination, pageIndex },
-      }),
-    }),
-    [filter, serializer, state]
-  )
+  }, [applied.query, tableParams])
   const tableKey = toSearchParams(tableParams).toString()
   return {
     params,
     queryKey: [applied.queryKey, tableKey].filter(Boolean).join("&"),
-    getPageParams,
   }
 }

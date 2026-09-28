@@ -178,11 +178,6 @@
           "target": "@components/data-table/data-table-body.tsx"
         },
         {
-          "path": "registry/radix/table/data-table-cards.tsx",
-          "type": "registry:component",
-          "target": "@components/data-table/data-table-cards.tsx"
-        },
-        {
           "path": "registry/radix/table/data-table-column-header.tsx",
           "type": "registry:component",
           "target": "@components/data-table/data-table-column-header.tsx"
@@ -246,11 +241,6 @@
           "path": "registry/shared/table/column-label.ts",
           "type": "registry:lib",
           "target": "@components/data-table/column-label.ts"
-        },
-        {
-          "path": "registry/shared/table/card-columns.ts",
-          "type": "registry:lib",
-          "target": "@components/data-table/card-columns.ts"
         },
         {
           "path": "registry/shared/table/data-table-cell-classes.ts",
