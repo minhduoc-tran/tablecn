@@ -63,6 +63,12 @@ This writes `apps/web/public/r/{radix,base,aria}/*.json`: one JSON file per bloc
 
 The folder is committed, so the registry can also be read straight from GitHub. After changing a registry component, run `pnpm --filter web registry:build` and commit `public/r` with it; CI fails when it's out of date. `pnpm dev` and `pnpm build` rebuild it too.
 
+## Releases
+
+1. For a change to a package, add a changeset: `pnpm changeset`. The Release workflow keeps a **Version Packages** pull request open; merging it publishes to npm.
+2. When a block starts using a new package version, raise that package's range in `apps/web/registry.json` (on 0.x, `^0.3.0` doesn't accept `0.4.0`), and rebuild the registry.
+3. Add what users will notice to the [Changelog](/docs/changelog): what's new, changed or fixed, and what to do when updating. Changes to the blocks belong there too, even without a package release.
+
 ## Build for production
 
 ```bash title="Terminal"

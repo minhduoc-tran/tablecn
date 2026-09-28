@@ -100,11 +100,4 @@ Hidden columns, their order, pins, widths and colors are the **layout**. It isn'
 
 ## Where each piece lives
 
-| Piece | What it does |
-| --- | --- |
-| `data-table` (registry) | The table UI, copied into your project. |
-| `filter-builder` (registry) | The filter UI, copied into your project. |
-| `@querycn/table-react` | `useDataTable`, the table's URL state, the layout, request builders for sort and page. |
-| `@querycn/filter-react` | `FilterProvider`, the filter hooks, the URL adapters. |
-| `@querycn/filter-next` | The Next.js adapter, and `parseFilters` for server components. |
-| `@querycn/filter-core` | Fields, rules, the filter's URL format and request builders. No dependencies. |
+The UI comes from the two registry blocks, the logic from the `@querycn` packages. The [Packages](/docs/installation#packages) table lists what each one does.

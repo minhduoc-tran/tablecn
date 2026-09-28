@@ -1,6 +1,6 @@
 ---
-title: Getting Started
-description: Install the tablecn data table and filter in your project.
+title: Installation
+description: Add the tablecn blocks to your project with the shadcn CLI, or install only the headless packages.
 ---
 
 ## Prerequisites
@@ -9,21 +9,34 @@ description: Install the tablecn data table and filter in your project.
 - A [shadcn/ui](https://ui.shadcn.com/docs/installation) setup with Tailwind CSS v4
 - For Next.js, the App Router (14.1+). For react-router, version 6.4+ or 7. Any other React app works too.
 
-## Choose what to install
+## Choose how to install
 
-tablecn comes as two blocks. Pick what fits your page:
+| | shadcn registry (recommended) | npm only |
+| --- | --- | --- |
+| You get | the UI source, copied into your project, and the packages it uses | the headless packages (`@querycn/*`) |
+| You write | your pages | your own table and filter UI |
+| Change the UI | edit the copied files | it's yours already |
 
-- **`@tablecn/data-table`**: the table, with search, sorting, pages, a column layout users can change, and row selection.
-- **`@tablecn/filter-builder`**: the filter builder, "Where *Status* is *Paid* and *Amount* is over *50*". Use it with the table, or on its own.
+tablecn has two blocks. Take one or both:
 
-Both can be installed from the shadcn registry or from npm:
+- **`@tablecn/data-table`**: the table, with search, sorting, pages, a column layout users can change, row selection and inline editing.
+- **`@tablecn/filter-builder`**: the filter builder, "Where *Status* is *Paid* and *Amount* is over *50*". It works with the table, or on its own.
 
-- **shadcn registry (recommended)** copies the UI source into your project (`components/data-table/` and `components/filter/`), so you own it and can change any of it. The logic comes along as npm packages, installed for you.
-- **npm** installs only the headless logic (`@querycn/*`), as regular dependencies. Use it to build your own UI on top.
+## The @tablecn registry
 
-## Setup
+tablecn is listed in the [shadcn registry directory](https://ui.shadcn.com/docs/directory), so the CLI knows `@tablecn` already: skip to [Add the blocks](#add-the-blocks).
 
-Since the shadcn registry is the recommended way, tell the shadcn CLI where to find tablecn first. Add it to your `components.json` once (skip this if you only use npm):
+The CLI reads the `style` in your `components.json` and gives you the matching version: Radix UI for `radix-*` (and older styles like `new-york`), Base UI for `base-*`, React Aria for `aria-*`. All three have the same files and props.
+
+### Add the registry yourself
+
+With an older shadcn CLI, or to write the URL down in your project, add it to `components.json`:
+
+```npm
+npx shadcn@latest registry add @tablecn=%SITE_URL%/r/{style}/{name}.json
+```
+
+Or by hand:
 
 ```json title="components.json"
 {
@@ -34,279 +47,58 @@ Since the shadcn registry is the recommended way, tell the shadcn CLI where to f
 }
 ```
 
-Or let the CLI add it:
+## Add the blocks
 
-```npm
-npx shadcn@latest registry add @tablecn=%SITE_URL%/r/{style}/{name}.json
-```
-
-The CLI reads the `style` in your `components.json` and gives you the matching version: Radix UI for `radix-*` (and older styles like `new-york`), Base UI for `base-*`, React Aria for `aria-*`.
-
-## Option 1: Table and filter
-
-Install via the shadcn registry (recommended):
+<Tabs items={["Table and filter", "Table only", "Filter only"]}>
+<Tab value="Table and filter">
 
 ```npm
 npx shadcn@latest add @tablecn/data-table @tablecn/filter-builder
 ```
 
-This copies the table into `components/data-table/` and the filter into `components/filter/`, installs the packages they need (`@querycn/*`, TanStack Table…), and adds any shadcn components you don't have yet.
+The table goes to `components/data-table/`, the filter to `components/filter/`.
 
-To put them in other folders, pass `--path`, one block per command:
+</Tab>
+<Tab value="Table only">
+
+```npm
+npx shadcn@latest add @tablecn/data-table
+```
+
+The table goes to `components/data-table/`. Search, sorting and pages still live in the URL: see [Without the filter](/docs/quick-start#without-the-filter).
+
+</Tab>
+<Tab value="Filter only">
+
+```npm
+npx shadcn@latest add @tablecn/filter-builder
+```
+
+The filter goes to `components/filter/`. For a filter over cards, a map or a chart, see [Use without the table](/docs/filter/standalone).
+
+</Tab>
+</Tabs>
+
+The CLI also installs the packages the blocks use (`@querycn/*`, TanStack Table…) and adds any shadcn component you don't have yet.
+
+**Next.js apps** add the Next.js adapter too. The registry leaves it out, since only Next.js needs it:
+
+```npm
+npm install @querycn/filter-next
+```
+
+Then build your first page: [Quick start](/docs/quick-start).
+
+## Notes on `--path`
+
+To put a block somewhere else than `components/`, pass `--path`, one block per command:
 
 ```npm
 npx shadcn@latest add @tablecn/data-table --path src/shared/data-table
 npx shadcn@latest add @tablecn/filter-builder --path src/shared/filter
 ```
 
-Then import from there (`@/shared/data-table/data-table`), and read [the notes on `--path`](#notes-on---path) first.
-
-Or install via npm, to build your own UI:
-
-```npm
-npm install @querycn/table-react @querycn/filter-react @tanstack/react-table
-```
-
-`useDataTable` then returns a TanStack table to render as you like. See [How it works](/docs/concepts).
-
-Then put it on a page:
-
-<Steps>
-<Step>
-
-### Define columns and fields
-
-The table needs two lists:
-
-- **Columns** decide what the table shows.
-- **Fields** decide what users can filter by.
-
-They often match, but don't have to: you can filter by something you don't show, and show something you can't filter by.
-
-Columns are [TanStack Table column definitions](https://tanstack.com/table/latest/docs/guide/column-defs). The helper types the extra options tablecn reads:
-
-```tsx title="components/orders/order-columns.tsx"
-"use client"
-
-import { createDataTableColumnHelper } from "@querycn/table-react"
-
-import { createSelectionColumn } from "@/components/data-table/data-table-selection-column"
-
-export interface Order {
-  id: string
-  customer: string
-  status: "paid" | "pending"
-  amount: number
-}
-
-const column = createDataTableColumnHelper<Order>()
-
-export const orderColumns = [
-  createSelectionColumn<Order>(),
-  column.accessor("customer", { header: "Customer", size: 200 }),
-  column.accessor("status", { header: "Status" }),
-  column.accessor("amount", { header: "Amount", sortDescFirst: true }),
-]
-```
-
-Fields have a name (matching a key of your rows), a label and a type. Put them in a file without `"use client"`, so server code can import them too:
-
-```ts title="lib/order-fields.ts"
-import type { FieldDefinition } from "@querycn/filter-core"
-
-export const orderFields: FieldDefinition[] = [
-  { name: "customer", label: "Customer", type: "text" },
-  {
-    name: "status",
-    label: "Status",
-    type: "select",
-    options: [
-      { label: "Paid", value: "paid" },
-      { label: "Pending", value: "pending" },
-    ],
-  },
-  { name: "amount", label: "Amount", type: "number" },
-]
-```
-
-Define both outside your components, so they don't change on every render. More in [Columns](/docs/table/columns) and [Fields](/docs/filter/fields).
-
-</Step>
-<Step>
-
-### Build the table
-
-`useDataTable` creates the table. The components render it:
-
-```tsx title="components/orders/orders-table.tsx"
-"use client"
-
-import { useDataTable } from "@querycn/table-react"
-
-import { DataTable } from "@/components/data-table/data-table"
-import { DataTablePagination } from "@/components/data-table/data-table-pagination"
-import { DataTableSearch } from "@/components/data-table/data-table-search"
-import { DataTableToolbar } from "@/components/data-table/data-table-toolbar"
-import { FilterBuilder } from "@/components/filter/filter-builder"
-import { FilterChips } from "@/components/filter/filter-chips"
-import { orderColumns, type Order } from "./order-columns"
-
-export function OrdersTable({ orders }: { orders: Order[] }) {
-  const table = useDataTable({
-    data: orders,
-    columns: orderColumns,
-    getRowId: (order) => order.id,
-    storageKey: "orders-table", // saves the column layout in the browser
-  })
-
-  return (
-    <div className="flex flex-col gap-3">
-      <DataTableToolbar table={table}>
-        <DataTableSearch table={table} />
-        <FilterBuilder />
-        <FilterChips />
-      </DataTableToolbar>
-      <DataTable table={table} className="max-h-[600px]" />
-      <DataTablePagination table={table} />
-    </div>
-  )
-}
-```
-
-</Step>
-<Step>
-
-### Wrap it in the filter provider
-
-The provider holds the filter and connects everything to the URL. The table finds it on its own, so the filter, search, sort and page all share one URL. Pick your router:
-
-<Tabs items={["Next.js", "Vite / plain React", "react-router"]}>
-<Tab value="Next.js">
-
-Add the Next.js adapter first. The registry doesn't install it, since only Next.js apps need it:
-
-```npm
-npm install @querycn/filter-next
-```
-
-```tsx title="app/orders/orders-view.tsx"
-"use client"
-
-import { NextFilterProvider } from "@querycn/filter-next"
-import { resetPagePatch } from "@querycn/table-react"
-
-import { OrdersTable } from "@/components/orders/orders-table"
-import type { Order } from "@/components/orders/order-columns"
-import { orderFields } from "@/lib/order-fields"
-
-export function OrdersView({ orders }: { orders: Order[] }) {
-  return (
-    <NextFilterProvider fields={orderFields} shallow onApply={() => resetPagePatch()}>
-      <OrdersTable orders={orders} />
-    </NextFilterProvider>
-  )
-}
-```
-
-`shallow` updates the URL without asking the server for a new page, which is right when every row is already in the browser. If your page fetches one page at a time on the server, leave it off: see [Server data](/docs/table/server-data#rendering-on-the-server).
-
-Render `OrdersView` from your page. On a statically prerendered route, wrap it in `<Suspense>`: the provider reads the URL with `useSearchParams`, and `next build` fails without a boundary.
-
-</Tab>
-<Tab value="Vite / plain React">
-
-```tsx title="src/orders-page.tsx"
-import { FilterProvider, useBrowserUrlAdapter } from "@querycn/filter-react"
-import { resetPagePatch } from "@querycn/table-react"
-
-import { OrdersTable } from "@/components/orders/orders-table"
-import type { Order } from "@/components/orders/order-columns"
-import { orderFields } from "@/lib/order-fields"
-
-export function OrdersPage({ orders }: { orders: Order[] }) {
-  const adapter = useBrowserUrlAdapter()
-
-  return (
-    <FilterProvider fields={orderFields} adapter={adapter} onApply={() => resetPagePatch()}>
-      <OrdersTable orders={orders} />
-    </FilterProvider>
-  )
-}
-```
-
-The adapter uses the browser's History API. If you use a client-side router, use its adapter instead.
-
-</Tab>
-<Tab value="react-router">
-
-```tsx title="src/routes/orders.tsx"
-import { FilterProvider } from "@querycn/filter-react"
-import { useReactRouterAdapter } from "@querycn/filter-react/react-router"
-import { resetPagePatch } from "@querycn/table-react"
-
-import { OrdersTable } from "@/components/orders/orders-table"
-import { orderFields } from "@/lib/order-fields"
-
-export function OrdersRoute() {
-  const adapter = useReactRouterAdapter()
-  const orders = useOrders() // your data
-
-  return (
-    <FilterProvider fields={orderFields} adapter={adapter} onApply={() => resetPagePatch()}>
-      <OrdersTable orders={orders} />
-    </FilterProvider>
-  )
-}
-```
-
-On react-router v6, also install `react-router` at the exact version your `react-router-dom` uses: two copies mean two router contexts, and `useLocation` fails.
-
-</Tab>
-</Tabs>
-
-`onApply={() => resetPagePatch()}` sends users back to page 1 when the filter changes. Page 4 of the old results means nothing for the new ones.
-
-</Step>
-</Steps>
-
-That's it. Search, filter, sort and page, and watch the URL change. The rows are filtered, sorted and paged in the browser. For large data, let your backend do it: see [Server data](/docs/table/server-data).
-
-### Without the filter
-
-The table doesn't need the filter. Skip `@tablecn/filter-builder`, drop `FilterBuilder` and `FilterChips` from the toolbar, and pass an adapter straight to `useDataTable`:
-
-```tsx title="Without a filter"
-import { useNextAdapter } from "@querycn/filter-next"
-
-const adapter = useNextAdapter({ shallow: true })
-const table = useDataTable({ data, columns, getRowId, adapter })
-```
-
-Without an adapter or a provider, the search, sort and page stay in memory and the URL is left alone.
-
-## Option 2: Filter only
-
-For a filter over something that isn't a table (cards, a map, a chart), install the filter alone.
-
-Via the shadcn registry (recommended):
-
-```npm
-npx shadcn@latest add @tablecn/filter-builder
-```
-
-Add `--path src/shared/filter` to put it in another folder than `components/filter/` (see [the notes on `--path`](#notes-on---path)).
-
-Or via npm:
-
-```npm
-npm install @querycn/filter-react
-```
-
-Next.js apps also add `@querycn/filter-next` for the URL adapter. See [Use without the table](/docs/filter/standalone) for the rest.
-
-## Notes on `--path`
-
-`--path` puts every file of the block in the folder you pass, with the imports between them rewritten to match.
+Every file of the block goes to that folder, with the imports between them rewritten to match. Import from there: `@/shared/data-table/data-table`.
 
 <Callout title="Delete the UI copies">
   `--path` also applies to the shadcn components the block needs, so the CLI writes `button.tsx`, `table.tsx`, `tooltip.tsx`… into your folder, even when you already have them. For those you have, the block imports the one in `components/ui/` and the copy is unused: delete every file in the folder that shares a name with one in `components/ui/`. Keep the others, the block imports them from the folder.
@@ -316,23 +108,65 @@ To skip that cleanup, point the `components` alias in `components.json` at the p
 
 `--dry-run` lists the default folders even with `--path`; the real run uses it.
 
-## Peer dependencies
+## Headless: npm only
 
-The packages share some libraries with your app, so they're peer dependencies: your app installs them once, and every package uses that one copy.
+To build your own UI, install the packages and skip the blocks:
 
-| Package | Needs |
-| --- | --- |
-| `@querycn/table-react` | `react` 18+, `@tanstack/react-table` ^9.2, `@querycn/filter-react` |
-| `@querycn/filter-react` | `react` 18+; `react-router` 6.4+ only for its react-router adapter |
-| `@querycn/filter-next` | `next` 14.1+, `react` 18+, `@querycn/filter-react` |
+<Tabs items={["Table and filter", "Filter only"]}>
+<Tab value="Table and filter">
 
-The shadcn registry installs them with the blocks. With npm, install them yourself, as in the commands above.
+```npm
+npm install @querycn/table-react @querycn/filter-react @tanstack/react-table
+```
+
+`useDataTable` returns a TanStack table to render as you like. See [How it works](/docs/concepts).
+
+</Tab>
+<Tab value="Filter only">
+
+```npm
+npm install @querycn/filter-react
+```
+
+See [Custom UI](/docs/filter/react) for the hooks behind the filter builder.
+
+</Tab>
+</Tabs>
+
+Next.js apps add `@querycn/filter-next` in both cases.
+
+## Packages
+
+| Package | What it is | Needs (peer dependencies) |
+| --- | --- | --- |
+| `data-table` (registry) | The table UI: table, headers, pagination, **Columns** menu, search box, toolbar, cell editors. | installed with it |
+| `filter-builder` (registry) | The filter UI: **Filter** button, panel, value inputs, chips. | installed with it |
+| `@querycn/table-react` | `useDataTable`: a TanStack table with URL state, the filter wired in, a saved layout and inline editing. | `react` 18+, `@tanstack/react-table` ^9.2, `@querycn/filter-react` |
+| `@querycn/filter-react` | The filter's provider and hooks, and the URL adapters (browser history, react-router). | `react` 18+; `react-router` 6.4+ only for its adapter |
+| `@querycn/filter-next` | The Next.js App Router adapter, and `parseFilters` for server components. | `next` 14.1+, `react` 18+, `@querycn/filter-react` |
+| `@querycn/filter-core` | The filter's logic: rules, validation, URL format, request builders. | none |
+
+Peer dependencies are shared with your app: it installs them once, and every package uses that one copy. The shadcn registry installs them with the blocks; with npm, install them yourself, as in the commands above.
+
+## Updating
+
+New versions are listed in the [Changelog](/docs/changelog). Update the packages as usual:
+
+```npm
+npm install @querycn/table-react@latest @querycn/filter-react@latest
+```
+
+The blocks are your files, so they don't update on their own. To take a new version of one, add it again with `--overwrite`:
+
+```npm
+npx shadcn@latest add @tablecn/data-table --overwrite
+```
+
+It replaces your copy, your changes included: commit first, then review the diff and bring your changes back.
 
 ## Next steps
 
 <Cards>
+  <Card title="Quick start" href="/docs/quick-start" description="Columns, fields, the table and the filter provider: a working page in three steps." />
   <Card title="How it works" href="/docs/concepts" description="Columns, fields, the URL and the API request, explained with one example." />
-  <Card title="Server data" href="/docs/table/server-data" description="Fetch one page at a time, with the filter, sort and page from the URL." />
-  <Card title="Filtering" href="/docs/table/filtering" description="How the filter narrows the rows, and how to tune it." />
-  <Card title="Components" href="/docs/components/table" description="Every part of the table UI and its props." />
 </Cards>

@@ -22,8 +22,10 @@
 <p align="center">
   <a href="apps/web/content/docs/index.mdx">Get Started</a> ·
   <a href="apps/web/content/docs/installation.mdx">Installation</a> ·
+  <a href="apps/web/content/docs/quick-start.mdx">Quick start</a> ·
   <a href="apps/web/content/docs/concepts.mdx">How it works</a> ·
-  <a href="apps/web/content/docs/filter/standalone.mdx">Filter without the table</a>
+  <a href="apps/web/content/docs/filter/standalone.mdx">Filter without the table</a> ·
+  <a href="apps/web/content/docs/changelog.mdx">Changelog</a>
 </p>
 
 ## Features
@@ -40,22 +42,13 @@
 
 ## Quick start
 
-Add the registry to your `components.json`, with the folder for your primitive library (`radix`, `base` or `aria`):
-
-```json
-{
-  "registries": {
-    "@tablecn": "https://raw.githubusercontent.com/minhduoc-tran/tablecn/main/apps/web/public/r/radix/{name}.json"
-  }
-}
-```
-
-Then add the blocks:
+`@tablecn` is in the [shadcn registry directory](https://ui.shadcn.com/docs/directory), so add the blocks straight away:
 
 ```bash
-npx shadcn@latest add @tablecn/data-table
-npx shadcn@latest add @tablecn/filter-builder
+npx shadcn@latest add @tablecn/data-table @tablecn/filter-builder
 ```
+
+The CLI picks the Radix UI, Base UI or React Aria version from the `style` in your `components.json`.
 
 They go to `components/data-table/` and `components/filter/`. Pass `--path src/shared/data-table` to pick another folder ([details](https://table-cn.vercel.app/docs/installation#notes-on---path)).
 

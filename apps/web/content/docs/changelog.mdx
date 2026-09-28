@@ -1,0 +1,72 @@
+---
+title: Changelog
+description: What's new in each release of the blocks and the @querycn packages, and what to do when you update.
+---
+
+Newest first. A release can change the npm packages, the registry blocks, or both:
+
+- **Packages** (`@querycn/*`) update with `npm install @querycn/table-react@latest …`.
+- **Blocks** (`data-table`, `filter-builder`) are files in your project, so they only change when you add them again. See [Updating](/docs/installation#updating).
+
+The full list of package changes is in each package's `CHANGELOG.md` on [GitHub](https://github.com/minhduoc-tran/tablecn/tree/main/packages).
+
+## September 28, 2026
+
+| Package | Version |
+| --- | --- |
+| `@querycn/table-react` | 0.3.0 |
+| `@querycn/filter-core`, `@querycn/filter-react`, `@querycn/filter-next` | 0.3.0 |
+
+### New
+
+- **`@tablecn` is in the [shadcn registry directory](https://ui.shadcn.com/docs/directory).** `npx shadcn@latest add @tablecn/data-table` works right away, without adding the registry to `components.json` first.
+- **Inline editing.** Users edit a cell where it is: <kbd>Enter</kbd>, <kbd>F2</kbd> or a double click opens its editor, <kbd>Enter</kbd> saves. Turn it on with `meta.edit` on a column and `onCellEdit` in `useDataTable`, which can save to your API and throw to show an error under the cell. Editors for text, numbers, selects and yes/no, a select can search your API with `loadOptions`, and you can add your own. See [Inline editing](/docs/table/editing).
+- **A `time` field type** for a time of day with no date, like `09:30`, with *is at*, *is after*, *is between* and the other time operators. See [Fields](/docs/filter/fields#choose-a-type).
+- **Time and date-time pickers.** The filter picks times and date-times from scrolling hour and minute columns, with **Now** and **OK**. Both pickers are also standalone components you can copy: [Time picker](/docs/components/time-picker) and [Date time picker](/docs/components/date-time-picker).
+- **A [Full example](/docs/full-example)** page: one orders table with every feature on, and all of its code.
+
+### Fixed
+
+- While dragging a column's edge, the resize cursor stays on, even when the pointer leaves the header.
+- The blocks ask for the package versions they use. `data-table` asked for `@querycn/table-react@^0.1.0`, so a new install could get an older version than the block needs.
+
+### Updating
+
+1. Update the packages: `npm install @querycn/table-react@latest @querycn/filter-react@latest` (and `@querycn/filter-next@latest` on Next.js).
+2. Add the blocks again to get inline editing and the pickers: `npx shadcn@latest add @tablecn/data-table @tablecn/filter-builder --overwrite`. Commit your changes first.
+3. If you pass complete message objects instead of using `mergeTableMessages` / `mergeMessages`, add the new texts: the table's `editing` group, and the filter's `placeholders.time`, `placeholders.hour`, `placeholders.minute`, `actions.now` and `actions.ok`. TypeScript points out what's missing.
+
+## September 26, 2026
+
+| Package | Version |
+| --- | --- |
+| `@querycn/table-react` | 0.2.0 |
+
+### New
+
+- **Turn a feature off for the whole table**: `enableSorting`, `enableColumnResizing` and `enableColumnOrdering` in `useDataTable`. Pass `enableSorting` to `useTableQuery` too, so your backend never gets a sort the table ignores. See [Columns](/docs/table/columns#what-users-can-do).
+
+### Changed
+
+- The selection bar under the toolbar only shows when you pass `selectionActions`. Without actions, the pagination already counts the selected rows. See [Row selection](/docs/table/selection#act-on-the-selected-rows).
+
+### Fixed
+
+- The selection column has no **⋯** menu, which used to cover its select-all checkbox.
+
+### Updating
+
+Update `@querycn/table-react`, and add `@tablecn/data-table` again with `--overwrite`.
+
+## September 25, 2026: first release
+
+| Package | Version |
+| --- | --- |
+| `@querycn/filter-core`, `@querycn/filter-react`, `@querycn/filter-next` | 0.2.0 |
+| `@querycn/table-react` | 0.1.0 |
+
+- **The `data-table` block**: search, sorting by one or several columns, pages, row selection, loading, empty and error states, and virtualization. Users move, resize, pin, hide and color columns, and their layout is saved in the browser.
+- **The `filter-builder` block**: conditions like *Status is Paid and Amount is between 10 and 50*, with AND / OR, chips, and options loaded from your API.
+- **Everything in the URL**: `?q=nguyen&status__eq=paid&sort=-amount&page=2`, through adapters for Next.js, react-router and the browser.
+- **Client or server data**, with request builders for JSON:API-style APIs, django-filter and PostgREST.
+- Radix UI, Base UI and React Aria versions of both blocks, and English and Vietnamese texts.

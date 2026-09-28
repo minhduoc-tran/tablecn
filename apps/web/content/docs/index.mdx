@@ -37,18 +37,9 @@ It follows the shadcn/ui way of working:
 - **Virtualization** for pages with thousands of rows.
 - **Accessible** from the keyboard and with screen readers, and **translatable** (English and Vietnamese included).
 
-## Packages
+## How you get it
 
-| Package | What it is |
-| --- | --- |
-| `data-table` (registry) | The table UI: table, headers, pagination, **Columns** menu, search box, toolbar. |
-| `filter-builder` (registry) | The filter UI: **Filter** button, panel, value inputs, chips. |
-| `@querycn/table-react` | `useDataTable`: a TanStack Table with URL state, the filter wired in, and a saved layout. |
-| `@querycn/filter-react` | The filter's provider and hooks, and the URL adapters (browser history, react-router). |
-| `@querycn/filter-next` | The Next.js App Router adapter, and `parseFilters` for server components. |
-| `@querycn/filter-core` | The filter's logic: rules, validation, URL format, request builders. No dependencies. |
-
-You don't need to install these one by one: adding the two registry blocks installs what they use.
+Two blocks from the shadcn registry, `data-table` and `filter-builder`, copy the UI into your project. They bring the logic along as npm packages under `@querycn`, so one command installs everything. See [Installation](/docs/installation), and [Packages](/docs/installation#packages) for what each one does.
 
 <Callout title="Only need a filter?">
   The filter works without the table, for example above a list of cards or in an API route. See [Use without the table](/docs/filter/standalone).
@@ -57,6 +48,8 @@ You don't need to install these one by one: adding the two registry blocks insta
 ## Next steps
 
 <Cards>
-  <Card title="Getting Started" href="/docs/installation" description="Install the table and the filter, then build a page with search, filter, sorting and pages." />
+  <Card title="Installation" href="/docs/installation" description="Add the registry and the blocks with the shadcn CLI." />
+  <Card title="Quick start" href="/docs/quick-start" description="A table with search, a filter, sorting and pages in three steps." />
   <Card title="How it works" href="/docs/concepts" description="Columns, fields, the URL and the API request, explained with one example." />
+  <Card title="Changelog" href="/docs/changelog" description="What's new in each release, and how to update." />
 </Cards>
