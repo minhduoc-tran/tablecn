@@ -10,6 +10,15 @@ export default defineConfig({
     alias: [
       { find: /^@\/lib\/utils$/, replacement: `${ui}lib/utils.ts` },
       { find: /^@\/registry\/radix\/ui\//, replacement: `${ui}components/` },
+      { find: /^@\/components\/ui\//, replacement: `${ui}components/` },
+      {
+        find: /^@\/components\/data-table\//,
+        replacement: `${app}registry/radix/table/`,
+      },
+      {
+        find: /^@\/components\/filter\//,
+        replacement: `${app}registry/radix/filter/`,
+      },
       { find: /^@workspace\/ui\//, replacement: ui },
       { find: /^@\//, replacement: app },
     ],

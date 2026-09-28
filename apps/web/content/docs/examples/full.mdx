@@ -1,0 +1,54 @@
+---
+title: Full example
+description: One orders table with every feature on, and all of its code.
+---
+
+import { FullExamplePreview } from "@/components/docs/full-example/full-example-preview"
+
+<FullExamplePreview />
+
+**Try it:** search `da nang`, filter by *Created at* between two moments or *City* is any of two cities, sort by several columns with Shift, then select a few rows and **Mark as shipped** or **Delete** them. Reload: the search, filter, sort and page come back from the URL, and the column layout from your browser.
+
+## What's in it
+
+- [Search](/docs/components/table#datatablesearch) in the order id, customer, email and city, ignoring accents.
+- A [filter](/docs/filter/fields) for each field type: text, select, multi-select, number, yes/no, date and date with time.
+- [Sorting](/docs/table/sorting), newest orders first by default, and [pages](/docs/table/url-state) of 10 to 100 rows.
+- [Row selection](/docs/table/selection) with bulk actions. Refunded orders can't be selected.
+- The order id [pinned](/docs/table/column-pinning) to the start, the amount to the end, and the email [hidden](/docs/table/column-visibility) until turned on in **Columns**.
+- Columns users can [move](/docs/table/column-ordering), [resize](/docs/table/column-sizing) and [color](/docs/table/column-colors), [saved](/docs/table/layout) in `localStorage`.
+- A reload button with the loading state.
+
+## The code
+
+Install the blocks first, as in [Getting Started](/docs/installation). The files below then work as they are.
+
+### Fields and data
+
+The fields decide what the filter offers. The rows are made up here; yours come from your API or database.
+
+<include meta='title="components/orders-data.ts"'>../../../components/docs/full-example/orders-data.ts</include>
+
+### The table
+
+<include meta='title="components/orders-table.tsx"'>../../../components/docs/full-example/orders-table.tsx</include>
+
+### The page
+
+`NextFilterProvider` reads the URL with `useSearchParams`, so the page needs a Suspense boundary:
+
+```tsx title="app/orders/page.tsx"
+import { Suspense } from "react"
+
+import { OrdersPage } from "@/components/orders-table"
+
+export default function Page() {
+  return (
+    <Suspense>
+      <OrdersPage />
+    </Suspense>
+  )
+}
+```
+
+The filtering, sorting and paging here run in the browser, over every row. For a large table, let your backend do it: see [Server data](/docs/table/server-data).

@@ -5,6 +5,9 @@
       "@/*": ["./*"],
       "@/lib/utils": ["../../packages/ui/src/lib/utils"],
       "@/registry/radix/ui/*": ["../../packages/ui/src/components/*"],
+      "@/components/ui/*": ["../../packages/ui/src/components/*"],
+      "@/components/data-table/*": ["./registry/radix/table/*"],
+      "@/components/filter/*": ["./registry/radix/filter/*"],
       "collections/*": ["./.source/*"],
       "@workspace/ui/*": ["../../packages/ui/src/*"]
     },

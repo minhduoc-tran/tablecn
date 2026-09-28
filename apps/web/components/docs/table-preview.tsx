@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation"
 
 import { OrdersDemo, OrdersDemoProvider } from "@/components/docs/orders-demo"
 
-function PageUrl() {
+export function PageUrl() {
   const search = useSearchParams().toString()
   return (
     <dl className="font-mono text-xs">
