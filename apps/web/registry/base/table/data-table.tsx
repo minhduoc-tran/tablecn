@@ -68,6 +68,7 @@ export function DataTable<TData extends object>({
   emptyState,
   errorState,
   skeletonRows,
+  cellEditors,
   className,
   ...props
 }: DataTableProps<TData>) {
@@ -167,6 +168,7 @@ export function DataTable<TData extends object>({
             emptyState={emptyState}
             errorState={errorState}
             skeletonRows={skeletonRows}
+            cellEditors={cellEditors}
           />
         </table>
       </ColumnReorder>

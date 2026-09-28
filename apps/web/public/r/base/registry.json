@@ -144,7 +144,7 @@
         "@dnd-kit/core@^6.3.1",
         "@dnd-kit/sortable@^10.0.0",
         "@querycn/filter-react@^0.2.0",
-        "@querycn/table-react@^0.1.0",
+        "@querycn/table-react@^0.3.0",
         "@tanstack/react-table@^9.2.0",
         "@tanstack/react-virtual@^3.14.13",
         "lucide-react"
@@ -153,13 +153,15 @@
         "button",
         "checkbox",
         "dropdown-menu",
+        "input",
         "input-group",
         "popover",
         "select",
         "separator",
         "skeleton",
         "table",
-        "tooltip"
+        "tooltip",
+        "command"
       ],
       "files": [
         {
@@ -176,6 +178,21 @@
           "path": "registry/base/table/data-table-body.tsx",
           "type": "registry:component",
           "target": "@components/data-table/data-table-body.tsx"
+        },
+        {
+          "path": "registry/base/table/data-table-editable-cell.tsx",
+          "type": "registry:component",
+          "target": "@components/data-table/data-table-editable-cell.tsx"
+        },
+        {
+          "path": "registry/base/table/data-table-cell-editors.tsx",
+          "type": "registry:component",
+          "target": "@components/data-table/data-table-cell-editors.tsx"
+        },
+        {
+          "path": "registry/base/table/data-table-search-select-editor.tsx",
+          "type": "registry:component",
+          "target": "@components/data-table/data-table-search-select-editor.tsx"
         },
         {
           "path": "registry/base/table/data-table-column-header.tsx",
@@ -256,6 +273,11 @@
           "path": "registry/shared/table/use-scroll-edges.ts",
           "type": "registry:hook",
           "target": "@components/data-table/use-scroll-edges.ts"
+        },
+        {
+          "path": "registry/shared/table/use-cell-editing.ts",
+          "type": "registry:hook",
+          "target": "@components/data-table/use-cell-editing.ts"
         },
         {
           "path": "registry/shared/table/data-table-pagination-state.ts",

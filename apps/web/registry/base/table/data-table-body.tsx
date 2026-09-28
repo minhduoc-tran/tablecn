@@ -22,6 +22,11 @@ import {
   isRowClick,
 } from "@/registry/shared/table/data-table-row-clicks"
 import type { VirtualRows } from "@/registry/shared/table/use-virtual-rows"
+import {
+  cellEditors as defaultCellEditors,
+  type CellEditors,
+} from "@/registry/base/table/data-table-cell-editors"
+import { DataTableCellContent } from "@/registry/base/table/data-table-editable-cell"
 
 export interface DataTableBodyOptions<TData extends object> {
   /** Skeleton rows on the first load; dims the rows while they reload. */
@@ -34,6 +39,11 @@ export interface DataTableBodyOptions<TData extends object> {
   emptyState?: React.ReactNode
   errorState?: React.ReactNode
   skeletonRows?: number
+  /**
+   * Editors by `meta.edit.type` for editable cells, e.g.
+   * `{ ...cellEditors, rating: RatingEditor }`.
+   */
+  cellEditors?: CellEditors
 }
 
 type Column<TData extends object> = ReturnType<
@@ -57,6 +67,7 @@ export function DataTableBody<TData extends object>({
   emptyState,
   errorState,
   skeletonRows = 5,
+  cellEditors = defaultCellEditors,
 }: DataTableBodyOptions<TData> & {
   table: DataTableInstance<TData>
   /** Visible leaf columns, in the order shown. */
@@ -150,9 +161,12 @@ export function DataTableBody<TData extends object>({
             )}
             className={pinnedCellClassName}
           >
-            <div className="truncate">
-              <table.FlexRender cell={cell} />
-            </div>
+            <DataTableCellContent
+              table={table}
+              cell={cell}
+              editors={cellEditors}
+              messages={messages}
+            />
           </TableCell>
         ))}
       </TableRow>
