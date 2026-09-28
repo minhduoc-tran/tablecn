@@ -135,9 +135,11 @@
       ],
       "bases": {
         "radix": {
+          "dependencies": ["radix-ui"],
           "registryDependencies": ["command"]
         },
         "base": {
+          "dependencies": ["@base-ui/react"],
           "registryDependencies": ["command"]
         },
         "aria": {
@@ -351,9 +353,11 @@
       ],
       "bases": {
         "radix": {
+          "dependencies": ["radix-ui"],
           "registryDependencies": ["command"]
         },
         "base": {
+          "dependencies": ["@base-ui/react"],
           "registryDependencies": ["command"]
         },
         "aria": {

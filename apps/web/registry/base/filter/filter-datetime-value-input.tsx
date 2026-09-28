@@ -2,6 +2,7 @@
 
 import { parseDateOnly, toDateOnly } from "@querycn/filter-core"
 import { useFilterActions } from "@querycn/filter-react"
+import { useDirection } from "@base-ui/react/direction-provider"
 import { CalendarIcon } from "lucide-react"
 
 import { Calendar } from "@/registry/base/ui/calendar"
@@ -35,6 +36,8 @@ export function DateTimeValueInput({
   setValue,
 }: FilterValueSlotProps) {
   const { messages } = useFilterActions()
+  // The calendar's arrows and weeks follow the library's reading direction.
+  const dir = useDirection()
   const format = useDateTimeFormat()
   const panel: PickerPanel = (value, onChange, onOk) => {
     const { day, time } = splitDateTime(value)
@@ -42,6 +45,7 @@ export function DateTimeValueInput({
       <>
         <div className="flex">
           <Calendar
+            dir={dir}
             mode="single"
             // Clicking the picked day again keeps it instead of clearing it.
             required

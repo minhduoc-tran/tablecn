@@ -1,5 +1,6 @@
 "use client"
 
+import { useDirection } from "@base-ui/react/direction-provider"
 import type { FilterRule } from "@querycn/filter-core"
 import {
   useAppliedFilter,
@@ -24,6 +25,7 @@ export function FilterRuleWarnings({
   warnings: readonly RuleWarningKey[]
   className?: string
 }) {
+  const dir = useDirection()
   const { messages } = useAppliedFilter()
   if (warnings.length === 0) return null
   const texts = warnings.map((key) => messages.warnings[key])
@@ -46,7 +48,11 @@ export function FilterRuleWarnings({
       >
         <TriangleAlertIcon />
       </PopoverTrigger>
-      <PopoverContent side="top" className="w-auto max-w-xs gap-1 p-2 text-xs">
+      <PopoverContent
+        dir={dir}
+        side="top"
+        className="w-auto max-w-xs gap-1 p-2 text-xs"
+      >
         {texts.map((text) => (
           <p key={text}>{text}</p>
         ))}

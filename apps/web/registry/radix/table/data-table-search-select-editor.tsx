@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { Direction } from "radix-ui"
 import { useFieldOptions } from "@querycn/filter-react"
 import { formatCellText } from "@querycn/table-react"
 import { ChevronsUpDownIcon } from "lucide-react"
@@ -34,6 +35,7 @@ export function SearchSelectCellEditor({
   onSave,
   onCancel,
 }: CellEditorProps) {
+  const dir = Direction.useDirection()
   const current = formatCellText(value)
   const [open, setOpen] = React.useState(true)
   const field = React.useMemo(
@@ -72,7 +74,7 @@ export function SearchSelectCellEditor({
           <ChevronsUpDownIcon className="text-muted-foreground" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-60 p-0" align="start">
+      <PopoverContent dir={dir} className="w-60 p-0" align="start">
         <Command shouldFilter={false}>
           <CommandInput
             placeholder={messages.editing.search}

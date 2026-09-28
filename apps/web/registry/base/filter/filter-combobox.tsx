@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useDirection } from "@base-ui/react/direction-provider"
 import type { SelectOption } from "@querycn/filter-core"
 import { useFilterActions } from "@querycn/filter-react"
 import { CheckIcon, ChevronsUpDownIcon } from "lucide-react"
@@ -62,6 +63,7 @@ export function FilterCombobox({
   onOpenChange,
   className,
 }: FilterComboboxProps) {
+  const dir = useDirection()
   const { messages } = useFilterActions()
   const [open, setOpen] = React.useState(false)
   const handleOpenChange = (next: boolean) => {
@@ -99,7 +101,7 @@ export function FilterCombobox({
         </span>
         <ChevronsUpDownIcon className="text-muted-foreground" />
       </PopoverTrigger>
-      <PopoverContent className="w-56 p-0" align="start">
+      <PopoverContent dir={dir} className="w-56 p-0" align="start">
         <Command shouldFilter={false}>
           <CommandInput
             placeholder={messages.placeholders.search}

@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { Direction } from "radix-ui"
 import { useAppliedFilter, useFilterActions } from "@querycn/filter-react"
 import { ListFilterIcon } from "lucide-react"
 
@@ -32,6 +33,7 @@ export function FilterBuilder({
   contentClassName,
   ...panelProps
 }: FilterBuilderProps) {
+  const dir = Direction.useDirection()
   const { activeCount, messages } = useAppliedFilter()
   const { addRule, discard } = useFilterActions()
   const [open, setOpen] = React.useState(false)
@@ -61,6 +63,7 @@ export function FilterBuilder({
         </Button>
       </PopoverTrigger>
       <PopoverContent
+        dir={dir}
         align="start"
         className={cn("w-auto max-w-[calc(100vw-2rem)] p-3", contentClassName)}
       >

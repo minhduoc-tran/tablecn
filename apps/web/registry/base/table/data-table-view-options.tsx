@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useDirection } from "@base-ui/react/direction-provider"
 import {
   enTableMessages,
   type DataTableInstance,
@@ -62,6 +63,7 @@ export function DataTableViewOptions<TData extends object>({
   messages = enTableMessages,
   className,
 }: DataTableViewOptionsProps<TData>) {
+  const dir = useDirection()
   const canReorder = canReorderColumns(table)
   const canFit = table
     .getVisibleLeafColumns()
@@ -88,6 +90,7 @@ export function DataTableViewOptions<TData extends object>({
           {messages.columns.menu}
         </PopoverTrigger>
         <PopoverContent
+          dir={dir}
           align="end"
           aria-label={messages.columns.menu}
           className="w-64 gap-1 p-1"

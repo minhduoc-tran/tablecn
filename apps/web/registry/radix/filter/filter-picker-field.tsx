@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { Direction } from "radix-ui"
 import { useFilterActions } from "@querycn/filter-react"
 import { ArrowRightIcon, type LucideIcon } from "lucide-react"
 
@@ -71,6 +72,7 @@ export function PickerField({
   placeholder: string
   className?: string
 }) {
+  const dir = Direction.useDirection()
   const [open, setOpen] = React.useState(false)
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -91,7 +93,7 @@ export function PickerField({
           <Icon className="text-muted-foreground" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto gap-0 p-0" align="start">
+      <PopoverContent dir={dir} className="w-auto gap-0 p-0" align="start">
         {panel(value, onChange, () => setOpen(false))}
       </PopoverContent>
     </Popover>
@@ -115,6 +117,7 @@ export function RangePickerField({
   onChange: (value: [string, string]) => void
   sideClassName?: string
 }) {
+  const dir = Direction.useDirection()
   const { messages } = useFilterActions()
   const [open, setOpen] = React.useState<Side | null>(null)
 
@@ -141,6 +144,7 @@ export function RangePickerField({
         </button>
       </PopoverTrigger>
       <PopoverContent
+        dir={dir}
         className="w-auto gap-0 p-0"
         align="start"
         // Moving on to the end: focus goes to its picker, not back here.

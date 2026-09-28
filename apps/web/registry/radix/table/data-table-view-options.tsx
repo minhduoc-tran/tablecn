@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { Direction } from "radix-ui"
 import {
   enTableMessages,
   type DataTableInstance,
@@ -62,6 +63,7 @@ export function DataTableViewOptions<TData extends object>({
   messages = enTableMessages,
   className,
 }: DataTableViewOptionsProps<TData>) {
+  const dir = Direction.useDirection()
   const canReorder = canReorderColumns(table)
   const canFit = table
     .getVisibleLeafColumns()
@@ -85,6 +87,7 @@ export function DataTableViewOptions<TData extends object>({
           </Button>
         </PopoverTrigger>
         <PopoverContent
+          dir={dir}
           align="end"
           aria-label={messages.columns.menu}
           className="w-64 gap-1 p-1"

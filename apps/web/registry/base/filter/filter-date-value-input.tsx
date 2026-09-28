@@ -3,6 +3,7 @@
 import * as React from "react"
 import { parseDateOnly, toDateOnly } from "@querycn/filter-core"
 import { useFilterActions } from "@querycn/filter-react"
+import { useDirection } from "@base-ui/react/direction-provider"
 import { CalendarIcon } from "lucide-react"
 import type { DateRange } from "react-day-picker"
 
@@ -31,6 +32,8 @@ export function DateValueInput({
   setValue,
 }: FilterValueSlotProps) {
   const { messages } = useFilterActions()
+  // The calendar's arrows and weeks follow the library's reading direction.
+  const dir = useDirection()
   const [open, setOpen] = React.useState(false)
   const formatDateOnly = useDateOnlyFormat()
   const range = arity === "range"
@@ -66,9 +69,10 @@ export function DateValueInput({
           {label || messages.placeholders.date}
         </span>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
+      <PopoverContent dir={dir} className="w-auto p-0" align="start">
         {range ? (
           <Calendar
+            dir={dir}
             mode="range"
             defaultMonth={toDay(from)}
             selected={{ from: toDay(from), to: toDay(to) }}
@@ -78,6 +82,7 @@ export function DateValueInput({
           />
         ) : (
           <Calendar
+            dir={dir}
             mode="single"
             // Clicking the picked day again keeps it instead of clearing the rule.
             required

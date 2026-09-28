@@ -11,7 +11,8 @@
       "dependencies": [
         "@querycn/filter-core@^0.3.0",
         "@querycn/filter-react@^0.3.0",
-        "lucide-react"
+        "lucide-react",
+        "radix-ui"
       ],
       "registryDependencies": [
         "badge",
@@ -147,7 +148,8 @@
         "@querycn/table-react@^0.3.0",
         "@tanstack/react-table@^9.2.0",
         "@tanstack/react-virtual@^3.14.13",
-        "lucide-react"
+        "lucide-react",
+        "radix-ui"
       ],
       "registryDependencies": [
         "button",
