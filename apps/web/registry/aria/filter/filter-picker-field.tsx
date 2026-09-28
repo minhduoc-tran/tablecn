@@ -1,0 +1,163 @@
+"use client"
+
+import * as React from "react"
+import { useFilterActions } from "@querycn/filter-react"
+import { ArrowRightIcon, type LucideIcon } from "lucide-react"
+import { Button as ButtonPrimitive, Dialog } from "react-aria-components"
+
+import { cn } from "@/lib/utils"
+import { Button } from "@/registry/aria/ui/button"
+import { Popover, PopoverTrigger } from "@/registry/aria/ui/popover"
+import {
+  pickerRangeFieldClassName,
+  pickerRangeSideClassName,
+} from "@/registry/shared/filter/filter-picker-field-parts"
+
+/** What a picker's popover shows; `onOk` closes it (or moves on to a range's end). */
+export type PickerPanel = (
+  value: string,
+  onChange: (value: string) => void,
+  onOk: () => void
+) => React.ReactNode
+
+interface PickerFieldBaseProps {
+  id?: string
+  label: string
+  format: (value: string) => string
+  icon: LucideIcon
+  panel: PickerPanel
+}
+
+/** Now and OK under a picker. */
+export function PickerFooter({
+  onNow,
+  onOk,
+  okDisabled,
+}: {
+  onNow: () => void
+  onOk: () => void
+  okDisabled: boolean
+}) {
+  const { messages } = useFilterActions()
+  return (
+    <div className="flex items-center justify-between gap-2 border-t p-1.5">
+      <Button variant="link" size="sm" className="h-7 px-1.5" onPress={onNow}>
+        {messages.actions.now}
+      </Button>
+      <Button size="sm" className="h-7" isDisabled={okDisabled} onPress={onOk}>
+        {messages.actions.ok}
+      </Button>
+    </div>
+  )
+}
+
+/** A button showing the value, opening `panel` in a popover. */
+export function PickerField({
+  id,
+  label,
+  value,
+  onChange,
+  format,
+  placeholder,
+  icon: Icon,
+  panel,
+  className,
+}: PickerFieldBaseProps & {
+  value: string
+  onChange: (value: string) => void
+  placeholder: string
+  className?: string
+}) {
+  const [open, setOpen] = React.useState(false)
+  return (
+    <PopoverTrigger isOpen={open} onOpenChange={setOpen}>
+      <Button
+        id={id}
+        variant="outline"
+        size="sm"
+        className={cn(
+          "justify-between text-sm font-normal tabular-nums",
+          className
+        )}
+      >
+        <span className="sr-only">{label}: </span>
+        <span className={cn("truncate", !value && "text-muted-foreground")}>
+          {value ? format(value) : placeholder}
+        </span>
+        <Icon className="text-muted-foreground" />
+      </Button>
+      <Popover className="w-auto gap-0 p-0" placement="bottom start">
+        <Dialog aria-label={label} className="outline-none">
+          {panel(value, onChange, () => setOpen(false))}
+        </Dialog>
+      </Popover>
+    </PopoverTrigger>
+  )
+}
+
+type Side = "from" | "to"
+
+/** Both ends of a range in one field; OK on the start moves on to the end. */
+export function RangePickerField({
+  id,
+  label,
+  value: [from, to],
+  onChange,
+  format,
+  icon: Icon,
+  panel,
+  sideClassName,
+}: PickerFieldBaseProps & {
+  value: [string, string]
+  onChange: (value: [string, string]) => void
+  sideClassName?: string
+}) {
+  const { messages } = useFilterActions()
+  const [open, setOpen] = React.useState<Side | null>(null)
+
+  const side = (name: Side, value: string, other: string) => (
+    <PopoverTrigger
+      isOpen={open === name}
+      onOpenChange={(next) =>
+        setOpen((current) => (next ? name : current === name ? null : current))
+      }
+    >
+      <ButtonPrimitive
+        id={name === "from" ? id : undefined}
+        aria-label={`${label} ${messages.placeholders[name]}`}
+        data-active={open === name || undefined}
+        // A range with one end picked is dropped on apply, so flag the empty end.
+        data-invalid={(value === "" && other !== "") || undefined}
+        className={cn(pickerRangeSideClassName, sideClassName)}
+      >
+        <span className={cn(!value && "text-muted-foreground")}>
+          {value ? format(value) : messages.placeholders[name]}
+        </span>
+      </ButtonPrimitive>
+      <Popover className="w-auto gap-0 p-0" placement="bottom start">
+        <Dialog
+          aria-label={`${label} ${messages.placeholders[name]}`}
+          className="outline-none"
+        >
+          {panel(
+            value,
+            (next) => onChange(name === "from" ? [next, to] : [from, next]),
+            () => setOpen(name === "from" ? "to" : null)
+          )}
+        </Dialog>
+      </Popover>
+    </PopoverTrigger>
+  )
+
+  return (
+    <div className={pickerRangeFieldClassName}>
+      {side("from", from, to)}
+      <ArrowRightIcon
+        aria-hidden
+        className="size-3.5 shrink-0 text-muted-foreground"
+      />
+      {side("to", to, from)}
+      <Icon aria-hidden className="size-4 shrink-0 text-muted-foreground" />
+    </div>
+  )
+}

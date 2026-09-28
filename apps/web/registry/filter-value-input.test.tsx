@@ -13,7 +13,13 @@ import {
   type AppliedFilterValue,
   type FilterDraftValue,
 } from "@querycn/filter-react"
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
+import {
+  act,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import type { ComponentType } from "react"
 import { hydrateRoot } from "react-dom/client"
@@ -105,6 +111,7 @@ const FIELDS: FieldDefinition[] = [
   },
   { name: "created", label: "Created", type: "date" },
   { name: "updated", label: "Updated", type: "datetime" },
+  { name: "pickup", label: "Pickup", type: "time" },
 ]
 
 const url = (...rules: unknown[][]) =>
@@ -411,13 +418,22 @@ describe.each(BASES)("%s value inputs", (_, Row, inputs, selectRole) => {
     expect(firstRule(h).value).toBe("2026-03-10")
   })
 
-  it("datetime: shows a zoned value in local time", () => {
+  it("datetime: shows a zoned value in local time, and picks now", async () => {
     vi.stubEnv("TZ", "Asia/Ho_Chi_Minh")
-    setup(url(["updated", "gt", "2026-03-01T01:00:00Z"]))
-    const input = screen
-      .getAllByLabelText("Updated")
-      .find((el): el is HTMLInputElement => el instanceof HTMLInputElement)
-    expect(input?.value).toBe("2026-03-01T08:00")
+    const { user, h } = setup(url(["updated", "gt", "2026-03-01T01:00:00Z"]))
+    const trigger = screen.getByRole("button", { name: /^Updated:/ })
+    const day = new Date(2026, 2, 1).toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    })
+    expect(trigger.textContent).toContain(`${day} 08:00`)
+
+    vi.useFakeTimers({ toFake: ["Date"] })
+    vi.setSystemTime(new Date(2026, 8, 28, 7, 5))
+    await user.click(trigger)
+    await user.click(await screen.findByRole("button", { name: "Now" }))
+    expect(firstRule(h).value).toBe("2026-09-28T07:05")
   })
 
   it("multi select: keeps values the search hides and exposes the checked state", async () => {
@@ -461,20 +477,106 @@ describe.each(BASES)("%s value inputs", (_, Row, inputs, selectRole) => {
     ])
   })
 
-  it("datetime: local date-time inputs for a range", () => {
-    const { h } = setup(
+  it("datetime: a range picks a day and a time for each end", async () => {
+    const { user, h } = setup(
       url(["updated", "between", ["2026-03-01T08:00", "2026-03-02T09:30"]])
     )
-    const from = screen.getByLabelText("Updated From") as HTMLInputElement
-    expect(from.type).toBe("datetime-local")
-    expect(from.value).toBe("2026-03-01T08:00")
+    await user.click(screen.getByRole("button", { name: "Updated From" }))
+    await user.click(
+      await screen.findByRole("button", { name: /March 5(th)?, 2026/ })
+    )
+    expect(firstRule(h).value).toEqual(["2026-03-05T08:00", "2026-03-02T09:30"])
+    const minutes = screen.getByRole("listbox", { name: "Minute" })
+    await user.click(within(minutes).getByRole("option", { name: "45" }))
+    expect(firstRule(h).value).toEqual(["2026-03-05T08:45", "2026-03-02T09:30"])
 
-    fireEvent.change(from, { target: { value: "2026-03-01T07:15" } })
+    await user.click(screen.getByRole("button", { name: "OK" }))
+    const endHours = await waitFor(() => {
+      const list = screen
+        .getAllByRole("listbox", { name: "Hour" })
+        .find((hours) =>
+          within(hours).queryByRole("option", { name: "09", selected: true })
+        )
+      expect(list).toBeDefined()
+      return list!
+    })
+    await user.click(within(endHours).getByRole("option", { name: "10" }))
+    await user.click(screen.getByRole("button", { name: "OK" }))
+    await waitFor(() => expect(screen.queryByRole("listbox")).toBeNull())
     act(() => h.current.draft.apply())
     expect(h.current.applied.state.rules[0]!.value).toEqual([
-      "2026-03-01T07:15",
-      "2026-03-02T09:30",
+      "2026-03-05T08:45",
+      "2026-03-02T10:30",
     ])
+  })
+
+  it("time: picks from the hour and minute columns, or now", async () => {
+    const { user, h } = setup(url(["pickup", "eq", "09:30"]))
+    const trigger = screen.getByRole("button", { name: /^Pickup:/ })
+    expect(trigger.textContent).toContain("09:30")
+
+    await user.click(trigger)
+    const minutes = await screen.findByRole("listbox", { name: "Minute" })
+    await user.click(within(minutes).getByRole("option", { name: "45" }))
+    expect(firstRule(h).value).toBe("09:45")
+    const hours = screen.getByRole("listbox", { name: "Hour" })
+    await user.click(within(hours).getByRole("option", { name: "14" }))
+    expect(firstRule(h).value).toBe("14:45")
+    await user.click(screen.getByRole("button", { name: "OK" }))
+    await waitFor(() => expect(screen.queryByRole("listbox")).toBeNull())
+
+    vi.useFakeTimers({ toFake: ["Date"] })
+    vi.setSystemTime(new Date(2026, 8, 28, 7, 5))
+    await user.click(trigger)
+    await user.click(await screen.findByRole("button", { name: "Now" }))
+    expect(firstRule(h).value).toBe("07:05")
+  })
+
+  it("time: a range picks the start, then moves on to the end", async () => {
+    const { user, h } = setup(url(["pickup", "between", ["08:00", "12:30"]]))
+    await user.click(screen.getByRole("button", { name: "Pickup From" }))
+    const minutes = await screen.findByRole("listbox", { name: "Minute" })
+    await user.click(within(minutes).getByRole("option", { name: "15" }))
+    expect(firstRule(h).value).toEqual(["08:15", "12:30"])
+
+    await user.click(screen.getByRole("button", { name: "OK" }))
+    // The end time's picker opens on its own hour.
+    const endHours = await waitFor(() => {
+      const list = screen
+        .getAllByRole("listbox", { name: "Hour" })
+        .find((hours) =>
+          within(hours).queryByRole("option", { name: "12", selected: true })
+        )
+      expect(list).toBeDefined()
+      return list!
+    })
+    await user.click(within(endHours).getByRole("option", { name: "13" }))
+    expect(firstRule(h).value).toEqual(["08:15", "13:30"])
+    await user.click(screen.getByRole("button", { name: "OK" }))
+    await waitFor(() => expect(screen.queryByRole("listbox")).toBeNull())
+    act(() => h.current.draft.apply())
+    expect(h.current.applied.state.rules[0]!.value).toEqual(["08:15", "13:30"])
+
+    // A range with one side picked is dropped on apply, so that side is flagged.
+    act(() => h.current.draft.setValue(firstRule(h).id, ["", "13:30"]))
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: "Pickup From" }).dataset.invalid
+      ).toBe("true")
+    )
+  })
+
+  it("time: keyboard moves through a column and Enter closes it", async () => {
+    const { user, h } = setup(url(["pickup", "eq", "09:30"]))
+    await user.click(screen.getByRole("button", { name: /^Pickup:/ }))
+    const hours = await screen.findByRole("listbox", { name: "Hour" })
+    await waitFor(() => expect(document.activeElement).toBe(hours))
+    await user.keyboard("{ArrowDown}{ArrowDown}")
+    expect(firstRule(h).value).toBe("11:30")
+    await user.keyboard("{Home}")
+    expect(firstRule(h).value).toBe("00:30")
+    await user.keyboard("{Enter}")
+    await waitFor(() => expect(screen.queryByRole("listbox")).toBeNull())
   })
 
   it("falls back to a text input for a type without one, and takes overrides", () => {

@@ -5,10 +5,11 @@ import type { FieldTypeId } from "@querycn/filter-core"
 
 import { BooleanValueInput } from "@/registry/aria/filter/filter-boolean-value-input"
 import { DateValueInput } from "@/registry/aria/filter/filter-date-value-input"
+import { DateTimeValueInput } from "@/registry/aria/filter/filter-datetime-value-input"
 import type { FilterValueSlotProps } from "@/registry/aria/filter/filter-rule-row"
 import { SelectValueInput } from "@/registry/aria/filter/filter-select-value-input"
+import { TimeValueInput } from "@/registry/aria/filter/filter-time-value-input"
 import {
-  DateTimeValueInput,
   NumberValueInput,
   TextValueInput,
 } from "@/registry/aria/filter/filter-text-value-input"
@@ -26,6 +27,7 @@ export const filterValueInputs: FilterValueInputs = {
   multiSelect: SelectValueInput,
   date: DateValueInput,
   datetime: DateTimeValueInput,
+  time: TimeValueInput,
 }
 
 export interface FilterValueInputProps extends FilterValueSlotProps {

@@ -7,9 +7,8 @@ import {
 import { useAppliedFilter, useFieldOptions } from "@querycn/filter-react"
 
 import {
-  toDateTimeLocal,
   useDateOnlyFormat,
-  useHydrated,
+  useDateTimeFormat,
 } from "@/registry/shared/filter/filter-date-format"
 
 export interface RuleSummary {
@@ -25,8 +24,8 @@ export function useRuleSummary(
   field: FieldDefinition
 ): RuleSummary {
   const { context, messages } = useAppliedFilter()
-  const hydrated = useHydrated()
   const formatDateOnly = useDateOnlyFormat()
+  const formatDateTime = useDateTimeFormat()
   const items = (
     rule.value === null
       ? []
@@ -45,9 +44,7 @@ export function useRuleSummary(
       : field.type === "date"
         ? formatDateOnly(item)
         : field.type === "datetime"
-          ? hydrated
-            ? toDateTimeLocal(item).replace("T", " ")
-            : item
+          ? formatDateTime(item)
           : getLabel(item)
   const arity =
     rule.operator === null

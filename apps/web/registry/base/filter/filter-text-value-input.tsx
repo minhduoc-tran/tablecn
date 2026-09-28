@@ -7,10 +7,6 @@ import { useFilterActions } from "@querycn/filter-react"
 import { cn } from "@/lib/utils"
 import { Input } from "@/registry/base/ui/input"
 import type { FilterValueSlotProps } from "@/registry/base/filter/filter-rule-row"
-import {
-  toDateTimeLocal,
-  useHydrated,
-} from "@/registry/shared/filter/filter-date-format"
 
 const toText = (value: FilterValue | undefined): string =>
   value === null || value === undefined || typeof value === "object"
@@ -23,13 +19,7 @@ function TextLikeInput({
   field,
   arity,
   setValue,
-  type,
-}: FilterValueSlotProps & { type?: "datetime-local" }) {
-  const wide = type === "datetime-local"
-  // A zoned value (e.g. "…Z") shows in local time; the time zone is only known in the browser.
-  const hydrated = useHydrated()
-  const show = (text: string) =>
-    wide && hydrated ? toDateTimeLocal(text) : text
+}: FilterValueSlotProps) {
   const { context, messages } = useFilterActions()
   // Raw text goes into the draft; the field type parses it on apply, so "1." can be typed.
   const invalid = (text: string) =>
@@ -42,8 +32,7 @@ function TextLikeInput({
     props: React.ComponentProps<"input">
   ) => (
     <Input
-      type={type}
-      value={show(text)}
+      value={text}
       onChange={(event) => onText(event.target.value)}
       aria-invalid={invalid(text) || undefined}
       {...props}
@@ -63,7 +52,7 @@ function TextLikeInput({
       <div className="flex items-center gap-1.5">
         {input(from!, (text) => setValue([text, to!]), {
           id,
-          className: wide ? "w-48" : "w-24",
+          className: "w-24",
           placeholder: messages.placeholders.from,
           "aria-invalid": invalid(from!) || missing(from!, to!) || undefined,
           "aria-label": `${field.label} ${messages.placeholders.from}`,
@@ -72,7 +61,7 @@ function TextLikeInput({
           {messages.rangeSeparator}
         </span>
         {input(to!, (text) => setValue([from!, text]), {
-          className: wide ? "w-48" : "w-24",
+          className: "w-24",
           placeholder: messages.placeholders.to,
           "aria-invalid": invalid(to!) || missing(to!, from!) || undefined,
           "aria-label": `${field.label} ${messages.placeholders.to}`,
@@ -84,7 +73,7 @@ function TextLikeInput({
   if (arity !== "single") return null
   return input(toText(rule.value), setValue, {
     id,
-    className: wide ? "w-48" : "w-40",
+    className: "w-40",
     placeholder: messages.placeholders.value,
     "aria-label": field.label,
   })
@@ -97,9 +86,4 @@ export function TextValueInput(props: FilterValueSlotProps) {
 // No `inputMode="decimal"`: iOS's decimal keypad has no minus key.
 export function NumberValueInput(props: FilterValueSlotProps) {
   return <TextLikeInput {...props} />
-}
-
-/** Local date and time as `YYYY-MM-DDTHH:mm`, without a zone; the backend decides how to read it. */
-export function DateTimeValueInput(props: FilterValueSlotProps) {
-  return <TextLikeInput {...props} type="datetime-local" />
 }

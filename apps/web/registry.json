@@ -93,9 +93,39 @@
           "target": "@components/filter/filter-date-value-input.tsx"
         },
         {
+          "path": "registry/{base}/filter/filter-datetime-value-input.tsx",
+          "type": "registry:component",
+          "target": "@components/filter/filter-datetime-value-input.tsx"
+        },
+        {
+          "path": "registry/{base}/filter/filter-time-value-input.tsx",
+          "type": "registry:component",
+          "target": "@components/filter/filter-time-value-input.tsx"
+        },
+        {
+          "path": "registry/{base}/filter/filter-picker-field.tsx",
+          "type": "registry:component",
+          "target": "@components/filter/filter-picker-field.tsx"
+        },
+        {
           "path": "registry/shared/filter/filter-date-format.ts",
           "type": "registry:lib",
           "target": "@components/filter/filter-date-format.ts"
+        },
+        {
+          "path": "registry/shared/filter/filter-time-parts.ts",
+          "type": "registry:lib",
+          "target": "@components/filter/filter-time-parts.ts"
+        },
+        {
+          "path": "registry/shared/filter/filter-time-panel.tsx",
+          "type": "registry:component",
+          "target": "@components/filter/filter-time-panel.tsx"
+        },
+        {
+          "path": "registry/shared/filter/filter-picker-field-parts.ts",
+          "type": "registry:lib",
+          "target": "@components/filter/filter-picker-field-parts.ts"
         },
         {
           "path": "registry/shared/filter/filter-rule-summary.ts",
