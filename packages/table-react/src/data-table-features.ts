@@ -16,6 +16,7 @@ import {
   type RowData,
 } from "@tanstack/react-table"
 
+import type { CellEdit } from "./cell-editing"
 import { columnColorFeature } from "./column-color-feature"
 import type { DataTableColumnMeta } from "./table-layout-state"
 
@@ -31,6 +32,9 @@ export interface DataTableMeta {
   search: string
   /** Writes the search to the URL and goes back to page 1. */
   setSearch: (search: string) => void
+  /** `useDataTable`'s, for the cells of columns with `meta.edit`. */
+  onCellEdit?: (edit: CellEdit<unknown>) => void | Promise<void>
+  canEditCell?: (row: unknown, columnId: string) => boolean
 }
 
 /**

@@ -100,6 +100,14 @@ describe("useDataTable in client mode", () => {
     expect(custom.result.current.options.meta?.pageSizes).toEqual([20, 25, 75])
   })
 
+  it("hands onCellEdit and canEditCell to the UI", () => {
+    const onCellEdit = () => {}
+    const canEditCell = () => true
+    const { result } = setup("", { onCellEdit, canEditCell })
+    expect(result.current.options.meta?.onCellEdit).toBe(onCellEdit)
+    expect(result.current.options.meta?.canEditCell).toBe(canEditCell)
+  })
+
   it("sorts through the URL and goes back to page 1", () => {
     const { adapter, result } = setup("?page=2&per_page=10")
     act(() => result.current.getColumn("amount")!.toggleSorting(true))

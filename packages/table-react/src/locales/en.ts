@@ -49,6 +49,15 @@ export const enTableMessages: TableMessages = {
     error: "Something went wrong.",
     loading: "Loading…",
   },
+  editing: {
+    edit: (column) => `Press Enter to edit ${column}`,
+    saving: "Saving…",
+    saveFailed: "Couldn't save.",
+    invalidNumber: "Enter a number.",
+    search: "Search…",
+    noOptions: "No options.",
+    loadFailed: "Couldn't load the options.",
+  },
   header: {
     move: (column) => `Move column ${column}`,
     resize: (column) => `Resize column ${column}`,

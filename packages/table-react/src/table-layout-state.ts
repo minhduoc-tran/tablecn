@@ -5,6 +5,7 @@ import type {
   ColumnVisibilityState,
 } from "@tanstack/react-table"
 
+import type { CellEditor } from "./cell-editing"
 import type { ColumnColorsState } from "./column-color-feature"
 
 export interface TableLayoutState {
@@ -25,6 +26,8 @@ export interface DataTableColumnMeta {
   defaultPinned?: "start" | "end"
   /** `false` keeps the column where it is, e.g. a selection column. */
   enableOrdering?: boolean
+  /** Lets users edit the column's cells, with `useDataTable`'s `onCellEdit`. */
+  edit?: CellEditor
 }
 
 /** The parts of a column definition the layout reads; TanStack column defs fit. */

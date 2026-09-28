@@ -53,6 +53,15 @@ export const viTableMessages: TableMessages = {
     error: "Đã có lỗi xảy ra.",
     loading: "Đang tải…",
   },
+  editing: {
+    edit: (column) => `Nhấn Enter để sửa ${column}`,
+    saving: "Đang lưu…",
+    saveFailed: "Không lưu được.",
+    invalidNumber: "Nhập một số.",
+    search: "Tìm kiếm…",
+    noOptions: "Không có lựa chọn.",
+    loadFailed: "Không tải được danh sách.",
+  },
   header: {
     move: (column) => `Di chuyển cột ${column}`,
     resize: (column) => `Đổi độ rộng cột ${column}`,

@@ -16,6 +16,7 @@ import { useEffect, useMemo, useState } from "react"
 import {
   dataTableFeatures,
   type DataTableColumnDef,
+  type DataTableMeta,
 } from "./data-table-features"
 import {
   decodeTableParams,
@@ -23,6 +24,7 @@ import {
   DEFAULT_PAGE_SIZES,
   type TableUrlOptions,
 } from "./table-url-codec"
+import type { CellEdit } from "./cell-editing"
 import { getSearchAccessors, searchRows } from "./table-search"
 import { getDefaultLayout, getLayoutColumns } from "./table-layout-state"
 import type { LayoutStorage } from "./layout-storage"
@@ -57,6 +59,15 @@ interface DataTableBaseOptions<TData extends RowData> {
   enableColumnOrdering?: boolean
   /** Reading direction, so resizing follows the pointer in right-to-left layouts. */
   dir?: "ltr" | "rtl"
+  /**
+   * Saves a cell of a column with `meta.edit`; without it, no cell is
+   * editable. Update `data` here, or send the change and refetch. While the
+   * promise is pending the editor waits; if it rejects, the editor stays open
+   * with the error's message, so throw to reject an invalid value.
+   */
+  onCellEdit?: (edit: CellEdit<TData>) => void | Promise<void>
+  /** Which rows can edit a column's cells; defaults to all. */
+  canEditCell?: (row: TData, columnId: string) => boolean
 }
 
 /** `data` is one page, already filtered and sorted by the backend. */
@@ -260,6 +271,8 @@ export function useDataTable<TData extends RowData>(
       resetLayout: layout.reset,
       search: urlState.search,
       setSearch: urlState.onSearchChange,
+      onCellEdit: options.onCellEdit as DataTableMeta["onCellEdit"],
+      canEditCell: options.canEditCell as DataTableMeta["canEditCell"],
     },
   })
 }

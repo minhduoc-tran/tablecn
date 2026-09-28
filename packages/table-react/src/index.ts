@@ -52,6 +52,14 @@ export type {
   DataTableFeatures,
   DataTableMeta,
 } from "./data-table-features"
+export { formatCellText, parseCellText } from "./cell-editing"
+export type {
+  CellEdit,
+  CellEditor,
+  CellEditorOption,
+  CellEditorType,
+  ParsedCellText,
+} from "./cell-editing"
 export { mergeTableMessages } from "./table-messages"
 export type { TableMessages, TableMessagesOverrides } from "./table-messages"
 export { enTableMessages } from "./locales/en"

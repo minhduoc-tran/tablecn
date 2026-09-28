@@ -36,6 +36,18 @@ export interface TableMessages {
   search: Labels<"label" | "placeholder" | "clear">
   actions: Labels<"reload" | "clearFilters" | "retry">
   states: Labels<"empty" | "error" | "loading">
+  /** Inline editing of cells. */
+  editing: Labels<
+    | "saving"
+    | "saveFailed"
+    | "invalidNumber"
+    | "search"
+    | "noOptions"
+    | "loadFailed"
+  > & {
+    /** What an editable cell tells screen readers, e.g. "Edit Amount". */
+    edit: (column: string) => string
+  }
   /** Column header controls and what screen readers hear while moving a column. */
   header: {
     move: (column: string) => string
