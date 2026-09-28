@@ -27,7 +27,12 @@ export const enTableMessages: TableMessages = {
     violet: "Violet",
     pink: "Pink",
   },
-  sorting: { asc: "Ascending", desc: "Descending", clear: "Clear sort" },
+  sorting: {
+    label: "Sort by",
+    asc: "Ascending",
+    desc: "Descending",
+    clear: "Clear sort",
+  },
   pagination: {
     label: "Pagination",
     rowsPerPage: "Rows per page",
@@ -43,11 +48,17 @@ export const enTableMessages: TableMessages = {
     clear: "Clear selection",
   },
   search: { label: "Search", placeholder: "Search…", clear: "Clear search" },
-  actions: { reload: "Reload", clearFilters: "Clear filters", retry: "Retry" },
+  actions: {
+    reload: "Reload",
+    clearFilters: "Clear filters",
+    retry: "Retry",
+    loadMore: "Load more",
+  },
   states: {
     empty: "No results.",
     error: "Something went wrong.",
     loading: "Loading…",
+    loadingMore: "Loading more…",
   },
   header: {
     move: (column) => `Move column ${column}`,

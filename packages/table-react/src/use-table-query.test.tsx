@@ -65,6 +65,37 @@ describe("useTableQuery", () => {
     )
   })
 
+  it("gives the params of any page with the same filter and sort", () => {
+    const adapter = createMemoryAdapter("?status__contains=paid&sort=-amount")
+    const { result } = renderHook(
+      () => useTableQuery({ columns: COLUMNS, serializer }),
+      { wrapper: withFilter(adapter) }
+    )
+    expect(result.current.getPageParams(2)).toEqual({
+      status__icontains: "paid",
+      ordering: "-amount",
+      page: "3",
+      page_size: "20",
+    })
+  })
+
+  it("ignores the URL's page when infinite", () => {
+    const adapter = createMemoryAdapter("?sort=-amount&page=3")
+    const { result } = renderHook(
+      () => useTableQuery({ columns: COLUMNS, serializer, infinite: true }),
+      { wrapper: withFilter(adapter) }
+    )
+    const { queryKey } = result.current
+    expect(result.current.params).toEqual({
+      ordering: "-amount",
+      page: "1",
+      page_size: "20",
+    })
+    act(() => adapter.write({ page: "4" }))
+    expect(result.current.queryKey).toBe(queryKey)
+    expect(result.current.getPageParams(1).page).toBe("2")
+  })
+
   it("changes its key only when the filter, sort or page does", () => {
     const adapter = createMemoryAdapter("?sort=amount")
     const { result } = renderHook(

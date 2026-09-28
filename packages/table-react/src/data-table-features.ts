@@ -31,7 +31,16 @@ export interface DataTableMeta {
   search: string
   /** Writes the search to the URL and goes back to page 1. */
   setSearch: (search: string) => void
+  /** Rows as a table or as cards; `auto` picks cards below `cardBreakpoint`. */
+  view: DataTableView
+  /** How the card view moves past the first rows. */
+  cardMode: DataTableCardMode
+  /** Viewport width, in pixels, below which `auto` shows cards. */
+  cardBreakpoint: number
 }
+
+export type DataTableView = "auto" | "table" | "cards"
+export type DataTableCardMode = "pages" | "infinite"
 
 /**
  * Every feature `useDataTable` turns on. The row models only run in client

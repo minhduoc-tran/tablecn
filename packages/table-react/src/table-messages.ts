@@ -22,7 +22,7 @@ export interface TableMessages {
   colors: Labels<
     "red" | "orange" | "amber" | "green" | "teal" | "blue" | "violet" | "pink"
   >
-  sorting: Labels<"asc" | "desc" | "clear">
+  sorting: Labels<"label" | "asc" | "desc" | "clear">
   pagination: Labels<
     | "label"
     | "rowsPerPage"
@@ -34,8 +34,8 @@ export interface TableMessages {
   >
   selection: Labels<"selectAll" | "selectRow" | "clear">
   search: Labels<"label" | "placeholder" | "clear">
-  actions: Labels<"reload" | "clearFilters" | "retry">
-  states: Labels<"empty" | "error" | "loading">
+  actions: Labels<"reload" | "clearFilters" | "retry" | "loadMore">
+  states: Labels<"empty" | "error" | "loading" | "loadingMore">
   /** Column header controls and what screen readers hear while moving a column. */
   header: {
     move: (column: string) => string

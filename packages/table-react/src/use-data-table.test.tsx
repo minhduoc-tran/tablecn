@@ -100,6 +100,24 @@ describe("useDataTable in client mode", () => {
     expect(custom.result.current.options.meta?.pageSizes).toEqual([20, 25, 75])
   })
 
+  it("passes the card view options to the UI, with defaults", () => {
+    expect(setup().result.current.options.meta).toMatchObject({
+      view: "auto",
+      cardMode: "pages",
+      cardBreakpoint: 768,
+    })
+    const custom = setup("", {
+      view: "cards",
+      cardMode: "infinite",
+      cardBreakpoint: 640,
+    })
+    expect(custom.result.current.options.meta).toMatchObject({
+      view: "cards",
+      cardMode: "infinite",
+      cardBreakpoint: 640,
+    })
+  })
+
   it("sorts through the URL and goes back to page 1", () => {
     const { adapter, result } = setup("?page=2&per_page=10")
     act(() => result.current.getColumn("amount")!.toggleSorting(true))
