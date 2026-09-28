@@ -14,6 +14,7 @@ export interface Order {
 }
 
 const CITIES = ["Hà Nội", "Hồ Chí Minh", "Đà Nẵng", "Singapore", "Bangkok"]
+export const cityOptions = CITIES.map((city) => ({ label: city, value: city }))
 
 // One field per filter type: text, select, multiSelect, number, boolean, date, time, datetime.
 export const orderFields: FieldDefinition[] = [
@@ -32,7 +33,7 @@ export const orderFields: FieldDefinition[] = [
     name: "city",
     label: "City",
     type: "multiSelect",
-    options: CITIES.map((city) => ({ label: city, value: city })),
+    options: cityOptions,
   },
   { name: "amount", label: "Amount", type: "number", defaultOperator: "gte" },
   { name: "shipped", label: "Shipped", type: "boolean" },

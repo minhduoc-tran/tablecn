@@ -84,6 +84,12 @@ const money = new Intl.NumberFormat("en-US", {
 
 const helper = createDataTableColumnHelper<Order>()
 
+const statusOptions = [
+  { label: "Paid", value: "paid" },
+  { label: "Pending", value: "pending" },
+  { label: "Refunded", value: "refunded" },
+]
+
 const columns = [
   createSelectionColumn<Order>(),
   helper.accessor("id", {
@@ -91,10 +97,15 @@ const columns = [
     size: 110,
     meta: { defaultPinned: "start" },
   }),
-  helper.accessor("customer", { header: "Customer", size: 200 }),
+  helper.accessor("customer", {
+    header: "Customer",
+    size: 200,
+    meta: { edit: { type: "text" } },
+  }),
   helper.accessor("status", {
     header: "Status",
     size: 110,
+    meta: { edit: { type: "select", options: statusOptions } },
     cell: ({ getValue }) => {
       const status = getValue<Order["status"]>()
       return (
@@ -108,6 +119,7 @@ const columns = [
     header: "Amount",
     size: 120,
     sortDescFirst: true,
+    meta: { edit: { type: "number" } },
     cell: ({ getValue }) => (
       <span className="tabular-nums">{money.format(getValue<number>())}</span>
     ),
@@ -126,11 +138,18 @@ const columns = [
 /** Toolbar, table and pagination over made-up orders, filtered and sorted in the browser. */
 export function OrdersDemo() {
   const [isRefreshing, setIsRefreshing] = React.useState(false)
+  const [orders, setOrders] = React.useState(ORDERS)
   const table = useDataTable({
-    data: ORDERS,
+    data: orders,
     columns,
     getRowId: (order) => order.id,
     storageKey: "tablecn-docs-orders",
+    onCellEdit: ({ rowId, columnId, value }) =>
+      setOrders((current) =>
+        current.map((order) =>
+          order.id === rowId ? { ...order, [columnId]: value } : order
+        )
+      ),
   })
 
   return (

@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { parseDateOnly } from "@querycn/filter-core"
+import { filterOptions, parseDateOnly } from "@querycn/filter-core"
 import { NextFilterProvider } from "@querycn/filter-next"
 import {
   createDataTableColumnHelper,
@@ -20,7 +20,7 @@ import { DataTableToolbar } from "@/components/data-table/data-table-toolbar"
 import { FilterBuilder } from "@/components/filter/filter-builder"
 import { FilterChips } from "@/components/filter/filter-chips"
 
-import { ORDERS, orderFields, type Order } from "./orders-data"
+import { cityOptions, ORDERS, orderFields, type Order } from "./orders-data"
 
 const statusVariant = {
   paid: "default",
@@ -48,6 +48,19 @@ const formatDay = (day: string) => {
 
 const helper = createDataTableColumnHelper<Order>()
 
+// Stands in for your API: the cities matching what the user types.
+async function loadCities(search: string, signal: AbortSignal) {
+  await new Promise((resolve) => setTimeout(resolve, 300))
+  signal.throwIfAborted()
+  return [...filterOptions(cityOptions, search)]
+}
+
+const statusOptions = [
+  { label: "Paid", value: "paid" },
+  { label: "Pending", value: "pending" },
+  { label: "Refunded", value: "refunded" },
+]
+
 const columns = [
   createSelectionColumn<Order>(),
   helper.accessor("id", {
@@ -55,7 +68,11 @@ const columns = [
     size: 110,
     meta: { defaultPinned: "start" },
   }),
-  helper.accessor("customer", { header: "Customer", size: 180 }),
+  helper.accessor("customer", {
+    header: "Customer",
+    size: 180,
+    meta: { edit: { type: "text" } },
+  }),
   helper.accessor("email", {
     header: "Email",
     size: 230,
@@ -64,6 +81,7 @@ const columns = [
   helper.accessor("status", {
     header: "Status",
     size: 110,
+    meta: { edit: { type: "select", options: statusOptions } },
     cell: ({ getValue }) => {
       const status = getValue<Order["status"]>()
       return (
@@ -73,10 +91,15 @@ const columns = [
       )
     },
   }),
-  helper.accessor("city", { header: "City", size: 140 }),
+  helper.accessor("city", {
+    header: "City",
+    size: 140,
+    meta: { edit: { type: "select", loadOptions: loadCities } },
+  }),
   helper.accessor("shipped", {
     header: "Shipped",
     size: 100,
+    meta: { edit: { type: "boolean" } },
     cell: ({ getValue }) =>
       getValue<boolean>() ? (
         <CheckIcon aria-label="Shipped" className="size-4" />
@@ -114,7 +137,7 @@ const columns = [
     header: "Amount",
     size: 120,
     sortDescFirst: true,
-    meta: { defaultPinned: "end" },
+    meta: { defaultPinned: "end", edit: { type: "number" } },
     cell: ({ getValue }) => (
       <span className="tabular-nums">{money.format(getValue<number>())}</span>
     ),
@@ -137,6 +160,18 @@ function OrdersTable() {
       defaultSorting: [{ id: "createdAt", desc: true }],
     },
     enableRowSelection: (row) => row.original.status !== "refunded",
+    // Stands in for saving to your API: throw to keep the editor open with a message.
+    onCellEdit: async ({ rowId, columnId, value }) => {
+      await new Promise((resolve) => setTimeout(resolve, 400))
+      if (columnId === "amount" && (value === null || (value as number) < 0)) {
+        throw new Error("Enter an amount of 0 or more.")
+      }
+      setOrders((current) =>
+        current.map((order) =>
+          order.id === rowId ? { ...order, [columnId]: value } : order
+        )
+      )
+    },
   })
 
   const update = (ids: string[], change: (order: Order) => Order | null) => {

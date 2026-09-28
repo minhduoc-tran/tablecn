@@ -7,7 +7,7 @@ import { FullExamplePreview } from "@/components/docs/full-example/full-example-
 
 <FullExamplePreview />
 
-**Try it:** search `da nang`, filter by *Pickup* between two times, *Created at* between two moments or *City* is any of two cities, sort by several columns with Shift, then select a few rows and **Mark as shipped** or **Delete** them. Reload: the search, filter, sort and page come back from the URL, and the column layout from your browser.
+**Try it:** search `da nang`, filter by *Pickup* between two times, *Created at* between two moments or *City* is any of two cities, sort by several columns with Shift, then select a few rows and **Mark as shipped** or **Delete** them. Double-click a customer, status, city, shipped or amount to edit it: the city searches a fake API, and a negative amount is refused. Reload: the search, filter, sort and page come back from the URL, and the column layout from your browser.
 
 ## What's in it
 
@@ -15,6 +15,7 @@ import { FullExamplePreview } from "@/components/docs/full-example/full-example-
 - A [filter](/docs/filter/fields) for each field type: text, select, multi-select, number, yes/no, date, time of day, and date with time.
 - [Sorting](/docs/table/sorting), newest orders first by default, and [pages](/docs/table/url-state) of 10 to 100 rows.
 - [Row selection](/docs/table/selection) with bulk actions. Refunded orders can't be selected.
+- [Inline editing](/docs/table/editing) of the customer, status, city, shipped and amount, saved after a fake 400 ms request that refuses negative amounts. The city's options come from a [search in a fake API](/docs/table/editing#options-from-your-api).
 - The order id [pinned](/docs/table/column-pinning) to the start, the amount to the end, and the email [hidden](/docs/table/column-visibility) until turned on in **Columns**.
 - Columns users can [move](/docs/table/column-ordering), [resize](/docs/table/column-sizing) and [color](/docs/table/column-colors), [saved](/docs/table/layout) in `localStorage`.
 - A reload button with the loading state.

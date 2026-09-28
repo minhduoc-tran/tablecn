@@ -32,6 +32,7 @@
 - **Search** — Across columns, ignoring case and accents: `nguyen ha noi` finds "Nguyễn Văn An" in "Hà Nội"
 - **Everything in the URL** — `?q=nguyen&status__eq=paid&sort=-amount&page=2`: shareable links, back/forward, a new filter goes back to page 1
 - **Client or server data** — Filter, sort and page in the browser, or send the URL to JSON:API, Django REST framework, PostgREST or your own backend
+- **Inline editing** — Double-click or press Enter on a cell, save it to your backend, and show its errors under the cell
 - **A layout users keep** — Drag, pin, resize, hide and color columns, saved in the browser and merged with the columns you ship later
 - **Thousands of rows** — Virtualization with the sticky header and pinned columns intact
 - **Three primitive libraries** — Every block in Radix UI, Base UI and React Aria, with the same props

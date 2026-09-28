@@ -85,6 +85,11 @@ The table itself: sticky header, pinned columns, sortable, resizable and reorder
     skeletonRows: { description: "How many skeleton rows the first load shows.", type: "number", default: "5" },
     virtualize: { description: "Renders only the rows in view. See Virtualization.", type: "boolean", default: "false" },
     estimateRowHeight: { description: "A row's height before it's measured, with virtualize.", type: "number", default: "37" },
+    cellEditors: {
+      description: "Editors by meta.edit type for editable cells, e.g. { ...cellEditors, rating: RatingEditor }. See Inline editing.",
+      type: "Record<string, React.ComponentType<CellEditorProps>>",
+      default: "cellEditors (text, number, select)",
+    },
     className: { description: "Classes for the scroll container, e.g. its height.", type: "string" },
   }}
 />
@@ -98,6 +103,8 @@ The header cells are rendered for you (`DataTableColumnHeader`, one per column):
 - **Drag** the header's end edge to resize: a line through the rows previews the new edge, and the width applies on release. Double-click the edge to fit the content. See [Layout & persistence](/docs/table/layout).
 - **⋯** (on hover or focus) or a **right-click** opens the column's menu: sort, pin, fit to content, color and hide. See [The column menu](/docs/table/layout#the-column-menu).
 - `meta.required` adds a red `*` after the title. See [Columns](/docs/table/columns).
+
+Cells of columns with `meta.edit` can be edited in place when `useDataTable` has `onCellEdit`: <kbd>Enter</kbd>, <kbd>F2</kbd> or a double click opens the editor. See [Inline editing](/docs/table/editing).
 
 ## createSelectionColumn
 
@@ -217,6 +224,7 @@ The selected rows' count, your actions, and **Clear selection**. `DataTableToolb
 - **Toolbar**: when a control that has focus goes away (**Clear filters**, **Clear selection**, an action that deletes the selected rows), focus moves to the toolbar.
 - **Reload** stays focusable while `isRefreshing`, marked as disabled.
 - **Selection checkboxes** are labelled "Select all" and "Select row".
+- **Editable cells** are focusable with <kbd>Tab</kbd> and described as "Press Enter to edit *Column*". <kbd>Enter</kbd> or <kbd>F2</kbd> opens the editor, <kbd>Esc</kbd> closes it, and the focus comes back to the cell. A save error is a `role="alert"` under the cell. See [Inline editing](/docs/table/editing#using-it).
 - With `virtualize`, the table has `aria-rowcount` and each row `aria-rowindex`, so screen readers count every row of the page.
 
 <Cards>

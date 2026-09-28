@@ -51,9 +51,10 @@ packages/{eslint,typescript}-config   Shared tooling (private)
 | URL | `table-url-codec.ts` (`sort`/`page`/`per_page`/`q`, `resetPagePatch`), `table-url-options.ts`, `use-table-url-state.ts` (shares the filter's adapter) |
 | Layout | `table-layout-state.ts` (defaults, `parseLayout` merge), `layout-storage.ts`, `use-table-layout.ts` (localStorage, cross-tab) |
 | Backend | `table-params-serializers.ts` (JSON:API, DRF, PostgREST), `use-table-query.ts`, `server.ts` (`parseTableParams`) |
+| Editing | `cell-editing.ts` (`meta.edit` types, `CellEdit`, `parseCellText`); `onCellEdit` / `canEditCell` go to the table meta |
 | i18n | `table-messages.ts`, `locales/en.ts`, `locales/vi.ts` |
 
-Registry `data-table` block: `DataTable` (+ `data-table-body`, virtualization via `@tanstack/react-virtual`), column header (sort, resize, dnd-kit reorder), pagination, view options (Columns menu), search box, toolbar, selection bar, selection column.
+Registry `data-table` block: `DataTable` (+ `data-table-body`, virtualization via `@tanstack/react-virtual`), column header (sort, resize, dnd-kit reorder), pagination, view options (Columns menu), search box, toolbar, selection bar, selection column, inline editing (`data-table-editable-cell`, `data-table-cell-editors`, shared `use-cell-editing`).
 
 ## Data flow
 

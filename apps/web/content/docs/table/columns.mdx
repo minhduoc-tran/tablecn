@@ -97,6 +97,10 @@ column.accessor("createdAt", { header: "Created", meta: { defaultHidden: true } 
       type: "boolean",
       default: "true",
     },
+    edit: {
+      description: "Lets users edit the column's cells, with the editor for this type. Needs onCellEdit in useDataTable. See Inline editing.",
+      type: '{ type: "text" | "number" | "boolean" | "select" | string; options?: { label: string; value: string }[]; loadOptions?: (search, signal) => Promise<{ label: string; value: string }[]> }',
+    },
   }}
 />
 

@@ -1,0 +1,361 @@
+---
+title: Inline editing
+description: Edit a cell where it is. Enter or a double click opens its editor, Enter saves, and a failed save shows its error under the cell.
+---
+
+import { TablePreview } from "@/components/docs/table-preview"
+
+<TablePreview />
+
+**Try it:** double-click a customer, a status or an amount, change it and press <kbd>Enter</kbd>. Or <kbd>Tab</kbd> to a cell and press <kbd>Enter</kbd> or <kbd>F2</kbd>. <kbd>Esc</kbd> cancels.
+
+Each cell saves on its own, as soon as the user confirms it. There is no edit mode for a whole row, and no **Save all** button.
+
+## Make a column editable
+
+It takes two things:
+
+1. `meta.edit` on each column users may edit, with the editor it opens.
+2. `onCellEdit` in `useDataTable`, which saves the change. Without it, no cell is editable.
+
+```tsx title="components/orders-table.tsx"
+const helper = createDataTableColumnHelper<Order>()
+
+const columns = [
+  helper.accessor("id", { header: "Order" }), // read-only
+  helper.accessor("customer", {
+    header: "Customer",
+    meta: { edit: { type: "text" } }, // [!code highlight]
+  }),
+  helper.accessor("status", {
+    header: "Status",
+    meta: {
+      edit: {
+        type: "select", // [!code highlight]
+        options: [
+          { label: "Paid", value: "paid" },
+          { label: "Pending", value: "pending" },
+        ],
+      },
+    },
+  }),
+  helper.accessor("amount", {
+    header: "Amount",
+    meta: { edit: { type: "number" } }, // [!code highlight]
+  }),
+  helper.accessor("shipped", {
+    header: "Shipped",
+    meta: { edit: { type: "boolean" } }, // [!code highlight]
+  }),
+]
+
+export function OrdersTable({ initialOrders }: { initialOrders: Order[] }) {
+  const [orders, setOrders] = React.useState(initialOrders)
+  const table = useDataTable({
+    data: orders,
+    columns,
+    getRowId: (order) => order.id,
+    onCellEdit: ({ rowId, columnId, value }) => // [!code highlight]
+      setOrders((current) => // [!code highlight]
+        current.map((order) => // [!code highlight]
+          order.id === rowId ? { ...order, [columnId]: value } : order // [!code highlight]
+        ) // [!code highlight]
+      ), // [!code highlight]
+  })
+  return <DataTable table={table} />
+}
+```
+
+The cell keeps rendering what its `cell` function returns: a badge, a formatted amount, a check icon. Only the editor works with the raw value.
+
+### Editors
+
+| `type` | Editor | Value `onCellEdit` gets |
+| --- | --- | --- |
+| `text` | A text input | the text as typed, `""` when emptied |
+| `number` | A text input that must hold a number | a `number`, or `null` when emptied |
+| `select` | The option list, open right away. With `loadOptions`, a search box over your API's options | the picked option's `value` (a `string`), and the option in `option` |
+| `boolean` | None: the cell flips | `true` or `false` |
+| another id | Yours, from [`cellEditors`](#your-own-editor), else a text input | whatever your editor saves |
+
+- **Numbers** are read with `Number()`: `12.5`, `-3` and `1e3` work. Text that isn't a number, like `12,5` or `abc`, shows *Enter a number.* under the cell and isn't sent to `onCellEdit`.
+- **Select** offers the `options` you list, or, with `loadOptions`, what your API returns for what the user types. See [Options from your API](#options-from-your-api).
+- **Boolean** cells have no editor: <kbd>Enter</kbd>, <kbd>F2</kbd> or a double click saves the opposite value right away.
+
+## Options from your API
+
+For a list too long to ship, or one that changes (customers, products, users), give the select `loadOptions` instead of `options`. The editor opens with a search box, asks your API for the first options, and asks again as the user types:
+
+```tsx title="Customers from your API"
+// Outside your components: the lists are cached per function.
+async function loadCustomers(search: string, signal: AbortSignal) {
+  const response = await fetch(
+    `/api/customers?search=${encodeURIComponent(search)}&limit=20`,
+    { signal }
+  )
+  if (!response.ok) throw new Error("Couldn't load customers.")
+  const customers: { id: string; name: string }[] = await response.json()
+  return customers.map((customer) => ({
+    label: customer.name,
+    value: customer.id,
+  }))
+}
+
+const columns = [
+  helper.accessor("customerId", {
+    header: "Customer",
+    // The cell shows the name; the editor saves the id.
+    cell: ({ row }) => row.original.customerName,
+    meta: { edit: { type: "select", loadOptions: loadCustomers } }, // [!code highlight]
+  }),
+]
+```
+
+`loadOptions(search, signal){:ts}` returns `{ label, value }[]`, like a [filter field's](/docs/filter/fields#loaded-from-your-api) (the same function works for both):
+
+- It's called with `""` when the list opens, then with what the user types, 300 ms after they stop. Your API does the matching.
+- A request the user typed past is aborted through `signal`. Pass it to `fetch`.
+- Each search's result is cached for the page session, per function. Define `loadOptions` outside your components, or in a `useMemo`: a new function every render means a new cache and a new request. To drop the cached lists, after creating a customer say, call `clearFieldOptionsCache()` from `@querycn/filter-react`.
+- While a search loads, *Loading…* shows over the previous list. If it rejects, the list shows *Couldn't load the options.* and **Retry**. An empty result shows *No options.*
+- With `loadOptions`, `options` is ignored.
+
+The editor's button shows the cell as the table renders it, so a value whose option isn't loaded yet still reads as the customer's name, not its id.
+
+### Save the label too
+
+The table only knows the id. To show the new name before your data is refetched, use `option`, the picked `{ label, value }`:
+
+```tsx title="Save the id, show the name"
+onCellEdit: async ({ rowId, columnId, value, option }) => {
+  await saveOrder(rowId, { [columnId]: value })
+  if (columnId === "customerId") {
+    setOrders((current) =>
+      current.map((order) =>
+        order.id === rowId
+          ? { ...order, customerId: String(value), customerName: option!.label }
+          : order
+      )
+    )
+  }
+}
+```
+
+In [server mode](#rows-from-your-backend), refetching after the save is enough: the new row comes with the new name.
+
+## Save the change
+
+`onCellEdit` gets one object per saved cell:
+
+<TypeTable
+  type={{
+    row: { description: "The row's data, as it was before the edit.", type: "TData" },
+    rowId: { description: "The row's id from getRowId.", type: "string" },
+    columnId: { description: "The column's id, e.g. customer_name for the accessor customer.name.", type: "string" },
+    value: { description: "The new value, from the editor.", type: "unknown" },
+    previous: { description: "The value the cell showed, from the column's accessor.", type: "unknown" },
+    option: { description: "From a select: the picked option, with its label.", type: "{ label: string; value: string } | undefined" },
+  }}
+/>
+
+It's only called when the value changed: opening an editor and leaving it as it was saves nothing.
+
+### Rows in the browser
+
+In [client mode](/docs/table/server-data#client-mode), update your rows and pass a new array, as in the example above. The table then filters, sorts and pages the new rows. If the user edits the column the table is sorted or filtered by, the row can move, or leave the page.
+
+### Rows from your backend
+
+Return a promise. While it's pending, the editor stays open and read-only, with a spinner in the cell. When it resolves, the editor closes; when it rejects, it stays open with the error (see [below](#validate-and-show-errors)).
+
+```tsx title="Saving to your API, with TanStack Query"
+const queryClient = useQueryClient()
+
+const table = useDataTable({
+  mode: "server",
+  data: orders.data?.rows ?? [],
+  rowCount: orders.data?.total,
+  columns,
+  getRowId: (order) => order.id,
+  onCellEdit: async ({ rowId, columnId, value }) => {
+    const response = await fetch(`/api/orders/${rowId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ [columnId]: value }),
+    })
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}))
+      throw new Error(body.message ?? "Couldn't save the order.")
+    }
+    // Waiting for the refetch keeps the spinner until the new value is in `data`.
+    await queryClient.invalidateQueries({ queryKey: ["orders"] })
+  },
+})
+```
+
+- Awaiting the refetch matters: if `onCellEdit` resolved first, the cell would show the old value for a moment.
+- For a faster feel, update the cached page with `queryClient.setQueryData` before the request, and put it back if the request fails.
+- Column ids are the table's, not always your API's field names. Map them if they differ: `{ customer_name: "customerName" }[columnId]`.
+
+## Validate and show errors
+
+Throw an `Error` in `onCellEdit`, or return a promise that rejects with one. Its `message` shows under the cell, the editor stays open with what the user typed, and nothing is saved. The user fixes it and presses <kbd>Enter</kbd> again, or gives up with <kbd>Esc</kbd>.
+
+```tsx title="Validation"
+onCellEdit: async ({ columnId, value, rowId }) => {
+  if (columnId === "amount" && (value === null || (value as number) < 0)) {
+    throw new Error("Enter an amount of 0 or more.")
+  }
+  if (columnId === "customer" && String(value).trim() === "") {
+    throw new Error("A customer needs a name.")
+  }
+  await saveOrder(rowId, { [columnId]: value })
+}
+```
+
+- Errors from your backend work the same way: throw with the message you want users to read.
+- An error without a message, or something thrown that isn't an `Error`, shows `messages.editing.saveFailed` (*Couldn't save.*).
+- The message is a `role="alert"`, so screen readers read it out, and the input is marked `aria-invalid`.
+- A boolean cell that fails to save keeps its old value and shows the error under it.
+
+## Which cells can be edited
+
+`meta.edit` decides per column. To decide per row too, pass `canEditCell`:
+
+```tsx title="Refunded orders are read-only"
+const table = useDataTable({
+  data: orders,
+  columns,
+  getRowId: (order) => order.id,
+  onCellEdit: saveCell,
+  canEditCell: (order, columnId) =>
+    order.status !== "refunded" || columnId === "status", // [!code highlight]
+})
+```
+
+Cells it turns down look and behave like any read-only cell: they can't be focused or opened. Keep it fast, it runs for every editable cell on every render.
+
+## Using it
+
+| Action | Mouse | Keyboard |
+| --- | --- | --- |
+| Go to a cell | | <kbd>Tab</kbd>: every editable cell is focusable |
+| Open its editor | Double-click | <kbd>Enter</kbd> or <kbd>F2</kbd> |
+| Save | Click outside the editor | <kbd>Enter</kbd>, or <kbd>Tab</kbd> away |
+| Cancel | | <kbd>Esc</kbd> |
+| Pick a select option | Click it | <kbd>↑</kbd> / <kbd>↓</kbd>, then <kbd>Enter</kbd> |
+| Search an API select | | Type: the search box has focus when the list opens |
+
+- After <kbd>Enter</kbd> or <kbd>Esc</kbd>, the focus goes back to the cell, so users can move on with <kbd>Tab</kbd> and edit the next one without the mouse. After a click outside, it stays where the user clicked.
+- The text editor opens with its content selected: typing replaces it, <kbd>←</kbd> / <kbd>→</kbd> keep it.
+- Closing a select's list without picking an option cancels. Picking the option already selected saves nothing.
+- Screen readers hear the cell's content, then "Press Enter to edit *Column*" (`messages.editing.edit`).
+
+### Clicks on editable cells
+
+- A single click is still a row click: `onRowClick` runs, and nothing opens. So a table can open a row's details on click and edit cells on double click.
+- A double click in an editable cell opens the editor, and doesn't call `onRowDoubleClick`. A double click on a read-only cell of the same row still does.
+- A double click starts with a click. With `onRowClick` set, it runs on the first click, before the editor opens. If `onRowClick` navigates away, users can only edit from the keyboard; open the details from a button in the row instead.
+
+## Your own editor
+
+An editor is a component that gets `CellEditorProps`. Give it a type id in `meta.edit`, and pass it to `DataTable` with the built-in ones:
+
+```tsx title="A 1–5 rating"
+import {
+  cellEditors,
+  type CellEditorProps,
+} from "@/components/data-table/data-table-cell-editors"
+
+function RatingEditor({ value, label, onSave, onCancel }: CellEditorProps) {
+  const current = typeof value === "number" ? value : 0
+  return (
+    <div
+      role="group"
+      aria-label={label}
+      className="flex"
+      onKeyDown={(event) => {
+        if (event.key === "Escape") onCancel()
+      }}
+      onBlur={(event) => {
+        // Leaving the group without a pick cancels; focus stays where it went.
+        if (!event.currentTarget.contains(event.relatedTarget)) onCancel(false)
+      }}
+    >
+      {[1, 2, 3, 4, 5].map((stars) => (
+        <button
+          key={stars}
+          type="button"
+          autoFocus={stars === Math.max(current, 1)}
+          aria-pressed={stars <= current}
+          aria-label={`${stars} stars`}
+          // Keeps the focus in the group: Safari doesn't focus a clicked button.
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={() => (stars === current ? onCancel() : onSave(stars))}
+        >
+          {stars <= current ? "★" : "☆"}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+const columns = [
+  helper.accessor("rating", {
+    header: "Rating",
+    meta: { edit: { type: "rating" } }, // [!code highlight]
+  }),
+]
+
+<DataTable table={table} cellEditors={{ ...cellEditors, rating: RatingEditor }} /> // [!code highlight]
+```
+
+<TypeTable
+  type={{
+    value: { description: "The cell's value when the editor opened.", type: "unknown" },
+    editor: { description: "The column's meta.edit, with its options.", type: "CellEditor" },
+    label: { description: "The column's name, for the editor's aria-label.", type: "string" },
+    display: { description: "The cell's content as the table renders it, e.g. for a button that opens a list.", type: "React.ReactNode" },
+    messages: { description: "The table's messages, e.g. messages.editing.", type: "TableMessages" },
+    saving: { description: "true while onCellEdit's promise is pending. Keep the editor open but stop changes.", type: "boolean" },
+    invalid: { description: "true while an error shows under the cell. Set aria-invalid with it.", type: "boolean" },
+    onSave: {
+      description: "Saves a value. Pass focusCell: false when the save comes from a blur, so the focus stays where the user moved it, and option to hand onCellEdit the picked option.",
+      type: "(value: unknown, options?: { focusCell?: boolean; option?: { label: string; value: string } }) => void",
+    },
+    onCancel: { description: "Closes the editor without saving. focusCell as for onSave.", type: "(focusCell?: boolean) => void" },
+    onError: { description: "Shows an error without saving, e.g. when the input can't be read.", type: "(message: string) => void" },
+  }}
+/>
+
+- The editor renders inside the cell, so keep it about one line high (`h-7`). Popovers and menus can be as big as they need.
+- Focus something when it mounts (`autoFocus`), or keyboard users land nowhere.
+- `TextCellEditor` and `SelectCellEditor` are exported too, if you only need to wrap one. `SearchSelectCellEditor` (in `data-table-search-select-editor.tsx`) is the one `SelectCellEditor` uses with `loadOptions`.
+- You can also replace a built-in editor: `{ ...cellEditors, text: MyTextEditor }`.
+
+## Translate
+
+The `editing` group of the [table messages](/docs/table/customization#translate-the-ui):
+
+| Key | Default |
+| --- | --- |
+| `edit(column){:ts}` | "Press Enter to edit *column*", read by screen readers on editable cells |
+| `saving` | "Saving…", the spinner's name |
+| `saveFailed` | "Couldn't save.", for errors without a message |
+| `invalidNumber` | "Enter a number." |
+| `search` | "Search…", the search box of a select with `loadOptions` |
+| `noOptions` | "No options.", when the API returns none |
+| `loadFailed` | "Couldn't load the options.", when `loadOptions` rejects (with **Retry**, from `actions.retry`) |
+
+Your own error messages come from `onCellEdit`, so translate them there.
+
+## Limitations
+
+- **One cell at a time.** There's no row edit mode, no **Save all**, no undo and no pasting into several cells.
+- **With [virtualization](/docs/table/virtualization)**, a row scrolled out of view is removed, and an editor open in it closes without saving.
+- **An edited row can move.** In client mode the table re-sorts and re-filters the new rows, so a row can change place or page after a save; the focus then goes back to the page.
+- **Editors see the accessor's value.** For a column with `accessorFn` (a full name built from two fields, say), save it back to your fields yourself in `onCellEdit`.
+
+<Cards>
+  <Card title="Server data" href="/docs/table/server-data" description="Fetch pages from your backend, and refetch after a save." />
+  <Card title="Table components" href="/docs/components/table#datatable" description="Every DataTable prop, cellEditors included." />
+</Cards>

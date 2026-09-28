@@ -4,6 +4,7 @@
     "columns",
     "sorting",
     "selection",
+    "editing",
     "filtering",
     "server-data",
     "url-state",
