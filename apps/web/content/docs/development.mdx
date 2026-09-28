@@ -68,6 +68,7 @@ The folder is committed, so the registry can also be read straight from GitHub. 
 1. For a change to a package, add a changeset: `pnpm changeset`. The Release workflow keeps a **Version Packages** pull request open; merging it publishes to npm.
 2. When a block starts using a new package version, raise that package's range in `apps/web/registry.json` (on 0.x, `^0.3.0` doesn't accept `0.4.0`), and rebuild the registry.
 3. Add what users will notice to the [Changelog](/docs/changelog): what's new, changed or fixed, and what to do when updating. Changes to the blocks belong there too, even without a package release.
+4. pnpm installs a version only a day after it's published. When a block needs a new package version, publish the packages first and push the block changes a day later, or pnpm users can't add the block until then.
 
 ## Build for production
 

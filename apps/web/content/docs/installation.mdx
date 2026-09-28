@@ -164,6 +164,19 @@ npx shadcn@latest add @tablecn/data-table --overwrite
 
 It replaces your copy, your changes included: commit first, then review the diff and bring your changes back.
 
+## Troubleshooting
+
+### `ERR_PNPM_NO_MATURE_MATCHING_VERSION`
+
+Recent pnpm versions only install a version once it's been published for a day (`minimumReleaseAge`, 1440 minutes by default), to keep you away from a compromised release. Right after a tablecn release, the blocks ask for `@querycn` versions younger than that, so `shadcn add` fails with pnpm. Wait a day, or let the `@querycn` packages through:
+
+```yaml title="pnpm-workspace.yaml"
+minimumReleaseAgeExclude:
+  - "@querycn/*"
+```
+
+npm, yarn and bun don't have this check by default.
+
 ## Next steps
 
 <Cards>
