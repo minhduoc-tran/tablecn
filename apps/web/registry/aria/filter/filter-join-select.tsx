@@ -3,7 +3,7 @@
 import type { Join } from "@querycn/filter-core"
 import { useFilterActions } from "@querycn/filter-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "cn"
 import {
   Select,
   SelectContent,

@@ -5,7 +5,7 @@ import { useDirection } from "@base-ui/react/direction-provider"
 import { useFilterActions } from "@querycn/filter-react"
 import { ArrowRightIcon, type LucideIcon } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "cn"
 import { Button } from "@/registry/base/ui/button"
 import {
   Popover,

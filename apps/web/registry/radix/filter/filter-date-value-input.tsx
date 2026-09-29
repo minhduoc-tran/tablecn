@@ -7,7 +7,7 @@ import { Direction } from "radix-ui"
 import { CalendarIcon } from "lucide-react"
 import type { DateRange } from "react-day-picker"
 
-import { cn } from "@/lib/utils"
+import { cn } from "cn"
 import { Button } from "@/registry/radix/ui/button"
 import { Calendar } from "@/registry/radix/ui/calendar"
 import {

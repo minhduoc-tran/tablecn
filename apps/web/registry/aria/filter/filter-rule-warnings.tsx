@@ -9,7 +9,7 @@ import {
 import { TriangleAlertIcon } from "lucide-react"
 import { Dialog } from "react-aria-components"
 
-import { cn } from "@/lib/utils"
+import { cn } from "cn"
 import { Button } from "@/registry/aria/ui/button"
 import { Popover, PopoverTrigger } from "@/registry/aria/ui/popover"
 

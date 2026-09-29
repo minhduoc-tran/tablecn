@@ -4,7 +4,7 @@ import * as React from "react"
 import { getFieldType, type FilterValue } from "@querycn/filter-core"
 import { useFilterActions } from "@querycn/filter-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "cn"
 import { Input } from "@/registry/radix/ui/input"
 import type { FilterValueSlotProps } from "@/registry/radix/filter/filter-rule-row"
 

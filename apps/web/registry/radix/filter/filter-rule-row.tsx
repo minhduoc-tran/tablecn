@@ -10,7 +10,7 @@ import type {
 import { useFilterActions, useFilterRule } from "@querycn/filter-react"
 import { XIcon } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "cn"
 import { Button } from "@/registry/radix/ui/button"
 import { FilterFieldSelect } from "@/registry/radix/filter/filter-field-select"
 import { FilterOperatorSelect } from "@/registry/radix/filter/filter-operator-select"

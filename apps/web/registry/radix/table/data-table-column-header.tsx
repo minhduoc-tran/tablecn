@@ -9,7 +9,7 @@ import {
   GripVerticalIcon,
 } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "cn"
 import { TableHead } from "@/registry/radix/ui/table"
 import {
   headerCellClassName,

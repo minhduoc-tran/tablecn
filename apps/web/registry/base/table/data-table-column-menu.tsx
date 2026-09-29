@@ -13,7 +13,7 @@ import {
   XIcon,
 } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "cn"
 import { Button } from "@/registry/base/ui/button"
 import {
   DropdownMenu,

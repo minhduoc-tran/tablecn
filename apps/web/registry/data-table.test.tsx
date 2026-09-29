@@ -88,7 +88,27 @@ describe.each(BASES)("%s DataTable", (_, DataTable, createSelectionColumn) => {
         .getAllByRole("cell")
         .map((td) => td.dataset.columnId)
     ).toEqual(["select", "customer", "amount"])
-    expect(screen.getByRole("table").style.width).toBe("300px")
+    // At least the columns' width, and a filler takes the rest of the container.
+    expect(screen.getByRole("table").style.minWidth).toBe("300px")
+    expect(screen.getByRole("table").style.width).toBe("100%")
+  })
+
+  it("fills the width the columns leave, before the end-pinned ones", () => {
+    const { rerender } = render(<Orders />)
+    const ids = (row: Element) =>
+      Array.from(row.children, (cell) =>
+        cell.getAttribute("data-slot") === "data-table-filler"
+          ? "filler"
+          : (cell as HTMLElement).dataset.columnId
+      )
+    const [head, first] = document.querySelectorAll("tr")
+    // Amount is pinned to the end, so it stays against the end edge.
+    expect(ids(head!)).toEqual(["select", "customer", "filler", "amount"])
+    expect(ids(first!)).toEqual(["select", "customer", "filler", "amount"])
+
+    rerender(<Orders data={NO_ORDERS} />)
+    const state = screen.getByText("No results.").closest("td")!
+    expect(state.colSpan).toBe(4)
   })
 
   it("marks the sorted column with aria-sort", () => {

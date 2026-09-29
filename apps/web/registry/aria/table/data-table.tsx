@@ -8,7 +8,7 @@ import {
   type TableMessages,
 } from "@querycn/table-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "cn"
 import { TableHead, TableHeader, TableRow } from "@/registry/aria/ui/table"
 import {
   headerCellClassName,
@@ -26,6 +26,11 @@ import { useTableContainer } from "@/registry/shared/table/column-layout-actions
 import { useScrollEdges } from "@/registry/shared/table/use-scroll-edges"
 import { useScrollToTopOnChange } from "@/registry/shared/table/use-scroll-to-top-on-change"
 import { useVirtualRows } from "@/registry/shared/table/use-virtual-rows"
+import {
+  DataTableFillerHead,
+  getFillerIndex,
+  withFiller,
+} from "@/registry/shared/table/data-table-filler"
 import {
   DataTableBody,
   type DataTableBodyOptions,
@@ -119,35 +124,42 @@ export function DataTable<TData extends object>({
             virtual && rowCount > 0 ? headerGroups.length + rowCount : undefined
           }
           className="table-fixed caption-bottom text-sm"
-          style={{ width: table.getTotalSize() }}
+          // Fills the container; a filler cell takes what the columns leave.
+          style={{ width: "100%", minWidth: table.getTotalSize() }}
         >
-          <TableHeader className="sticky top-0 z-20 bg-background">
+          <TableHeader className="sticky top-0 z-20 bg-background [&_tr]:border-b-0">
             {headerGroups.map((headerGroup) => (
               <TableRow key={headerGroup.id} className="hover:bg-transparent">
-                {headerGroup.headers.map((header) =>
-                  header.subHeaders.length === 0 ? (
-                    <DataTableColumnHeader
-                      key={header.id}
-                      table={table}
-                      header={header}
-                      edges={edges}
-                      messages={messages}
-                      canReorder={canReorder}
-                    />
-                  ) : (
-                    <TableHead
-                      key={header.id}
-                      colSpan={header.colSpan}
-                      {...getHeaderCellProps(header, edges)}
-                      className={cn(pinnedCellClassName, headerCellClassName)}
-                    >
-                      {header.isPlaceholder ? null : (
-                        <div className="truncate">
-                          <table.FlexRender header={header} />
-                        </div>
-                      )}
-                    </TableHead>
-                  )
+                {withFiller(
+                  headerGroup.headers,
+                  getFillerIndex(
+                    headerGroup.headers.map((header) => header.column)
+                  ),
+                  (header) =>
+                    header.subHeaders.length === 0 ? (
+                      <DataTableColumnHeader
+                        key={header.id}
+                        table={table}
+                        header={header}
+                        edges={edges}
+                        messages={messages}
+                        canReorder={canReorder}
+                      />
+                    ) : (
+                      <TableHead
+                        key={header.id}
+                        colSpan={header.colSpan}
+                        {...getHeaderCellProps(header, edges)}
+                        className={cn(pinnedCellClassName, headerCellClassName)}
+                      >
+                        {header.isPlaceholder ? null : (
+                          <div className="truncate">
+                            <table.FlexRender header={header} />
+                          </div>
+                        )}
+                      </TableHead>
+                    ),
+                  <DataTableFillerHead />
                 )}
               </TableRow>
             ))}

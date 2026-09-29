@@ -7,7 +7,7 @@ import { useDirection } from "@base-ui/react/direction-provider"
 import { CalendarIcon } from "lucide-react"
 import type { DateRange } from "react-day-picker"
 
-import { cn } from "@/lib/utils"
+import { cn } from "cn"
 import { Button } from "@/registry/base/ui/button"
 import { Calendar } from "@/registry/base/ui/calendar"
 import {

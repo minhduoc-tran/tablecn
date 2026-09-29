@@ -10,7 +10,7 @@ import {
 import { useAppliedFilter } from "@querycn/filter-react"
 import { XIcon } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "cn"
 import { Button } from "@/registry/base/ui/button"
 import { FilterRuleWarnings } from "@/registry/base/filter/filter-rule-warnings"
 import { useRuleSummary } from "@/registry/shared/filter/filter-rule-summary"

@@ -9,7 +9,7 @@ import {
 } from "@querycn/table-react"
 import { RefreshCwIcon } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "cn"
 import { Button } from "@/registry/radix/ui/button"
 import { DataTableResetFiltersButton } from "@/registry/radix/table/data-table-reset-filters-button"
 import { DataTableSelectionBar } from "@/registry/radix/table/data-table-selection-bar"

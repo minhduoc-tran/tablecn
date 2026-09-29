@@ -5,7 +5,7 @@ import { useFilterActions } from "@querycn/filter-react"
 import { ArrowRightIcon, type LucideIcon } from "lucide-react"
 import { Button as ButtonPrimitive, Dialog } from "react-aria-components"
 
-import { cn } from "@/lib/utils"
+import { cn } from "cn"
 import { Button } from "@/registry/aria/ui/button"
 import { Popover, PopoverTrigger } from "@/registry/aria/ui/popover"
 import {

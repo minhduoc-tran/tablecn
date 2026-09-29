@@ -8,7 +8,7 @@ import {
 } from "@querycn/table-react"
 import { SearchIcon, XIcon } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "cn"
 import {
   InputGroup,
   InputGroupAddon,

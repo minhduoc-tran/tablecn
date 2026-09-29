@@ -5,7 +5,7 @@ import type { SelectOption } from "@querycn/filter-core"
 import { useFilterActions } from "@querycn/filter-react"
 import { Autocomplete, type Key } from "react-aria-components"
 
-import { cn } from "@/lib/utils"
+import { cn } from "cn"
 import { Button } from "@/registry/aria/ui/button"
 import {
   Select,

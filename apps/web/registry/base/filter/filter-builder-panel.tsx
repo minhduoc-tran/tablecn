@@ -4,7 +4,7 @@ import * as React from "react"
 import { useFilter } from "@querycn/filter-react"
 import { PlusIcon } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "cn"
 import { Button } from "@/registry/base/ui/button"
 import { FilterJoinSelect } from "@/registry/base/filter/filter-join-select"
 import {

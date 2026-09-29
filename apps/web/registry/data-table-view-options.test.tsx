@@ -109,7 +109,7 @@ describe.each(BASES)(
     // From the DOM: React Aria's popover hides the rest of the page from roles.
     const headers = () =>
       Array.from(
-        document.querySelectorAll<HTMLElement>("thead th"),
+        document.querySelectorAll<HTMLElement>("thead th[data-column-id]"),
         (th) => th.dataset.columnId
       )
     const header = (id: string) =>

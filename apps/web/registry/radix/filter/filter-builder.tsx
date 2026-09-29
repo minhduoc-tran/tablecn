@@ -5,7 +5,7 @@ import { Direction } from "radix-ui"
 import { useAppliedFilter, useFilterActions } from "@querycn/filter-react"
 import { ListFilterIcon } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "cn"
 import { Badge } from "@/registry/radix/ui/badge"
 import { Button } from "@/registry/radix/ui/button"
 import {

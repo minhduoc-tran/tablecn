@@ -6,7 +6,7 @@ import type { SelectOption } from "@querycn/filter-core"
 import { useFilterActions } from "@querycn/filter-react"
 import { CheckIcon, ChevronsUpDownIcon } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "cn"
 import { Button } from "@/registry/base/ui/button"
 import {
   Command,

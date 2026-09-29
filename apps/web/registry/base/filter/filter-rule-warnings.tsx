@@ -9,7 +9,7 @@ import {
 } from "@querycn/filter-react"
 import { TriangleAlertIcon } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "cn"
 import { Button } from "@/registry/base/ui/button"
 import {
   Popover,

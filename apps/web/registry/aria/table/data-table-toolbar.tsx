@@ -9,7 +9,7 @@ import {
 } from "@querycn/table-react"
 import { RefreshCwIcon } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "cn"
 import { Button } from "@/registry/aria/ui/button"
 import { DataTableResetFiltersButton } from "@/registry/aria/table/data-table-reset-filters-button"
 import { DataTableSelectionBar } from "@/registry/aria/table/data-table-selection-bar"

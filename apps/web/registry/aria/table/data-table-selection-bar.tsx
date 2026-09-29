@@ -9,7 +9,7 @@ import {
 } from "@querycn/table-react"
 import { XIcon } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "cn"
 import { Button } from "@/registry/aria/ui/button"
 import { getSelectedPageRows } from "@/registry/shared/table/data-table-pagination-state"
 import { useFocusToolbarOnUnmount } from "@/registry/shared/table/use-focus-toolbar-on-unmount"

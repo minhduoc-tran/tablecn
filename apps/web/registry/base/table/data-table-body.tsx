@@ -7,7 +7,7 @@ import type {
   TableMessages,
 } from "@querycn/table-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "cn"
 import { Button } from "@/registry/base/ui/button"
 import { Skeleton } from "@/registry/base/ui/skeleton"
 import { TableBody, TableCell, TableRow } from "@/registry/base/ui/table"
@@ -22,6 +22,11 @@ import {
   isRowClick,
 } from "@/registry/shared/table/data-table-row-clicks"
 import type { VirtualRows } from "@/registry/shared/table/use-virtual-rows"
+import {
+  DataTableFillerCell,
+  getFillerIndex,
+  withFiller,
+} from "@/registry/shared/table/data-table-filler"
 import {
   cellEditors as defaultCellEditors,
   type CellEditors,
@@ -79,11 +84,14 @@ export function DataTableBody<TData extends object>({
 }) {
   const rows = table.getRowModel().rows
   const dragCell = useColumnDragCell()
+  const fillerIndex = getFillerIndex(columns)
+  // Every column and the filler cell.
+  const span = columns.length + 1
 
   let body: React.ReactNode
   if (isError) {
     body = (
-      <StateRow colSpan={columns.length}>
+      <StateRow colSpan={span}>
         {errorState ?? (
           <div className="flex flex-col items-center gap-2">
             <p>{messages.states.error}</p>
@@ -99,22 +107,25 @@ export function DataTableBody<TData extends object>({
   } else if (isLoading && rows.length === 0) {
     body = Array.from({ length: skeletonRows }, (_, index) => (
       <TableRow key={index} className="group/row hover:bg-transparent">
-        {columns.map((column) => (
-          <TableCell
-            key={column.id}
-            {...getColumnCellProps(column, edges)}
-            className={pinnedCellClassName}
-          >
-            <Skeleton className="h-4 w-full" />
-          </TableCell>
-        ))}
+        {withFiller(
+          columns,
+          fillerIndex,
+          (column) => (
+            <TableCell
+              key={column.id}
+              {...getColumnCellProps(column, edges)}
+              className={pinnedCellClassName}
+            >
+              <Skeleton className="h-4 w-full" />
+            </TableCell>
+          ),
+          <DataTableFillerCell />
+        )}
       </TableRow>
     ))
   } else if (rows.length === 0) {
     body = (
-      <StateRow colSpan={columns.length}>
-        {emptyState ?? messages.states.empty}
-      </StateRow>
+      <StateRow colSpan={span}>{emptyState ?? messages.states.empty}</StateRow>
     )
   } else {
     const shown = virtual
@@ -148,27 +159,32 @@ export function DataTableBody<TData extends object>({
           rowClassName?.(row)
         )}
       >
-        {[
-          ...row.getStartVisibleCells(),
-          ...row.getCenterVisibleCells(),
-          ...row.getEndVisibleCells(),
-        ].map((cell) => (
-          <TableCell
-            key={cell.id}
-            {...dragCell(
-              cell.column.id,
-              getColumnCellProps(cell.column, edges)
-            )}
-            className={pinnedCellClassName}
-          >
-            <DataTableCellContent
-              table={table}
-              cell={cell}
-              editors={cellEditors}
-              messages={messages}
-            />
-          </TableCell>
-        ))}
+        {withFiller(
+          [
+            ...row.getStartVisibleCells(),
+            ...row.getCenterVisibleCells(),
+            ...row.getEndVisibleCells(),
+          ],
+          fillerIndex,
+          (cell) => (
+            <TableCell
+              key={cell.id}
+              {...dragCell(
+                cell.column.id,
+                getColumnCellProps(cell.column, edges)
+              )}
+              className={pinnedCellClassName}
+            >
+              <DataTableCellContent
+                table={table}
+                cell={cell}
+                editors={cellEditors}
+                messages={messages}
+              />
+            </TableCell>
+          ),
+          <DataTableFillerCell />
+        )}
       </TableRow>
     ))
   }
@@ -180,11 +196,9 @@ export function DataTableBody<TData extends object>({
         isLoading && rows.length > 0 && "pointer-events-none opacity-60"
       )}
     >
-      {virtual && (
-        <SpacerRow height={virtual.before} colSpan={columns.length} />
-      )}
+      {virtual && <SpacerRow height={virtual.before} colSpan={span} />}
       {body}
-      {virtual && <SpacerRow height={virtual.after} colSpan={columns.length} />}
+      {virtual && <SpacerRow height={virtual.after} colSpan={span} />}
     </TableBody>
   )
 }

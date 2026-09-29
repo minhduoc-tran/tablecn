@@ -3,7 +3,7 @@
 import * as React from "react"
 import type { DataTableInstance } from "@querycn/table-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "cn"
 import { ColumnGuideLine } from "@/registry/shared/table/column-guide-line"
 import {
   getColumnWidthBounds,
@@ -84,7 +84,7 @@ export function ColumnResizeHandle<TData extends object>({
       style={preview ? { transform: `translateX(${preview}px)` } : undefined}
       className={cn(
         "absolute inset-y-0 -end-1 z-10 w-2 cursor-col-resize touch-none outline-none select-none",
-        "after:absolute after:inset-y-1.5 after:start-1/2 after:w-px after:-translate-x-1/2 rtl:after:translate-x-1/2 after:bg-border after:opacity-0 after:transition-opacity hover:after:opacity-100 focus-visible:after:w-0.5 focus-visible:after:bg-ring focus-visible:after:opacity-100"
+        "after:absolute after:inset-y-1.5 after:start-1/2 after:w-px after:-translate-x-1/2 after:bg-border after:opacity-0 after:transition-opacity hover:after:opacity-100 focus-visible:after:w-0.5 focus-visible:after:bg-ring focus-visible:after:opacity-100 rtl:after:translate-x-1/2"
       )}
     >
       {isResizing && (

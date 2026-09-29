@@ -4,7 +4,7 @@ import * as React from "react"
 import type { OperatorId } from "@querycn/filter-core"
 import { useFilterActions, type OperatorOption } from "@querycn/filter-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "cn"
 import {
   Select,
   SelectContent,

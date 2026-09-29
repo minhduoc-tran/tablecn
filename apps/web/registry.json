@@ -11,6 +11,7 @@
       "dependencies": [
         "@querycn/filter-core@^0.3.0",
         "@querycn/filter-react@^0.3.0",
+        "cn",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -159,6 +160,7 @@
         "@querycn/table-react@^0.3.0",
         "@tanstack/react-table@^9.2.0",
         "@tanstack/react-virtual@^3.14.13",
+        "cn",
         "lucide-react"
       ],
       "registryDependencies": [
@@ -274,6 +276,11 @@
           "path": "registry/shared/table/data-table-cell-classes.ts",
           "type": "registry:lib",
           "target": "@components/data-table/data-table-cell-classes.ts"
+        },
+        {
+          "path": "registry/shared/table/data-table-filler.tsx",
+          "type": "registry:component",
+          "target": "@components/data-table/data-table-filler.tsx"
         },
         {
           "path": "registry/shared/table/data-table-pinning.ts",

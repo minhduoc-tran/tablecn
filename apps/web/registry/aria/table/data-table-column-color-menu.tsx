@@ -4,7 +4,7 @@ import * as React from "react"
 import type { DataTableInstance, TableMessages } from "@querycn/table-react"
 import { PaletteIcon } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "cn"
 import {
   DropdownMenuGroup,
   DropdownMenuItem,

@@ -5,7 +5,7 @@ import { parseDate, type CalendarDate } from "@internationalized/date"
 import { useFilterActions } from "@querycn/filter-react"
 import { CalendarIcon } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "cn"
 import { Button } from "@/registry/aria/ui/button"
 import { Calendar, RangeCalendar } from "@/registry/aria/ui/calendar"
 import { Popover, PopoverTrigger } from "@/registry/aria/ui/popover"

@@ -5,7 +5,7 @@ import { useAppliedFilter, useFilterActions } from "@querycn/filter-react"
 import { ListFilterIcon } from "lucide-react"
 import { Dialog } from "react-aria-components"
 
-import { cn } from "@/lib/utils"
+import { cn } from "cn"
 import { Badge } from "@/registry/aria/ui/badge"
 import { Button } from "@/registry/aria/ui/button"
 import { Popover, PopoverTrigger } from "@/registry/aria/ui/popover"

@@ -64,22 +64,24 @@ export function DataTableEditableCell<TData extends object>({
 }: CellProps<TData> & { editor: CellEditor }) {
   const value = cell.getValue()
   const label = getColumnLabel(cell.column)
-  const editing = useCellEditing({
-    saveFailed: messages.editing.saveFailed,
-    onSave: (next, option) =>
-      table.options.meta!.onCellEdit!({
-        row: cell.row.original,
-        rowId: cell.row.id,
-        columnId: cell.column.id,
-        value: next,
-        previous: value,
-        option,
-      }),
-  })
+  // Destructured: one object holding the ref reads as a ref to the React Compiler's lint.
+  const { cellRef, editing, saving, error, setError, start, cancel, save } =
+    useCellEditing({
+      saveFailed: messages.editing.saveFailed,
+      onSave: (next, option) =>
+        table.options.meta!.onCellEdit!({
+          row: cell.row.original,
+          rowId: cell.row.id,
+          columnId: cell.column.id,
+          value: next,
+          previous: value,
+          option,
+        }),
+    })
   const open = () => {
-    if (editing.saving) return
-    if (editor.type === "boolean") void editing.save(!value)
-    else editing.start()
+    if (saving) return
+    if (editor.type === "boolean") void save(!value)
+    else start()
   }
   const Editor = Object.hasOwn(editors, editor.type)
     ? editors[editor.type]!
@@ -87,25 +89,25 @@ export function DataTableEditableCell<TData extends object>({
 
   return (
     <div data-slot="data-table-editable-cell" className="relative">
-      {editing.editing ? (
+      {editing ? (
         <Editor
           value={value}
           editor={editor}
           label={label}
           display={<table.FlexRender cell={cell} />}
           messages={messages}
-          saving={editing.saving}
-          invalid={editing.error !== undefined}
-          onSave={(next, options) => void editing.save(next, options)}
-          onCancel={editing.cancel}
-          onError={editing.setError}
+          saving={saving}
+          invalid={error !== undefined}
+          onSave={(next, options) => void save(next, options)}
+          onCancel={cancel}
+          onError={setError}
         />
       ) : (
         <div
-          ref={editing.cellRef}
+          ref={cellRef}
           tabIndex={0}
           aria-description={messages.editing.edit(label)}
-          aria-busy={editing.saving || undefined}
+          aria-busy={saving || undefined}
           onKeyDown={(event) => {
             if (event.key !== "Enter" && event.key !== "F2") return
             event.preventDefault()
@@ -120,19 +122,19 @@ export function DataTableEditableCell<TData extends object>({
           <table.FlexRender cell={cell} />
         </div>
       )}
-      {editing.saving && (
+      {saving && (
         <Loader2Icon
           role="status"
           aria-label={messages.editing.saving}
           className="absolute end-0 top-1/2 size-3.5 -translate-y-1/2 animate-spin text-muted-foreground"
         />
       )}
-      {editing.error && (
+      {error && (
         <p
           role="alert"
           className="absolute start-0 top-full z-30 mt-1.5 rounded-md border bg-popover px-2 py-1 text-xs whitespace-nowrap text-destructive shadow-md"
         >
-          {editing.error}
+          {error}
         </p>
       )}
     </div>
