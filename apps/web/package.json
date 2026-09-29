@@ -9,7 +9,7 @@
     "build": "pnpm registry:build && next build",
     "registry:build": "node scripts/build-registry.mjs",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint --max-warnings 0",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run"
