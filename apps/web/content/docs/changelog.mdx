@@ -10,6 +10,21 @@ Newest first. A release can change the npm packages, the registry blocks, or bot
 
 The full list of package changes is in each package's `CHANGELOG.md` on [GitHub](https://github.com/minhduoc-tran/tablecn/tree/main/packages).
 
+## September 29, 2026
+
+Changes to the blocks only: no package release.
+
+### Fixed
+
+- **`cn` comes from the `cn` package**, like shadcn/ui's current styles, so the blocks build in projects without `lib/utils.ts`. The blocks list `cn` as a dependency. ([#7](https://github.com/minhduoc-tran/tablecn/issues/7))
+- **The table fills its border.** When the columns add up to less than the container, a filler cell takes the rest, so rows and their hover and selection colors reach the border. Columns pinned to the end stay against the end edge. ([#8](https://github.com/minhduoc-tran/tablecn/issues/8))
+- **One line under the header**, instead of two stacked 1px lines. ([#9](https://github.com/minhduoc-tran/tablecn/issues/9))
+- **No `react-hooks/refs` errors** in `data-table-editable-cell.tsx` with `eslint-config-next` 16. ([#6](https://github.com/minhduoc-tran/tablecn/issues/6))
+
+### Updating
+
+Add the blocks again with `--overwrite`: `npx shadcn@latest add @tablecn/data-table @tablecn/filter-builder --overwrite`. Commit your changes first.
+
 ## September 28, 2026
 
 | Package | Version |
