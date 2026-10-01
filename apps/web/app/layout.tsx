@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { RootProvider } from "fumadocs-ui/provider/next"
+import { Analytics } from "@vercel/analytics/next"
 
 import { DocsSearchDialog } from "@/components/docs/docs-search-dialog"
 import { siteConfig } from "@/lib/site-config"
@@ -69,6 +70,7 @@ export default function RootLayout({
         >
           {children}
         </RootProvider>
+        <Analytics />
       </body>
     </html>
   )
