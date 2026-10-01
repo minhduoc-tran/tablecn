@@ -56,7 +56,7 @@ export function HomeHero() {
         </div>
         {/* `@tablecn` is in the shadcn registry directory: the CLI finds it and picks the user's style. */}
         <InstallCommandTabs
-          command="npx shadcn@latest add @tablecn/data-table"
+          command="npx shadcn@latest add @tablecn/data-table @tablecn/filter-builder"
           className="w-full max-w-3xl animate-in text-left delay-300 duration-700 fill-mode-both fade-in"
         />
       </div>
