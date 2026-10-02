@@ -29,6 +29,9 @@ export async function InstallCommandTabs({
       code: await highlight(convertLines(command, manager), {
         lang: "bash",
         themes: { light: "github-light", dark: "github-dark" },
+        // Colors as CSS variables only, like the docs' code blocks, so the
+        // background and text follow the theme instead of staying light.
+        defaultColor: false,
         components: { pre: (props) => <Pre {...props} /> },
       }),
     }))

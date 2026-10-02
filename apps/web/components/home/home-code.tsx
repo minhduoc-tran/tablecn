@@ -36,6 +36,8 @@ export async function HomeCode() {
   const code = await highlight(CODE, {
     lang: "tsx",
     themes: { light: "github-light", dark: "github-dark" },
+    // Colors as CSS variables only, so the block follows the theme.
+    defaultColor: false,
     components: { pre: (props) => <DocsPre {...props} /> },
   })
 
