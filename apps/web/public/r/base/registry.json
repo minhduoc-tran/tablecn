@@ -156,6 +156,7 @@
       "registryDependencies": [
         "button",
         "checkbox",
+        "dialog",
         "dropdown-menu",
         "input",
         "input-group",
@@ -192,6 +193,16 @@
           "path": "registry/base/table/data-table-cell-editors.tsx",
           "type": "registry:component",
           "target": "@components/data-table/data-table-cell-editors.tsx"
+        },
+        {
+          "path": "registry/base/table/data-table-bulk-edit-dialog.tsx",
+          "type": "registry:component",
+          "target": "@components/data-table/data-table-bulk-edit-dialog.tsx"
+        },
+        {
+          "path": "registry/base/table/data-table-bulk-edit-field.tsx",
+          "type": "registry:component",
+          "target": "@components/data-table/data-table-bulk-edit-field.tsx"
         },
         {
           "path": "registry/base/table/data-table-search-select-editor.tsx",

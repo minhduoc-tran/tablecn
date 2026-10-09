@@ -14,6 +14,12 @@ import { Button } from "@/registry/radix/ui/button"
 import { Separator } from "@/registry/radix/ui/separator"
 import { onToolbarArrowKeys } from "@/registry/shared/table/toolbar-arrow-keys"
 import { useFloatingSelectionBar } from "@/registry/shared/table/use-floating-selection-bar"
+import { useBulkEdit } from "@/registry/shared/table/use-bulk-edit"
+import {
+  cellEditors as defaultCellEditors,
+  type CellEditors,
+} from "@/registry/radix/table/data-table-cell-editors"
+import { DataTableBulkEditDialog } from "@/registry/radix/table/data-table-bulk-edit-dialog"
 
 export interface DataTableSelectionBarProps<TData extends object> extends Omit<
   React.ComponentProps<"div">,
@@ -23,22 +29,27 @@ export interface DataTableSelectionBarProps<TData extends object> extends Omit<
   messages?: TableMessages
   /** What can be done with the selected rows, e.g. a delete button. */
   actions?: (rows: DataTableRow<TData>[]) => React.ReactNode
+  /** Editors by `meta.edit.type` for the bulk edit dialog, as on `DataTable`. */
+  cellEditors?: CellEditors
 }
 
 /**
  * Floats over the bottom of the table while rows of the page are selected:
- * their count, actions and a button that clears them.
+ * their count, actions, Bulk edit and a button that clears them. Without
+ * actions or columns a bulk edit can change, it doesn't show.
  */
 export function DataTableSelectionBar<TData extends object>({
   table,
   messages = enTableMessages,
   actions,
+  cellEditors = defaultCellEditors,
   className,
   ...props
 }: DataTableSelectionBarProps<TData>) {
   const { ref, mounted, closing, rows } = useFloatingSelectionBar(table)
   const countId = React.useId()
-  if (!mounted) return null
+  const bulk = useBulkEdit({ table, rows, messages })
+  if (!mounted || (!actions && bulk.columns.length === 0)) return null
   return (
     <div
       ref={ref}
@@ -74,6 +85,16 @@ export function DataTableSelectionBar<TData extends object>({
         <>
           <Separator orientation="vertical" className="my-1 bg-background/20" />
           <div className="flex items-center gap-1">{actions(rows)}</div>
+        </>
+      )}
+      {bulk.columns.length > 0 && (
+        <>
+          <Separator orientation="vertical" className="my-1 bg-background/20" />
+          <DataTableBulkEditDialog
+            bulk={bulk}
+            editors={cellEditors}
+            messages={messages}
+          />
         </>
       )}
     </div>

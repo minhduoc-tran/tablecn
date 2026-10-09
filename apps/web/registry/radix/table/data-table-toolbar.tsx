@@ -14,6 +14,7 @@ import { Button } from "@/registry/radix/ui/button"
 import { DataTableResetFiltersButton } from "@/registry/radix/table/data-table-reset-filters-button"
 import { DataTableSelectionBar } from "@/registry/radix/table/data-table-selection-bar"
 import { DataTableViewOptions } from "@/registry/radix/table/data-table-view-options"
+import type { CellEditors } from "@/registry/radix/table/data-table-cell-editors"
 
 export interface DataTableToolbarProps<TData extends object> extends Omit<
   React.ComponentProps<"div">,
@@ -26,14 +27,16 @@ export interface DataTableToolbarProps<TData extends object> extends Omit<
   /** Shows a reload button. */
   onRefresh?: () => void
   isRefreshing?: boolean
-  /** Actions for the selected rows, in a bar floating over the table while some are. Without them, no bar. */
+  /** Actions for the selected rows, in a bar floating over the table while some are. */
   selectionActions?: (rows: DataTableRow<TData>[]) => React.ReactNode
+  /** Editors by `meta.edit.type` for Bulk edit; pass the ones `DataTable` has. */
+  cellEditors?: CellEditors
 }
 
 /**
  * Above a `DataTable`: the app's controls, then clear filters, reload and the
- * column menu. With `selectionActions`, the selection bar floats over the
- * table while rows are selected.
+ * column menu. While rows are selected, the selection bar floats over the
+ * table with `selectionActions` and, for editable columns, Bulk edit.
  */
 export function DataTableToolbar<TData extends object>({
   table,
@@ -42,6 +45,7 @@ export function DataTableToolbar<TData extends object>({
   onRefresh,
   isRefreshing = false,
   selectionActions,
+  cellEditors,
   className,
   ...props
 }: DataTableToolbarProps<TData>) {
@@ -86,15 +90,12 @@ export function DataTableToolbar<TData extends object>({
           </div>
         </div>
       </div>
-      {/* Without actions the bar adds nothing: the pagination already counts
-          the selection, and the header checkbox clears it. */}
-      {selectionActions && (
-        <DataTableSelectionBar
-          table={table}
-          messages={messages}
-          actions={selectionActions}
-        />
-      )}
+      <DataTableSelectionBar
+        table={table}
+        messages={messages}
+        actions={selectionActions}
+        cellEditors={cellEditors}
+      />
     </div>
   )
 }

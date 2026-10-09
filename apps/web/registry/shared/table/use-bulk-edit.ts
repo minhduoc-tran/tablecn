@@ -110,4 +110,6 @@ export function useBulkEdit<TData extends object>({
   }
 }
 
-export type BulkEditState = ReturnType<typeof useBulkEdit>
+export type BulkEditState<TData extends object = object> = ReturnType<
+  typeof useBulkEdit<TData>
+>
