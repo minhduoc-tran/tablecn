@@ -12,11 +12,11 @@ import { ThemeToggleButton } from "@/components/docs/theme-toggle-button"
 import { siteConfig } from "@/lib/site-config"
 
 /** Sticky top header for the docs, modeled after ui.shadcn.com */
-export function SiteHeader({ tree }: { tree: PageTree.Root }) {
+export function SiteHeader({ tree, updatedUrls }: { tree: PageTree.Root; updatedUrls?: string[] }) {
   return (
     <header className="bg-background/95 supports-backdrop-filter:bg-background/80 sticky top-0 z-40 w-full backdrop-blur">
       <div className="mx-auto flex h-14 w-full max-w-[1400px] items-center gap-2 px-4 lg:px-6">
-        <DocsMobileNav tree={tree} />
+        <DocsMobileNav tree={tree} updatedUrls={updatedUrls} />
         <Link href="/" className="me-2 flex items-center gap-2 font-semibold">
           {/* Same artwork as the favicon; inverted in dark mode */}
           <Image src="/logo.png" alt="" width={24} height={24} className="size-6 dark:invert" priority />

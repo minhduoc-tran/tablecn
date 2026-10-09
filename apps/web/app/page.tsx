@@ -7,6 +7,7 @@ import { HomeCta, HomeFooter } from "@/components/home/home-cta"
 import { HomeDemo } from "@/components/home/home-demo"
 import { HomeHero } from "@/components/home/home-hero"
 import { HomeStack } from "@/components/home/home-stack"
+import { getRecentlyUpdatedUrls } from "@/lib/recently-updated-pages"
 import { source } from "@/lib/source"
 
 export const metadata: Metadata = {
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
 export default function Page() {
   return (
     <div className="flex min-h-svh flex-col">
-      <SiteHeader tree={source.getPageTree()} />
+      <SiteHeader tree={source.getPageTree()} updatedUrls={getRecentlyUpdatedUrls()} />
       <main className="flex-1">
         <HomeHero />
         <HomeDemo />

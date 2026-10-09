@@ -16,7 +16,7 @@ import {
 import { DocsSidebarNav } from "@/components/docs/docs-sidebar-nav"
 
 /** Sidebar navigation in a sheet for screens below `lg` */
-export function DocsMobileNav({ tree }: { tree: PageTree.Root }) {
+export function DocsMobileNav({ tree, updatedUrls }: { tree: PageTree.Root; updatedUrls?: string[] }) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -32,7 +32,7 @@ export function DocsMobileNav({ tree }: { tree: PageTree.Root }) {
           <SheetTitle>Menu</SheetTitle>
         </SheetHeader>
         <div className="px-2 pb-6">
-          <DocsSidebarNav tree={tree} onNavigate={() => setOpen(false)} />
+          <DocsSidebarNav tree={tree} updatedUrls={updatedUrls} onNavigate={() => setOpen(false)} />
         </div>
       </SheetContent>
     </Sheet>

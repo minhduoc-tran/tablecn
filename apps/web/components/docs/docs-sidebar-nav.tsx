@@ -46,9 +46,12 @@ function getSidebarGroups(tree: PageTree.Root): SidebarGroup[] {
 /** shadcn-style docs sidebar navigation, shared by desktop sidebar and mobile sheet */
 export function DocsSidebarNav({
   tree,
+  updatedUrls = [],
   onNavigate,
 }: {
   tree: PageTree.Root
+  /** Pages marked with a green dot, from `getRecentlyUpdatedUrls`. */
+  updatedUrls?: string[]
   onNavigate?: () => void
 }) {
   const pathname = usePathname()
@@ -73,6 +76,12 @@ export function DocsSidebarNav({
                 )}
               >
                 {item.name}
+                {updatedUrls.includes(item.url) && (
+                  <>
+                    <span aria-hidden className="ms-1.5 size-1.5 rounded-full bg-emerald-500" />
+                    <span className="sr-only">(updated)</span>
+                  </>
+                )}
               </Link>
             )
           })}

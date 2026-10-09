@@ -2,7 +2,12 @@ import {
   rehypeCodeDefaultOptions,
   remarkMdxMermaid,
 } from "fumadocs-core/mdx-plugins"
-import { defineConfig, defineDocs } from "fumadocs-mdx/config"
+import {
+  defineConfig,
+  defineDocs,
+  frontmatterSchema,
+} from "fumadocs-mdx/config"
+import { z } from "zod"
 
 import { convertLines } from "./lib/package-manager-commands"
 import { siteConfig } from "./lib/site-config"
@@ -10,6 +15,12 @@ import { siteConfig } from "./lib/site-config"
 // MDX docs collection, read from `content/docs`
 export const docs = defineDocs({
   dir: "content/docs",
+  docs: {
+    schema: frontmatterSchema.extend({
+      // `YYYY-MM-DD`: the sidebar marks the page for a while after it.
+      updated: z.coerce.date().optional(),
+    }),
+  },
 })
 
 /** `%SITE_URL%` in code becomes the deployed origin, so install commands work as copied */
