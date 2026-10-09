@@ -52,6 +52,8 @@ export type {
   DataTableFeatures,
   DataTableMeta,
 } from "./data-table-features"
+export { applyBulkEdit, getBulkEditColumns } from "./bulk-editing"
+export type { BulkEdit } from "./bulk-editing"
 export { formatCellText, parseCellText } from "./cell-editing"
 export type {
   CellEdit,

@@ -58,6 +58,24 @@ export const enTableMessages: TableMessages = {
     noOptions: "No options.",
     loadFailed: "Couldn't load the options.",
   },
+  bulkEdit: {
+    open: "Bulk edit",
+    title: "Bulk edit",
+    description: (count) =>
+      count === 1
+        ? "Set the same values in 1 selected row."
+        : `Set the same values in ${format(count)} selected rows.`,
+    column: "Column",
+    chooseColumn: "Choose a column",
+    value: "Value",
+    chooseValue: "Choose…",
+    addField: "Add field",
+    removeField: (column) => `Remove ${column}`,
+    cancel: "Cancel",
+    applying: "Applying…",
+    apply: (count) =>
+      count === 1 ? "Apply to 1 row" : `Apply to ${format(count)} rows`,
+  },
   header: {
     move: (column) => `Move column ${column}`,
     resize: (column) => `Resize column ${column}`,

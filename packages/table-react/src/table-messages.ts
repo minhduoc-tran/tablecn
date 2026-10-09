@@ -48,6 +48,23 @@ export interface TableMessages {
     /** What an editable cell tells screen readers, e.g. "Edit Amount". */
     edit: (column: string) => string
   }
+  /** The dialog that sets the same values in the selected rows. */
+  bulkEdit: Labels<
+    | "open"
+    | "title"
+    | "column"
+    | "chooseColumn"
+    | "value"
+    | "chooseValue"
+    | "addField"
+    | "cancel"
+    | "applying"
+  > & {
+    description: (count: number) => string
+    /** The label of a field's remove button, e.g. "Remove Status". */
+    removeField: (column: string) => string
+    apply: (count: number) => string
+  }
   /** Column header controls and what screen readers hear while moving a column. */
   header: {
     move: (column: string) => string

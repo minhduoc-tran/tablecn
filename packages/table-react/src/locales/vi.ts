@@ -62,6 +62,21 @@ export const viTableMessages: TableMessages = {
     noOptions: "Không có lựa chọn.",
     loadFailed: "Không tải được danh sách.",
   },
+  bulkEdit: {
+    open: "Sửa hàng loạt",
+    title: "Sửa hàng loạt",
+    description: (count) =>
+      `Đặt cùng giá trị cho ${format(count)} dòng đã chọn.`,
+    column: "Cột",
+    chooseColumn: "Chọn cột",
+    value: "Giá trị",
+    chooseValue: "Chọn…",
+    addField: "Thêm trường",
+    removeField: (column) => `Bỏ ${column}`,
+    cancel: "Huỷ",
+    applying: "Đang áp dụng…",
+    apply: (count) => `Áp dụng cho ${format(count)} dòng`,
+  },
   header: {
     move: (column) => `Di chuyển cột ${column}`,
     resize: (column) => `Đổi độ rộng cột ${column}`,

@@ -22,6 +22,9 @@ describe("table messages", () => {
     expect(enTableMessages.counts.rows(1)).toBe("1 row")
     expect(enTableMessages.counts.rows(1234)).toBe("1,234 rows")
     expect(viTableMessages.counts.rows(1234)).toBe("1.234 dòng")
+    expect(enTableMessages.bulkEdit.apply(1)).toBe("Apply to 1 row")
+    expect(enTableMessages.bulkEdit.apply(1234)).toBe("Apply to 1,234 rows")
+    expect(viTableMessages.bulkEdit.apply(1234)).toBe("Áp dụng cho 1.234 dòng")
   })
 
   it("merges overrides per group", () => {

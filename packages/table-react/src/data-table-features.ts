@@ -16,6 +16,7 @@ import {
   type RowData,
 } from "@tanstack/react-table"
 
+import type { BulkEdit } from "./bulk-editing"
 import type { CellEdit } from "./cell-editing"
 import { columnColorFeature } from "./column-color-feature"
 import type { DataTableColumnMeta } from "./table-layout-state"
@@ -35,6 +36,8 @@ export interface DataTableMeta {
   /** `useDataTable`'s, for the cells of columns with `meta.edit`. */
   onCellEdit?: (edit: CellEdit<unknown>) => void | Promise<void>
   canEditCell?: (row: unknown, columnId: string) => boolean
+  /** `useDataTable`'s, for the Bulk edit of the selected rows. */
+  onBulkEdit?: (edit: BulkEdit<unknown>) => void | Promise<void>
 }
 
 /**

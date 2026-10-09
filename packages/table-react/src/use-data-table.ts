@@ -24,6 +24,7 @@ import {
   DEFAULT_PAGE_SIZES,
   type TableUrlOptions,
 } from "./table-url-codec"
+import type { BulkEdit } from "./bulk-editing"
 import type { CellEdit } from "./cell-editing"
 import { getSearchAccessors, searchRows } from "./table-search"
 import { getDefaultLayout, getLayoutColumns } from "./table-layout-state"
@@ -68,6 +69,12 @@ interface DataTableBaseOptions<TData extends RowData> {
   onCellEdit?: (edit: CellEdit<TData>) => void | Promise<void>
   /** Which rows can edit a column's cells; defaults to all. */
   canEditCell?: (row: TData, columnId: string) => boolean
+  /**
+   * Saves a Bulk edit: the same values in every selected row, in one call.
+   * Without it, a Bulk edit calls `onCellEdit` for each changed cell. Throw
+   * to keep the dialog open with the error's message.
+   */
+  onBulkEdit?: (edit: BulkEdit<TData>) => void | Promise<void>
 }
 
 /** `data` is one page, already filtered and sorted by the backend. */
@@ -273,6 +280,7 @@ export function useDataTable<TData extends RowData>(
       setSearch: urlState.onSearchChange,
       onCellEdit: options.onCellEdit as DataTableMeta["onCellEdit"],
       canEditCell: options.canEditCell as DataTableMeta["canEditCell"],
+      onBulkEdit: options.onBulkEdit as DataTableMeta["onBulkEdit"],
     },
   })
 }
