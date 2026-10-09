@@ -37,6 +37,7 @@
 - **Inline editing** — Double-click or press Enter on a cell, save it to your backend, and show its errors under the cell
 - **A layout users keep** — Drag, pin, resize, hide and color columns, saved in the browser and merged with the columns you ship later
 - **Thousands of rows** — Virtualization with the sticky header and pinned columns intact
+- **Cards on small screens** — In a narrow container, each row shows as a card with every visible column, no sideways scroll
 - **Three primitive libraries** — Every block in Radix UI, Base UI and React Aria, with the same props
 - **Accessible and localized** — Keyboard sorting and column moves with announcements; English and Vietnamese included
 

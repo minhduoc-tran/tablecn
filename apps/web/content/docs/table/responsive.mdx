@@ -1,0 +1,124 @@
+---
+title: Responsive
+description: On a phone or in a narrow panel, the rows show as cards and the toolbar stacks, instead of a table you scroll sideways.
+updated: 2026-10-09
+---
+
+import { ResponsiveTablePreview } from "@/components/docs/responsive-table-preview"
+
+<ResponsiveTablePreview />
+
+**Try it:** switch between **Phone**, **Tablet** and **Full**, or drag the frame's bottom corner. Below `36rem` (576px), each row becomes a card and the toolbar stacks: the search on its own line, **Filter** beside the buttons, then the filter chips. Select a card, or add a filter to see its chips move down.
+
+A table narrower than its columns makes users scroll sideways to read one row. So the blocks follow the width they get, not the screen's: a table in a narrow sidebar shows cards on a wide screen too. There's nothing to turn on.
+
+## What a card shows
+
+Each card holds the row's visible columns, in the user's order:
+
+- **At the top:** the selection checkbox, the first column as the title, and the columns pinned to the end on the right.
+- **Below:** the other columns, two per line, each with its label above its value. Long values wrap.
+
+So you arrange the cards with the columns you already have. For an orders table:
+
+```tsx title="components/orders-table.tsx"
+const columns = [
+  createSelectionColumn<Order>(),
+  // First: the card's title.
+  helper.accessor("id", { header: "Order", meta: { defaultPinned: "start" } }),
+  helper.accessor("customer", { header: "Customer" }),
+  helper.accessor("status", { header: "Status", cell: StatusBadge }),
+  // Hidden by default: not in the table, not in the cards.
+  helper.accessor("email", { header: "Email", meta: { defaultHidden: true } }),
+  // Pinned to the end: beside the title.
+  helper.accessor("amount", { header: "Amount", meta: { defaultPinned: "end" } }),
+]
+```
+
+Each card then reads:
+
+```txt
+┌─────────────────────────────────┐
+│ ☐  ORD-1468             $356.73 │
+│    Customer       Status        │
+│    Noah Brown     Pending       │
+└─────────────────────────────────┘
+```
+
+- The label is the column's `meta.label`, else its `header` when that's a string, else its id.
+- Each value is the column's `cell`, the same as in the table: a badge stays a badge.
+- Users change the cards with the **Columns** menu: a column they hide or pin there moves in the cards too.
+
+## What works in cards
+
+- **Selection:** the checkbox selects the row, and the [floating bar](/docs/table/selection#the-floating-bar) shows as usual.
+- **Clicks:** `onRowClick` and `onRowDoubleClick` work on the whole card, outside its controls.
+- **`rowClassName`** styles the cards too.
+- **Loading:** cards dim while the rows reload, like rows do.
+
+Cards are read-only: a column with `meta.edit` shows its value, without its editor. Edit in the table, or open a form from `onRowClick`:
+
+```tsx title="Edit a row from its card"
+<DataTable
+  table={table}
+  onRowClick={(row) => setEditing(row.original)} // [!code highlight]
+/>
+<OrderSheet order={editing} onClose={() => setEditing(undefined)} />
+```
+
+## When it stays a table
+
+The table keeps its usual layout at any width:
+
+- With [`virtualize`](/docs/table/virtualization).
+- While it shows its error state.
+- While it has no rows: the first load's skeleton and the empty state.
+
+## The toolbar
+
+`DataTableToolbar` stacks the same way when it's narrower than `36rem`:
+
+- `DataTableSearch` takes a line of its own, full width.
+- The next line has your other controls, like `FilterBuilder`, at the start and **Clear filters**, reload and **Columns** at the end. **Columns** shows only its icon; screen readers still hear its name.
+- `FilterChips` go last, on their own lines.
+
+```tsx title="components/orders-table.tsx"
+<DataTableToolbar table={table} onRefresh={refetch}>
+  <DataTableSearch table={table} placeholder="Search orders…" />
+  <FilterBuilder />
+  <FilterChips />
+</DataTableToolbar>
+```
+
+The order of `children` doesn't change. Other controls you add stay where you put them, between the search and the chips.
+
+## Change the breakpoint
+
+Each switch is a Tailwind [container query](https://tailwindcss.com/docs/responsive-design#container-queries), so change it in your copy. For the table, two classes in `data-table.tsx`:
+
+```tsx title="components/data-table/data-table.tsx"
+<table
+  className={cn(
+    "table-fixed caption-bottom text-sm",
+    cards && "@max-2xl/data-table:hidden" // [!code highlight]
+  )}
+>
+// …
+<DataTableCards
+  // …
+  className="@2xl/data-table:hidden" // [!code highlight]
+/>
+```
+
+Change both together, to the same size. To always show the table, set `cards` to `false`.
+
+For the toolbar, the `@xl/data-table-toolbar` and `@max-xl/data-table-toolbar` classes in `data-table-toolbar.tsx`, and the **Columns** label's in `data-table-view-options.tsx`.
+
+To change a card itself, edit `data-table-cards.tsx`.
+
+## Good to know
+
+- **The cards and the table are both on the page.** CSS hides the one that doesn't fit, so screen readers and the browser's find only see the shown one. Every cell renders twice, which is fine for a page of rows. For thousands, use [virtualization](/docs/table/virtualization), which keeps the table.
+- **In tests**, jsdom doesn't run container queries, so a value shows up twice and `getByText` finds two matches. Query inside the table: `within(screen.getByRole("table")).getByText("Nguyễn Văn An")`.
+- **A cell that renders a portal**, e.g. an always-open popover, renders it twice. Menus and dialogs that open on a click are fine.
+- **Fixed elements inside the table** are fixed to the table, not the screen: a query container is their containing block. Render them outside `DataTable`, or in a portal.

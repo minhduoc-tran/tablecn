@@ -155,5 +155,6 @@ const position = useMemo(() => new Map(rows.map((row, index) => [row.id, index])
 
 - It's built on [TanStack Virtual](https://tanstack.com/virtual), installed with the table UI.
 - The table stays a real `<table>`: the sticky header, pinned columns and widths work as usual. Screen readers still hear the full row count.
+- A virtualized table stays a table on [small screens](/docs/table/responsive), without cards.
 - It has no effect while the table shows its error state. The first load's skeleton rows render as usual.
 - **Every** table, virtualized or not, scrolls back to the top when the sort, page or filter changes. If you build a "load more" pattern, where the page size grows as users reach the end, edit `use-scroll-to-top-on-change.ts` in your copy so it doesn't jump on every load.

@@ -1,6 +1,7 @@
 ---
 title: Changelog
 description: What's new in each release of the blocks and the @querycn packages, and what to do when you update.
+updated: 2026-10-09
 ---
 
 Newest first. A release can change the npm packages, the registry blocks, or both:
@@ -19,6 +20,7 @@ The full list of package changes is in each package's `CHANGELOG.md` on [GitHub]
 ### New
 
 - **Bulk edit in `@querycn/table-react`.** `useDataTable`'s new `onBulkEdit` saves the same values in every selected row in one call: it gets `{ rowIds, rows, changes, options }`, where `changes` holds the new value of each column and `options` the picked option of each `select` column. If it throws, `applyBulkEdit` rejects with the error. Without `onBulkEdit`, a bulk edit calls `onCellEdit` for each changed cell. `getBulkEditColumns(table, rows)` lists the columns a bulk edit can change, those with `meta.edit` that `canEditCell` allows in every row, and `applyBulkEdit(table, rows, changes, options)` saves the edit. The `data-table` block doesn't have a bulk edit dialog yet; these are for building your own.
+- **Cards and a stacked toolbar on small screens.** When the table's container is narrower than `36rem` (576px), each row shows as a card: the selection checkbox, the first column as the title, the columns pinned to the end beside it, and the other visible columns below with their labels. Selection, the floating bar, `onRowClick` and `rowClassName` work on cards; editing stays in the table. A virtualized table keeps the table layout. The toolbar stacks too: the search on its own line, the filter beside the buttons, then the chips, and **Columns** shows only its icon. Both follow their container's width, not the screen's, with Tailwind container queries you can change. See [Responsive](/docs/table/responsive).
 
 ### Changed
 
@@ -27,7 +29,8 @@ The full list of package changes is in each package's `CHANGELOG.md` on [GitHub]
 ### Updating
 
 1. Update the package for bulk edit: `npm install @querycn/table-react@latest`. If you pass a complete message object instead of using `mergeTableMessages`, add the new `bulkEdit` group. TypeScript points out what's missing.
-2. Add the `data-table` block again with `--overwrite`: `npx shadcn@latest add @tablecn/data-table --overwrite`. It brings two new files, `use-floating-selection-bar.ts` and `toolbar-arrow-keys.ts`. Commit your changes first.
+2. Add the `data-table` block again with `--overwrite`: `npx shadcn@latest add @tablecn/data-table --overwrite`. It brings three new files, `use-floating-selection-bar.ts`, `toolbar-arrow-keys.ts` and `data-table-cards.tsx`. Commit your changes first.
+3. If your tests render the table in jsdom, query inside the table: `within(screen.getByRole("table"))`. The cards repeat each value, and jsdom doesn't run the container queries that hide them.
 
 ## September 29, 2026
 
