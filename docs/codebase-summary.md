@@ -54,7 +54,7 @@ packages/{eslint,typescript}-config   Shared tooling (private)
 | Editing | `cell-editing.ts` (`meta.edit` types, `CellEdit`, `parseCellText`); `onCellEdit` / `canEditCell` go to the table meta |
 | i18n | `table-messages.ts`, `locales/en.ts`, `locales/vi.ts` |
 
-Registry `data-table` block: `DataTable` (+ `data-table-body`, virtualization via `@tanstack/react-virtual`), column header (sort, resize, dnd-kit reorder), pagination, view options (Columns menu), search box, toolbar, selection bar, selection column, inline editing (`data-table-editable-cell`, `data-table-cell-editors`, shared `use-cell-editing`).
+Registry `data-table` block: `DataTable` (+ `data-table-body`, virtualization via `@tanstack/react-virtual`), column header (sort, resize, dnd-kit reorder), pagination, view options (Columns menu), search box, toolbar, floating selection bar (shared `use-floating-selection-bar`, `toolbar-arrow-keys`), selection column, inline editing (`data-table-editable-cell`, `data-table-cell-editors`, shared `use-cell-editing`).
 
 ## Data flow
 

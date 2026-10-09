@@ -305,6 +305,60 @@ describe.each(BASES)(
       expect(document.activeElement).toBe(toolbar())
     })
 
+    it("names the selection bar a toolbar after its count", async () => {
+      const user = userEvent.setup()
+      render(
+        <Orders
+          adapter={createMemoryAdapter()}
+          selectionActions={() => <button type="button">Delete</button>}
+        />
+      )
+      await user.click(rowCheckboxes()[0]!)
+      expect(screen.getByRole("toolbar", { name: "1 of 20 selected" })).toBe(
+        selectionBar()
+      )
+    })
+
+    it.each([
+      ["ltr", "{ArrowRight}", "{ArrowLeft}"],
+      ["rtl", "{ArrowLeft}", "{ArrowRight}"],
+    ])(
+      "moves between the selection bar's buttons with the arrow keys (%s)",
+      async (dir, forward, back) => {
+        const user = userEvent.setup()
+        render(
+          <div dir={dir}>
+            <Orders
+              adapter={createMemoryAdapter()}
+              selectionActions={() => (
+                <>
+                  <button type="button">Export</button>
+                  <button type="button">Delete</button>
+                </>
+              )}
+            />
+          </div>
+        )
+        await user.click(rowCheckboxes()[0]!)
+        const bar = within(selectionBar()!)
+        const clear = bar.getByRole("button", { name: "Clear selection" })
+        const exportButton = bar.getByRole("button", { name: "Export" })
+        const deleteButton = bar.getByRole("button", { name: "Delete" })
+
+        clear.focus()
+        await user.keyboard(forward)
+        expect(document.activeElement).toBe(exportButton)
+        await user.keyboard("{End}")
+        expect(document.activeElement).toBe(deleteButton)
+        await user.keyboard(forward)
+        expect(document.activeElement).toBe(clear)
+        await user.keyboard(back)
+        expect(document.activeElement).toBe(deleteButton)
+        await user.keyboard("{Home}")
+        expect(document.activeElement).toBe(clear)
+      }
+    )
+
     it("shows no selection bar without selectionActions", async () => {
       const user = userEvent.setup()
       render(<Orders adapter={createMemoryAdapter()} />)

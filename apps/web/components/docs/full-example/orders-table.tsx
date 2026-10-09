@@ -201,7 +201,7 @@ function OrdersTable() {
           return (
             <>
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={() =>
                   update(ids, (order) => ({ ...order, shipped: true }))
@@ -211,7 +211,7 @@ function OrdersTable() {
                 Mark as shipped
               </Button>
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={() => update(ids, () => null)}
               >

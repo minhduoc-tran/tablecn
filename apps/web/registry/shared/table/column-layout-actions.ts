@@ -56,6 +56,10 @@ export function useTableContainer(
   }, [table, ref])
 }
 
+export function getTableContainer(table: object): HTMLElement | undefined {
+  return containers.get(table)
+}
+
 /** Fits the columns (every visible resizable one by default) to their content. */
 export function fitColumns<TData extends object>(
   table: DataTableInstance<TData>,

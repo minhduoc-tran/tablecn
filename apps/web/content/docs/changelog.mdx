@@ -10,6 +10,18 @@ Newest first. A release can change the npm packages, the registry blocks, or bot
 
 The full list of package changes is in each package's `CHANGELOG.md` on [GitHub](https://github.com/minhduoc-tran/tablecn/tree/main/packages).
 
+## October 9, 2026
+
+Changes to the blocks only: no package release.
+
+### Changed
+
+- **The selection bar floats over the table.** It's a pill at the bottom of the table, like a toast: **×** to clear the selection, the count, then your `selectionActions`. It stays in view while the table scrolls past and never covers the pagination. Its colors are the theme's swapped, and it's a toolbar you can move through with the arrow keys. `selectionActions` is unchanged; give its buttons `variant="ghost"`. **Clear selection** is now an **×** button with that name. See [The floating bar](/docs/table/selection#the-floating-bar).
+
+### Updating
+
+Add the `data-table` block again with `--overwrite`: `npx shadcn@latest add @tablecn/data-table --overwrite`. It brings two new files, `use-floating-selection-bar.ts` and `toolbar-arrow-keys.ts`. Commit your changes first.
+
 ## September 29, 2026
 
 Changes to the blocks only: no package release.

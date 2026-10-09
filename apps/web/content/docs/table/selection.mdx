@@ -36,12 +36,21 @@ The selection only covers the current page, and clears when the page, sort, sear
 
 ## Act on the selected rows
 
-Pass `selectionActions` to the toolbar. While rows are selected, a bar under the toolbar shows their count, your actions and **Clear selection**:
+Pass `selectionActions` to the toolbar. While rows are selected, a bar floats over the bottom of the table with **×** to clear the selection, their count ("3 of 20 selected") and your actions:
 
-```tsx title="A delete action"
+```tsx title="Export and delete actions"
 <DataTableToolbar
   table={table}
-  selectionActions={(rows) => <DeleteOrders ids={rows.map((row) => row.id)} />}
+  selectionActions={(rows) => (
+    <>
+      <Button variant="ghost" size="sm" onClick={() => exportOrders(rows)}>
+        Export
+      </Button>
+      <Button variant="ghost" size="sm" onClick={() => deleteOrders(rows)}>
+        Delete
+      </Button>
+    </>
+  )}
 >
   <DataTableSearch table={table} />
 </DataTableToolbar>
@@ -52,6 +61,14 @@ Without `selectionActions`, there's no bar: the pagination already counts the se
 - `row.original` is the row's data, `row.id` its id from `getRowId`.
 - Actions only get the selected rows the page shows, never one the user can't see.
 - When an action removes the rows (and the focused button with them), focus moves to the toolbar.
+
+### The floating bar
+
+- It's centred on the table and stays in view: at the bottom of the screen while the table goes past it, and just above the table's bottom edge once that's in view, so it never covers the pagination.
+- Its colors are the theme's swapped: dark on a light page, light on a dark one. Give your actions `variant="ghost"`: buttons in the bar hover in its colors.
+- It's a toolbar named by its count. <kbd>←</kbd> <kbd>→</kbd> move between its buttons (mirrored right to left), <kbd>Home</kbd> and <kbd>End</kbd> go to the first and last, and <kbd>Tab</kbd> still reaches each one.
+- It slides in and out, and simply appears and goes with reduced motion.
+- It's `position: fixed`. An ancestor with a `transform`, `filter` or `perspective` makes it fixed to that ancestor instead of the screen.
 
 To put the bar somewhere else, render [`DataTableSelectionBar`](/docs/components/table#datatableselectionbar) yourself.
 

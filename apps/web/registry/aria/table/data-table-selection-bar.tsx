@@ -11,8 +11,9 @@ import { XIcon } from "lucide-react"
 
 import { cn } from "cn"
 import { Button } from "@/registry/aria/ui/button"
-import { getSelectedPageRows } from "@/registry/shared/table/data-table-pagination-state"
-import { useFocusToolbarOnUnmount } from "@/registry/shared/table/use-focus-toolbar-on-unmount"
+import { Separator } from "@/registry/aria/ui/separator"
+import { onToolbarArrowKeys } from "@/registry/shared/table/toolbar-arrow-keys"
+import { useFloatingSelectionBar } from "@/registry/shared/table/use-floating-selection-bar"
 
 export interface DataTableSelectionBarProps<TData extends object> extends Omit<
   React.ComponentProps<"div">,
@@ -24,49 +25,57 @@ export interface DataTableSelectionBarProps<TData extends object> extends Omit<
   actions?: (rows: DataTableRow<TData>[]) => React.ReactNode
 }
 
-/** The page's selected rows: their count, actions and a way to clear them. Hidden while none are selected. */
-export function DataTableSelectionBar<TData extends object>(
-  props: DataTableSelectionBarProps<TData>
-) {
-  const rows = getSelectedPageRows(props.table)
-  if (rows.length === 0) return null
-  return <SelectionBar {...props} rows={rows} />
-}
-
-function SelectionBar<TData extends object>({
+/**
+ * Floats over the bottom of the table while rows of the page are selected:
+ * their count, actions and a button that clears them.
+ */
+export function DataTableSelectionBar<TData extends object>({
   table,
-  rows,
   messages = enTableMessages,
   actions,
   className,
   ...props
-}: DataTableSelectionBarProps<TData> & { rows: DataTableRow<TData>[] }) {
-  const ref = useFocusToolbarOnUnmount<HTMLDivElement>()
+}: DataTableSelectionBarProps<TData>) {
+  const { ref, mounted, closing, rows } = useFloatingSelectionBar(table)
+  const countId = React.useId()
+  if (!mounted) return null
   return (
     <div
       ref={ref}
+      role="toolbar"
+      aria-labelledby={countId}
       data-slot="data-table-selection-bar"
+      data-state={closing ? "closed" : "open"}
+      onKeyDown={onToolbarArrowKeys}
       className={cn(
-        "flex flex-wrap items-center gap-2 rounded-md border bg-muted/50 py-1 ps-3 pe-1 text-sm",
+        // The theme's colors swapped: dark on a light page, light on a dark one.
+        "fixed bottom-(--bar-bottom) left-(--bar-x) z-40 flex max-w-[calc(100vw-1rem)] -translate-x-1/2 items-center gap-1 overflow-x-auto rounded-full bg-foreground p-1 text-sm text-background shadow-lg",
+        // Buttons inside, the app's too, hover in the pill's colors, beating `ghost`'s own.
+        "[&_button:not(:disabled):hover]:bg-background/15 [&_button:not(:disabled):hover]:text-background [&_button[aria-expanded=true]]:bg-background/15 [&_button[aria-expanded=true]]:text-background",
+        "duration-200 data-[state=closed]:pointer-events-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-bottom-4 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom-4 motion-reduce:animate-none",
         className
       )}
       {...props}
     >
-      <span className="tabular-nums">
-        {messages.counts.selected(rows.length, table.getRowModel().rows.length)}
-      </span>
-      {actions && (
-        <div className="flex flex-wrap items-center gap-2">{actions(rows)}</div>
-      )}
       <Button
         variant="ghost"
-        size="sm"
-        className="ms-auto"
+        size="icon-sm"
+        className="rounded-full"
+        aria-label={messages.selection.clear}
         onPress={() => table.resetRowSelection(true)}
       >
         <XIcon />
-        {messages.selection.clear}
       </Button>
+      <Separator orientation="vertical" className="my-1 bg-background/20" />
+      <span id={countId} className="px-3 whitespace-nowrap tabular-nums">
+        {messages.counts.selected(rows.length, table.getRowModel().rows.length)}
+      </span>
+      {actions && (
+        <>
+          <Separator orientation="vertical" className="my-1 bg-background/20" />
+          <div className="flex items-center gap-1">{actions(rows)}</div>
+        </>
+      )}
     </div>
   )
 }
