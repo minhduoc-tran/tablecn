@@ -1,7 +1,7 @@
 ---
 title: Changelog
 description: What's new in each release of the blocks and the @querycn packages, and what to do when you update.
-updated: 2026-10-09
+updated: 2026-10-10
 ---
 
 Newest first. A release can change the npm packages, the registry blocks, or both:
@@ -10,6 +10,25 @@ Newest first. A release can change the npm packages, the registry blocks, or bot
 - **Blocks** (`data-table`, `filter-builder`) are files in your project, so they only change when you add them again. See [Updating](/docs/installation#updating).
 
 The full list of package changes is in each package's `CHANGELOG.md` on [GitHub](https://github.com/minhduoc-tran/tablecn/tree/main/packages).
+
+## October 10, 2026
+
+Changes to the blocks only: they now need `@querycn/table-react` 0.4.0.
+
+### New
+
+- **Bulk edit.** While rows are selected, the floating bar shows **Bulk edit** for tables with editable columns. Its dialog picks columns and a value for each, with the column's own editor, and saves them in every selected row: one `onBulkEdit` call, or `onCellEdit` per changed cell. See [Bulk edit](/docs/table/bulk-edit).
+- `DataTableToolbar` and `DataTableSelectionBar` take `cellEditors`, for your own editors in the dialog.
+
+### Changed
+
+- **The selection bar shows for editable tables** even without `selectionActions`, to offer Bulk edit.
+
+### Updating
+
+1. Update the package: `npm install @querycn/table-react@latest`.
+2. Add the `data-table` block again with `--overwrite`: `npx shadcn@latest add @tablecn/data-table --overwrite`. It brings four new files, `data-table-bulk-edit-dialog.tsx`, `data-table-bulk-edit-field.tsx`, `use-bulk-edit.ts` and `bulk-edit-fields.ts`, and shadcn's `dialog`. Commit your changes first.
+3. If you pass your own editors to `DataTable`, pass them to `DataTableToolbar` too.
 
 ## October 9, 2026
 

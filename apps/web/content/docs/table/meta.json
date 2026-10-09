@@ -5,6 +5,7 @@
     "sorting",
     "selection",
     "editing",
+    "bulk-edit",
     "filtering",
     "server-data",
     "url-state",

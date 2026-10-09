@@ -57,7 +57,7 @@ Pass `selectionActions` to the toolbar. While rows are selected, a bar floats ov
 </DataTableToolbar>
 ```
 
-Without `selectionActions`, there's no bar: the pagination already counts the selection, and the header checkbox clears it.
+With editable columns, the bar also shows **Bulk edit**, after your actions. See [Bulk edit](/docs/table/bulk-edit). Without `selectionActions` or editable columns, there's no bar: the pagination already counts the selection, and the header checkbox clears it.
 
 - `row.original` is the row's data, `row.id` its id from `getRowId`.
 - Actions only get the selected rows the page shows, never one the user can't see.

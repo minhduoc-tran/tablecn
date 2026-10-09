@@ -35,6 +35,7 @@
 - **Everything in the URL** — `?q=nguyen&status__eq=paid&sort=-amount&page=2`: shareable links, back/forward, a new filter goes back to page 1
 - **Client or server data** — Filter, sort and page in the browser, or send the URL to JSON:API, Django REST framework, PostgREST or your own backend
 - **Inline editing** — Double-click or press Enter on a cell, save it to your backend, and show its errors under the cell
+- **Bulk edit** — Select rows, pick columns and values, and save them in every selected row in one call
 - **A layout users keep** — Drag, pin, resize, hide and color columns, saved in the browser and merged with the columns you ship later
 - **Thousands of rows** — Virtualization with the sticky header and pinned columns intact
 - **Cards on small screens** — In a narrow container, each row shows as a card with every visible column, no sideways scroll

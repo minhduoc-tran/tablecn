@@ -1,0 +1,171 @@
+---
+title: Bulk edit
+description: Select rows, pick columns, give each a value, and save it in every selected row at once.
+updated: 2026-10-10
+---
+
+import { TablePreview } from "@/components/docs/table-preview"
+
+<TablePreview />
+
+**Try it:** select two or three rows, then press **Bulk edit** in the bar at the bottom of the table. Pick *Status*, choose a value, **Add field** for *Amount*, and **Apply**.
+
+Bulk edit sets the same values in every selected row: mark ten orders as shipped, or move them all to one city. It builds on [inline editing](/docs/table/editing): the columns are the ones with `meta.edit`, and each value gets the editor its cells have.
+
+## Turn it on
+
+There's nothing to add if your table already has these:
+
+1. A [selection column](/docs/table/selection#the-selection-column).
+2. Columns with [`meta.edit`](/docs/table/editing#make-a-column-editable).
+3. `onCellEdit` or `onBulkEdit` in `useDataTable`, to save.
+4. `DataTableToolbar` above the table, which renders the [floating bar](/docs/table/selection#the-floating-bar).
+
+While rows are selected, the bar then shows **Bulk edit** after your `selectionActions`. With no editable column, or nothing to save with, it doesn't.
+
+## The dialog
+
+- Each line picks a column, then a value with that column's editor: a text box, a number, a select, a select searching your API, or [your own](#your-own-editors). Yes/no columns get a checkbox.
+- **Add field** adds a line for another column. A column can only be picked once.
+- **Apply to N rows** saves. It waits for every line to have a value, and for numbers to be numbers.
+- While it saves, the dialog can't be closed. Once saved, it closes and the selection clears. If saving fails, it stays open with the error, and the lines as they were.
+- It applies to the rows selected when it opened, even if a refetch changes the page meanwhile.
+
+## Save in one call
+
+Without more, a bulk edit calls `onCellEdit` for each changed cell. For one request instead, give `useDataTable` an `onBulkEdit`:
+
+```tsx title="components/orders-table.tsx"
+const table = useDataTable({
+  data: orders,
+  columns,
+  getRowId: (order) => order.id,
+  onCellEdit: saveOneCell,
+  onBulkEdit: async ({ rowIds, changes }) => { // [!code highlight]
+    // changes: { status: "shipped", city: "hn" }
+    const ids = new Set(rowIds)
+    setOrders((current) =>
+      current.map((order) => (ids.has(order.id) ? { ...order, ...changes } : order))
+    )
+  },
+})
+```
+
+<TypeTable
+  type={{
+    rowIds: { description: "The selected rows' ids, from getRowId.", type: "string[]" },
+    rows: { description: "The selected rows' data, in the same order.", type: "TData[]" },
+    changes: { description: "The new value of each picked column, by column id.", type: "Record<string, unknown>" },
+    options: {
+      description: "For select columns: the picked option, with its label to show before a refetch.",
+      type: "Record<string, { label: string; value: string }>",
+    },
+  }}
+/>
+
+Return a promise to keep the dialog saving until it settles. Throw to keep it open with your message:
+
+```tsx title="Saving to your API, with TanStack Query"
+const queryClient = useQueryClient()
+
+const table = useDataTable({
+  // …
+  onBulkEdit: async ({ rowIds, changes }) => {
+    const response = await fetch("/api/orders", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids: rowIds, changes }),
+    })
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}))
+      throw new Error(body.message ?? "Couldn't save the orders.")
+    }
+    await queryClient.invalidateQueries({ queryKey: ["orders"] })
+  },
+})
+```
+
+Column ids are the table's, not always your API's field names: map them as for [inline editing](/docs/table/editing#rows-from-your-backend).
+
+### Without onBulkEdit
+
+Each changed cell goes to `onCellEdit`, as if the user had edited it:
+
+- The rows save in parallel; one row's cells save one after the other, so they never race.
+- A cell that already has the value is skipped: `previous` is the cell's own value.
+- Every save runs, then the dialog shows the first error, if any. Rows that saved stay saved.
+
+So update your rows with a function, `setOrders((current) => …)`, not from the `orders` of the last render: the saves of other rows would be lost.
+
+## Which columns it offers
+
+- Columns with `meta.edit`, hidden ones too: the dialog doesn't depend on what the table shows.
+- With [`canEditCell`](/docs/table/editing#which-cells-can-be-edited), only the columns every selected row can edit. A column one of them can't edit isn't offered.
+
+## Your own editors
+
+Your [cell editors](/docs/table/editing#your-own-editor) work in the dialog too. Pass them to the toolbar as well as the table:
+
+```tsx title="components/orders-table.tsx"
+const editors = { ...cellEditors, rating: RatingEditor }
+
+<DataTableToolbar table={table} cellEditors={editors}>
+  <DataTableSearch table={table} />
+</DataTableToolbar>
+<DataTable table={table} cellEditors={editors} />
+```
+
+In the dialog an editor saves into its line, not a cell: `onSave` sets the line's value, `onError` shows a message under it, and `onCancel` clears that message.
+
+## Build your own UI
+
+To bulk edit from somewhere else, e.g. a side panel, use what the dialog uses:
+
+- **`useBulkEdit({ table, rows, messages })`**, in `use-bulk-edit.ts` with the block, holds the dialog's state: the columns, the lines, opening, saving and errors. `DataTableBulkEditDialog` renders it.
+- **`getBulkEditColumns(table, rows)`**, from `@querycn/table-react`, returns the columns a bulk edit can change in these rows: none without `onBulkEdit` or `onCellEdit`. With no rows, every editable column.
+- **`applyBulkEdit(table, rows, changes, options)`** saves: one `onBulkEdit` call, or `onCellEdit` per changed cell, as above.
+
+```tsx title="A button that marks the selected orders as shipped"
+import { applyBulkEdit, getBulkEditColumns } from "@querycn/table-react"
+
+const rows = table.getSelectedRowModel().rows
+const canShip =
+  rows.length > 0 &&
+  getBulkEditColumns(table, rows).some((column) => column.id === "shipped")
+
+<Button
+  disabled={!canShip}
+  onClick={async () => {
+    await applyBulkEdit(table, rows, { shipped: true })
+    table.resetRowSelection(true)
+  }}
+>
+  Mark as shipped
+</Button>
+```
+
+## Translate
+
+The `bulkEdit` group of the [table messages](/docs/table/customization#translate-the-ui):
+
+| Key | Default |
+| --- | --- |
+| `open` | "Bulk edit", the bar's button |
+| `title` | "Bulk edit", the dialog's title |
+| `description(count){:ts}` | "Set the same values in *count* selected rows." |
+| `column` | "Column", the column picker's name |
+| `chooseColumn` | "Choose a column" |
+| `value` | "Value" |
+| `chooseValue` | "Choose…", before a column is picked |
+| `addField` | "Add field" |
+| `removeField(column){:ts}` | "Remove *column*", a line's remove button |
+| `cancel` | "Cancel" |
+| `applying` | "Applying…" |
+| `apply(count){:ts}` | "Apply to *count* rows" |
+
+Errors without a message use `editing.saveFailed`.
+
+## Limitations
+
+- **Values, not blanks.** A line needs a value: the dialog can't clear a column.
+- **The page's rows.** Selection holds within one page, so a bulk edit only reaches the rows the page shows.

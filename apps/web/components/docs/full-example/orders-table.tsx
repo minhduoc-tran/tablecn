@@ -172,6 +172,19 @@ function OrdersTable() {
         )
       )
     },
+    // Bulk edit: one save for every selected row, like one PATCH to your API.
+    onBulkEdit: async ({ rowIds, changes }) => {
+      await new Promise((resolve) => setTimeout(resolve, 400))
+      if ("amount" in changes && !((changes.amount as number) >= 0)) {
+        throw new Error("Enter an amount of 0 or more.")
+      }
+      const ids = new Set(rowIds)
+      setOrders((current) =>
+        current.map((order) =>
+          ids.has(order.id) ? { ...order, ...changes } : order
+        )
+      )
+    },
   })
 
   const update = (ids: string[], change: (order: Order) => Order | null) => {

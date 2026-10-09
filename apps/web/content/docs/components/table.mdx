@@ -164,8 +164,13 @@ Above the table: your controls on the left; **Clear filters**, reload and **Colu
       default: "false",
     },
     selectionActions: {
-      description: "Actions for the selected rows, in a bar floating over the table while rows are selected. Without it, there's no bar.",
+      description: "Actions for the selected rows, in a bar floating over the table while rows are selected. Without them and without editable columns, there's no bar.",
       type: "(rows: DataTableRow<TData>[]) => React.ReactNode",
+    },
+    cellEditors: {
+      description: "Editors by meta.edit type for Bulk edit. Pass the ones DataTable has. See Bulk edit.",
+      type: "Record<string, React.ComponentType<CellEditorProps>>",
+      default: "cellEditors (text, number, select)",
     },
     messages: { description: "See Customization.", type: "TableMessages", default: "enTableMessages" },
     className: { description: "Classes for the toolbar.", type: "string" },
@@ -199,7 +204,7 @@ The search goes back to page 1 by itself. For the filter, pass `onApply={() => r
 
 ## DataTableSelectionBar
 
-A bar floating over the bottom of the table: **×** to clear the selection, the selected rows' count and your actions. `DataTableToolbar` renders it when you pass `selectionActions`; render it yourself without the toolbar. It renders nothing while no row is selected, and it finds the table through `table`, wherever you render it. See [The floating bar](/docs/table/selection#the-floating-bar). See [Row selection](/docs/table/selection). It only counts the selected rows of the page, so actions never receive a row the user can't see.
+A bar floating over the bottom of the table: **×** to clear the selection, the selected rows' count, your actions and, for editable columns, **Bulk edit** (see [Bulk edit](/docs/table/bulk-edit)). `DataTableToolbar` renders it; render it yourself without the toolbar. It renders nothing while no row is selected, and it finds the table through `table`, wherever you render it. See [The floating bar](/docs/table/selection#the-floating-bar). See [Row selection](/docs/table/selection). It only counts the selected rows of the page, so actions never receive a row the user can't see.
 
 <TypeTable
   type={{
@@ -207,6 +212,11 @@ A bar floating over the bottom of the table: **×** to clear the selection, the 
     actions: {
       description: "What can be done with the selected rows, e.g. a delete button.",
       type: "(rows: DataTableRow<TData>[]) => React.ReactNode",
+    },
+    cellEditors: {
+      description: "Editors by meta.edit type for the Bulk edit dialog.",
+      type: "Record<string, React.ComponentType<CellEditorProps>>",
+      default: "cellEditors (text, number, select)",
     },
     messages: { description: "See Customization.", type: "TableMessages", default: "enTableMessages" },
     className: { description: "Classes for the bar.", type: "string" },

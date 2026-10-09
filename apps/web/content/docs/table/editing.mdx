@@ -351,7 +351,7 @@ Your own error messages come from `onCellEdit`, so translate them there.
 ## Limitations
 
 - **Not in cards.** On [small screens](/docs/table/responsive) the rows show as read-only cards.
-- **One cell at a time.** There's no row edit mode, no **Save all**, no undo and no pasting into several cells.
+- **One cell at a time.** There's no row edit mode, no **Save all**, no undo and no pasting into several cells. To set one value in many rows, use [Bulk edit](/docs/table/bulk-edit).
 - **With [virtualization](/docs/table/virtualization)**, a row scrolled out of view is removed, and an editor open in it closes without saving.
 - **An edited row can move.** In client mode the table re-sorts and re-filters the new rows, so a row can change place or page after a save; the focus then goes back to the page.
 - **Editors see the accessor's value.** For a column with `accessorFn` (a full name built from two fields, say), save it back to your fields yourself in `onCellEdit`.
