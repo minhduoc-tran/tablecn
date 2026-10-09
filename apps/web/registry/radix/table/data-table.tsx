@@ -26,6 +26,7 @@ import { useTableContainer } from "@/registry/shared/table/column-layout-actions
 import { useScrollEdges } from "@/registry/shared/table/use-scroll-edges"
 import { useScrollToTopOnChange } from "@/registry/shared/table/use-scroll-to-top-on-change"
 import { useVirtualRows } from "@/registry/shared/table/use-virtual-rows"
+import { DataTableCards } from "@/registry/shared/table/data-table-cards"
 import {
   DataTableFillerHead,
   getFillerIndex,
@@ -57,7 +58,8 @@ export interface DataTableProps<TData extends object>
  * Renders a `useDataTable` table: sticky header, pinned columns, loading,
  * empty and error states. The container scrolls, so give it a height (e.g.
  * `className="max-h-[600px]"`) for the header to stay in view. Scrolls back
- * to the top when the sort, page, search or filter changes.
+ * to the top when the sort, page, search or filter changes. Narrower than
+ * `@xl` (36rem), the rows show as cards, unless virtualized.
  */
 export function DataTable<TData extends object>({
   table,
@@ -102,6 +104,7 @@ export function DataTable<TData extends object>({
     scrollRef,
     estimateRowHeight,
   })
+  const cards = !virtualize && !isError && rowCount > 0
 
   return (
     <div
@@ -110,7 +113,7 @@ export function DataTable<TData extends object>({
       data-scroll-start={scrolled.start || undefined}
       data-scroll-end={scrolled.end || undefined}
       className={cn(
-        "group/data-table relative w-full overflow-auto rounded-md border",
+        "group/data-table @container/data-table relative w-full overflow-auto rounded-md border",
         className
       )}
       {...props}
@@ -123,7 +126,11 @@ export function DataTable<TData extends object>({
           aria-rowcount={
             virtual && rowCount > 0 ? headerGroups.length + rowCount : undefined
           }
-          className="table-fixed caption-bottom text-sm"
+          className={cn(
+            "table-fixed caption-bottom text-sm",
+            // Change the breakpoint here and in `DataTableCards` below.
+            cards && "@max-xl/data-table:hidden"
+          )}
           // Fills the container; a filler cell takes what the columns leave.
           style={{ width: "100%", minWidth: table.getTotalSize() }}
         >
@@ -184,6 +191,16 @@ export function DataTable<TData extends object>({
           />
         </table>
       </ColumnReorder>
+      {cards && (
+        <DataTableCards
+          table={table}
+          isLoading={isLoading}
+          onRowClick={onRowClick}
+          onRowDoubleClick={onRowDoubleClick}
+          rowClassName={rowClassName}
+          className="@xl/data-table:hidden"
+        />
+      )}
     </div>
   )
 }

@@ -83,7 +83,10 @@ export function DataTableViewOptions<TData extends object>({
         <PopoverTrigger asChild>
           <Button variant="outline" size="sm" className={className}>
             <Settings2Icon />
-            {messages.columns.menu}
+            {/* The icon alone in a narrow toolbar; screen readers still hear the label. */}
+            <span className="@max-xl/data-table-toolbar:sr-only">
+              {messages.columns.menu}
+            </span>
           </Button>
         </PopoverTrigger>
         <PopoverContent

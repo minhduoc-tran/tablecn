@@ -338,6 +338,11 @@
           "target": "@components/data-table/toolbar-arrow-keys.ts"
         },
         {
+          "path": "registry/shared/table/data-table-cards.tsx",
+          "type": "registry:component",
+          "target": "@components/data-table/data-table-cards.tsx"
+        },
+        {
           "path": "registry/shared/table/data-table-row-clicks.ts",
           "type": "registry:lib",
           "target": "@components/data-table/data-table-row-clicks.ts"

@@ -74,6 +74,8 @@ describe.each(BASES)("%s DataTable", (_, DataTable, createSelectionColumn) => {
   const headers = () =>
     screen.getAllByRole("columnheader").map((th) => th.textContent)
   const bodyRows = () => screen.getAllByRole("row").slice(1)
+  // The cards repeat the rows; jsdom has no container queries to hide them.
+  const inTable = () => within(screen.getByRole("table"))
 
   it("renders pinned columns at their edges, sticky at TanStack's offsets", () => {
     render(<Orders />)
@@ -145,7 +147,7 @@ describe.each(BASES)("%s DataTable", (_, DataTable, createSelectionColumn) => {
     expect(selectAll!.getAttribute("aria-checked") ?? "true").toBe("true")
     expect(selectAll!.closest("[data-indeterminate]")).toBeNull()
 
-    await user.click(screen.getByText("Bình"))
+    await user.click(inTable().getByText("Bình"))
     expect(onRowClick).toHaveBeenCalledTimes(1)
     expect(onRowClick.mock.calls[0]![0].id).toBe("2")
   })
@@ -186,11 +188,73 @@ describe.each(BASES)("%s DataTable", (_, DataTable, createSelectionColumn) => {
       )
     }
     render(<WithMenu />)
-    await user.click(screen.getByRole("button", { name: "Delete" }))
-    fireEvent.click(screen.getByText("An"), { detail: 2 })
+    // The portal of the row's table cell; its card renders one too.
+    await user.click(screen.getAllByRole("button", { name: "Delete" })[0]!)
+    fireEvent.click(inTable().getByText("An"), { detail: 2 })
     expect(onRowClick).not.toHaveBeenCalled()
-    await user.dblClick(screen.getByText("Châu"))
+    await user.dblClick(inTable().getByText("Châu"))
     expect(onRowDoubleClick).toHaveBeenCalledTimes(1)
+  })
+
+  it("repeats the rows as cards: title, end-pinned columns, labelled fields", async () => {
+    const user = userEvent.setup()
+    const onRowClick = vi.fn()
+    function Cards() {
+      const [adapter] = useState(() => createMemoryAdapter())
+      const columns = useMemo(
+        () => [
+          createSelectionColumn(),
+          helper.accessor("customer", { header: "Customer" }),
+          helper.accessor("id", { header: "Number" }),
+          helper.accessor((row) => row.id, {
+            id: "secret",
+            header: "Secret",
+            meta: { defaultHidden: true },
+          }),
+          helper.accessor("amount", {
+            header: "Amount",
+            meta: { defaultPinned: "end" },
+          }),
+        ],
+        []
+      )
+      const table = useDataTable({
+        data: ORDERS,
+        columns,
+        getRowId: (row) => row.id,
+        adapter,
+      })
+      return <DataTable table={table} onRowClick={onRowClick} />
+    }
+    render(<Cards />)
+    const cards = within(screen.getByRole("list")).getAllByRole("listitem")
+    expect(cards.map((card) => card.textContent)).toEqual([
+      "An30Number1",
+      "Bình10Number2",
+      "Châu20Number3",
+    ])
+    expect(within(cards[0]!).getByRole("term").textContent).toBe("Number")
+    expect(within(cards[0]!).queryByText("Secret")).toBeNull()
+
+    await user.click(within(cards[1]!).getByRole("checkbox"))
+    expect(cards[1]!.dataset.state).toBe("selected")
+    expect(bodyRows()[1]!.dataset.state).toBe("selected")
+    expect(onRowClick).not.toHaveBeenCalled()
+
+    await user.click(within(cards[2]!).getByText("Châu"))
+    expect(onRowClick).toHaveBeenCalledTimes(1)
+    expect(onRowClick.mock.calls[0]![0].id).toBe("3")
+  })
+
+  it("keeps the table's own states and virtualized rows out of cards", () => {
+    const { rerender } = render(<Orders data={NO_ORDERS} />)
+    expect(screen.queryByRole("list")).toBeNull()
+    rerender(<Orders isError />)
+    expect(screen.queryByRole("list")).toBeNull()
+    rerender(<Orders virtualize />)
+    expect(screen.queryByRole("list")).toBeNull()
+    rerender(<Orders />)
+    expect(screen.getByRole("list")).toBeTruthy()
   })
 
   it("keeps group and placeholder headers above pinned columns sticky", () => {

@@ -53,31 +53,37 @@ export function DataTableToolbar<TData extends object>({
       className={cn("flex flex-col gap-2 outline-none", className)}
       {...props}
     >
-      <div className="flex flex-wrap items-start gap-2">
-        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-          {children}
-        </div>
-        <div className="flex items-center gap-2">
-          <DataTableResetFiltersButton table={table} messages={messages} />
-          {onRefresh && (
-            <Button
-              variant="outline"
-              size="icon-sm"
-              aria-label={messages.actions.reload}
-              // Pending, not disabled: it keeps focus.
-              aria-disabled={isRefreshing || undefined}
-              onClick={() => {
-                if (!isRefreshing) onRefresh()
-              }}
-            >
-              <RefreshCwIcon
-                className={cn(
-                  isRefreshing && "animate-spin motion-reduce:animate-none"
-                )}
-              />
-            </Button>
-          )}
-          <DataTableViewOptions table={table} messages={messages} />
+      {/* Only around the controls: a query container is the containing block
+          of fixed descendants, like the selection bar. */}
+      <div className="@container/data-table-toolbar">
+        <div className="flex flex-wrap items-start gap-2">
+          {/* Narrower than `@xl`, its controls join the row: the search on a
+              line of its own, the filter beside the actions, then the chips. */}
+          <div className="contents @xl/data-table-toolbar:flex @xl/data-table-toolbar:min-w-0 @xl/data-table-toolbar:flex-1 @xl/data-table-toolbar:flex-wrap @xl/data-table-toolbar:items-center @xl/data-table-toolbar:gap-2 @max-xl/data-table-toolbar:[&>[data-slot=data-table-search]]:w-full @max-xl/data-table-toolbar:[&>[data-slot=filter-chips]]:order-last @max-xl/data-table-toolbar:[&>[data-slot=filter-chips]]:basis-full">
+            {children}
+          </div>
+          <div className="ms-auto flex items-center gap-2">
+            <DataTableResetFiltersButton table={table} messages={messages} />
+            {onRefresh && (
+              <Button
+                variant="outline"
+                size="icon-sm"
+                aria-label={messages.actions.reload}
+                // Pending, not disabled: it keeps focus.
+                aria-disabled={isRefreshing || undefined}
+                onClick={() => {
+                  if (!isRefreshing) onRefresh()
+                }}
+              >
+                <RefreshCwIcon
+                  className={cn(
+                    isRefreshing && "animate-spin motion-reduce:animate-none"
+                  )}
+                />
+              </Button>
+            )}
+            <DataTableViewOptions table={table} messages={messages} />
+          </div>
         </div>
       </div>
       {/* Without actions the bar adds nothing: the pagination already counts
