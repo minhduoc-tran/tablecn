@@ -12,7 +12,13 @@ The full list of package changes is in each package's `CHANGELOG.md` on [GitHub]
 
 ## October 9, 2026
 
-Changes to the blocks only: no package release.
+| Package | Version |
+| --- | --- |
+| `@querycn/table-react` | 0.4.0 |
+
+### New
+
+- **Bulk edit in `@querycn/table-react`.** `useDataTable`'s new `onBulkEdit` saves the same values in every selected row in one call: it gets `{ rowIds, rows, changes, options }`, where `changes` holds the new value of each column and `options` the picked option of each `select` column. If it throws, `applyBulkEdit` rejects with the error. Without `onBulkEdit`, a bulk edit calls `onCellEdit` for each changed cell. `getBulkEditColumns(table, rows)` lists the columns a bulk edit can change, those with `meta.edit` that `canEditCell` allows in every row, and `applyBulkEdit(table, rows, changes, options)` saves the edit. The `data-table` block doesn't have a bulk edit dialog yet; these are for building your own.
 
 ### Changed
 
@@ -20,7 +26,8 @@ Changes to the blocks only: no package release.
 
 ### Updating
 
-Add the `data-table` block again with `--overwrite`: `npx shadcn@latest add @tablecn/data-table --overwrite`. It brings two new files, `use-floating-selection-bar.ts` and `toolbar-arrow-keys.ts`. Commit your changes first.
+1. Update the package for bulk edit: `npm install @querycn/table-react@latest`. If you pass a complete message object instead of using `mergeTableMessages`, add the new `bulkEdit` group. TypeScript points out what's missing.
+2. Add the `data-table` block again with `--overwrite`: `npx shadcn@latest add @tablecn/data-table --overwrite`. It brings two new files, `use-floating-selection-bar.ts` and `toolbar-arrow-keys.ts`. Commit your changes first.
 
 ## September 29, 2026
 
